@@ -1,2 +1,1491 @@
-const SUPABASE_URL_RAW = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
-const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY_HERE";
+const SUPABASE_URL_RAW = "https://dedcykelhdqwktkmkeiv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_mdp0ij0wBpGmqwWnDtNKHA_TF1zNzvw";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MDH Surgical Staffing</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --blue: #0f4c81;
+      --blue-dark: #0a355b;
+      --blue-soft: #e9f2fb;
+      --green: #15803d;
+      --green-soft: #dcfce7;
+      --red: #b91c1c;
+      --red-soft: #fee2e2;
+      --amber: #b45309;
+      --amber-soft: #fef3c7;
+      --purple: #6d28d9;
+      --purple-soft: #ede9fe;
+      --grey: #64748b;
+      --grey-soft: #f1f5f9;
+      --border: #dbe3ec;
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #64748b;
+      --shadow: 0 8px 24px rgba(15, 76, 129, 0.08);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    header {
+      background: var(--blue);
+      color: white;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
+    .top-user {
+      text-align: right;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 22px auto;
+      padding: 0 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .login-wrap {
+      max-width: 430px;
+      margin: 70px auto;
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 12px;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    h2 {
+      font-size: 19px;
+    }
+
+    h3 {
+      font-size: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: white;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.12);
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--blue);
+      color: white;
+    }
+
+    button:hover {
+      background: var(--blue-dark);
+    }
+
+    button.secondary {
+      background: var(--grey-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover {
+      background: #e2e8f0;
+    }
+
+    button.danger {
+      background: var(--red);
+    }
+
+    button.success {
+      background: var(--green);
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+    }
+
+    .tab.active {
+      background: var(--blue);
+      color: white;
+      border-color: var(--blue);
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge.green {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .badge.red {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .badge.amber {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .badge.blue {
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .badge.purple {
+      background: var(--purple-soft);
+      color: var(--purple);
+    }
+
+    .badge.grey {
+      background: var(--grey-soft);
+      color: var(--grey);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 10px 11px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .error {
+      background: var(--red-soft);
+      color: var(--red);
+      border: 1px solid #fecaca;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    .success-msg {
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1px solid #bbf7d0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+
+    .info {
+      background: var(--blue-soft);
+      color: var(--blue);
+      border: 1px solid #bfdbfe;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+
+    .roster-table {
+      min-width: 1100px;
+    }
+
+    .shift-cell {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 30px;
+      height: 26px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .shift-D, .shift-M, .shift-E {
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .shift-N {
+      background: #1e3a8a;
+      color: white;
+    }
+
+    .shift-O, .shift-R {
+      background: var(--grey-soft);
+      color: var(--grey);
+    }
+
+    .shift-AL {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .shift-SL {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .shift-ML, .shift-ST {
+      background: var(--purple-soft);
+      color: var(--purple);
+    }
+
+    .shift-TI, .shift-TO, .shift-OT {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .override-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--red);
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 850px) {
+      .grid-2, .grid-3, .grid-4, .stat-grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-user {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-title">MDH Surgical Staffing</div>
+      <div class="brand-subtitle">Surgical wards staffing report system</div>
+    </div>
+    <div class="top-user" id="topUser">Not signed in</div>
+  </header>
+
+  <main class="container">
+    <section id="loginScreen" class="login-wrap">
+      <div class="card">
+        <h1>Sign in</h1>
+        <p class="muted">Use the Supabase test accounts created for this project.</p>
+
+        <div id="loginMessage"></div>
+
+        <div class="grid">
+          <div>
+            <label>Email</label>
+            <input id="loginEmail" type="email" autocomplete="username" placeholder="name@example.com" />
+          </div>
+
+          <div>
+            <label>Password</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password" />
+          </div>
+
+          <button onclick="signIn()">Sign in</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="appScreen" class="hidden">
+      <div class="card">
+        <div class="actions" style="justify-content: space-between;">
+          <div>
+            <h1 id="mainTitle">Dashboard</h1>
+            <div class="muted" id="mainSubtitle"></div>
+          </div>
+          <div class="actions">
+            <button class="secondary" onclick="reloadCurrentTab()">Refresh</button>
+            <button class="danger" onclick="signOut()">Sign out</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs" id="tabs"></div>
+
+      <div id="message"></div>
+      <div id="content"></div>
+    </section>
+  </main>
+
+  <script>
+    /************************************************************
+     * IMPORTANT:
+     * Paste your own Supabase values below.
+     * Do NOT use the service_role key.
+     ************************************************************/
+
+    const SUPABASE_URL_RAW = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY_HERE";
+
+    const SUPABASE_URL = SUPABASE_URL_RAW
+      .replace(/\/rest\/v1\/?$/i, "")
+      .replace(/\/$/i, "");
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let appState = {
+      session: null,
+      ref: null,
+      profile: null,
+      wards: [],
+      activeTab: null,
+      selectedWardId: null,
+      selectedDate: todayISO(),
+      selectedMonth: monthISO(new Date())
+    };
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const { data } = await sb.auth.getSession();
+      appState.session = data.session;
+
+      sb.auth.onAuthStateChange((_event, session) => {
+        appState.session = session;
+        boot();
+      });
+
+      await boot();
+    });
+
+    async function boot() {
+      clearMessage();
+
+      if (!appState.session) {
+        showLogin();
+        return;
+      }
+
+      await loadReferenceData();
+      showApp();
+    }
+
+    function showLogin() {
+      document.getElementById("loginScreen").classList.remove("hidden");
+      document.getElementById("appScreen").classList.add("hidden");
+      document.getElementById("topUser").textContent = "Not signed in";
+    }
+
+    function showApp() {
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("appScreen").classList.remove("hidden");
+
+      const profile = appState.profile;
+      document.getElementById("topUser").innerHTML =
+        `<strong>${escapeHtml(profile.full_name)}</strong><br>${labelRole(profile.role)}`;
+
+      document.getElementById("mainTitle").textContent =
+        profile.is_sno ? "Senior Nursing Officer Dashboard" : "Ward Dashboard";
+
+      document.getElementById("mainSubtitle").textContent =
+        profile.is_sno
+          ? "All surgical wards overview"
+          : `Access: ${appState.wards.map(w => w.ward_code).join(", ")}`;
+
+      buildTabs();
+
+      if (!appState.activeTab) {
+        appState.activeTab = profile.is_sno ? "snoOverview" : "wardDaily";
+      }
+
+      renderTab(appState.activeTab);
+    }
+
+    async function loadReferenceData() {
+      const { data, error } = await sb.rpc("get_app_reference_data");
+
+      if (error) {
+        showError(error.message);
+        throw error;
+      }
+
+      appState.ref = data;
+      appState.profile = data.profile;
+      appState.wards = data.accessible_wards || [];
+
+      if (!appState.selectedWardId && appState.wards.length > 0) {
+        appState.selectedWardId = appState.wards[0].ward_id;
+      }
+    }
+
+    function buildTabs() {
+      const tabs = [];
+
+      if (appState.profile.is_sno) {
+        tabs.push(
+          ["snoOverview", "Today’s Overview"],
+          ["monthlyRoster", "Monthly Roster"],
+          ["staffManagement", "Staff Management"],
+          ["relievingPool", "Relieving Pool"],
+          ["auditHistory", "Audit History"],
+          ["myAccount", "My Account"]
+        );
+      } else {
+        tabs.push(
+          ["wardDaily", "Daily Staffing"],
+          ["monthlyRoster", "Monthly Roster"],
+          ["staffManagement", "My Ward Staff"],
+          ["relievingPool", "Relieving Pool"],
+          ["myAccount", "My Account"]
+        );
+      }
+
+      document.getElementById("tabs").innerHTML = tabs.map(([key, label]) => `
+        <button class="tab ${appState.activeTab === key ? "active" : ""}" onclick="renderTab('${key}')">
+          ${label}
+        </button>
+      `).join("");
+    }
+
+    async function renderTab(tabKey) {
+      appState.activeTab = tabKey;
+      buildTabs();
+      clearMessage();
+
+      const content = document.getElementById("content");
+      content.innerHTML = `<div class="card"><p class="muted">Loading...</p></div>`;
+
+      try {
+        if (tabKey === "snoOverview") await renderSnoOverview();
+        if (tabKey === "wardDaily") await renderWardDaily();
+        if (tabKey === "monthlyRoster") await renderMonthlyRoster();
+        if (tabKey === "staffManagement") await renderStaffManagement();
+        if (tabKey === "relievingPool") await renderRelievingPool();
+        if (tabKey === "auditHistory") await renderAuditHistory();
+        if (tabKey === "myAccount") await renderMyAccount();
+      } catch (err) {
+        showError(err.message || String(err));
+      }
+    }
+
+    function reloadCurrentTab() {
+      renderTab(appState.activeTab);
+    }
+
+    async function signIn() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      setLoginMessage("");
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        setLoginMessage(`<div class="error">${escapeHtml(error.message)}</div>`);
+        return;
+      }
+
+      setLoginMessage("");
+    }
+
+    async function signOut() {
+      await sb.auth.signOut();
+      appState = {
+        session: null,
+        ref: null,
+        profile: null,
+        wards: [],
+        activeTab: null,
+        selectedWardId: null,
+        selectedDate: todayISO(),
+        selectedMonth: monthISO(new Date())
+      };
+      showLogin();
+    }
+
+    /***********************
+     * SNO Overview
+     ***********************/
+
+    async function renderSnoOverview() {
+      const date = appState.selectedDate;
+
+      const { data, error } = await sb.rpc("get_sno_daily_overview", {
+        p_staffing_date: date
+      });
+
+      if (error) throw error;
+
+      const totalWards = data.length;
+      const fullyStaffed = data.filter(r => r.ward_status === "fully_staffed").length;
+      const shortStaffed = data.filter(r => r.ward_status === "short_staffed").length;
+      const notSubmitted = data.filter(r => r.ward_status === "not_submitted").length;
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content: space-between;">
+            <div>
+              <h2>Today’s Overview</h2>
+              <p class="muted">All wards must submit daily staffing by 07:00.</p>
+            </div>
+            <div>
+              <label>Date</label>
+              <input type="date" value="${date}" onchange="setSelectedDate(this.value)" />
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          ${statCard(totalWards, "Total wards")}
+          ${statCard(fullyStaffed, "Fully staffed")}
+          ${statCard(shortStaffed, "Short staffed")}
+          ${statCard(notSubmitted, "Not submitted")}
+        </div>
+
+        <div class="grid grid-3" style="margin-top: 16px;">
+          ${data.map(row => `
+            <div class="card">
+              <div class="actions" style="justify-content: space-between;">
+                <h3>${escapeHtml(row.ward_code)}</h3>
+                ${wardStatusBadge(row.ward_status)}
+              </div>
+              <p class="muted">${escapeHtml(row.ward_name)}</p>
+              <table style="min-width: 0;">
+                <tr><td>Required nurses</td><td><strong>${row.required_nurses}</strong></td></tr>
+                <tr><td>Required carers/HCAs</td><td><strong>${row.required_carers}</strong></td></tr>
+                <tr><td>Present nurses</td><td><strong>${row.present_nurses}</strong></td></tr>
+                <tr><td>Present carers/HCAs</td><td><strong>${row.present_carers + row.present_healthcare_assistants}</strong></td></tr>
+                <tr><td>Sick</td><td><strong>${row.sick_total}</strong></td></tr>
+                <tr><td>Leave</td><td><strong>${row.leave_total}</strong></td></tr>
+                <tr><td>Shortage</td><td><strong>${row.total_shortage}</strong></td></tr>
+              </table>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    /***********************
+     * Ward Daily Staffing
+     ***********************/
+
+    async function renderWardDaily() {
+      const wardId = appState.selectedWardId;
+      const date = appState.selectedDate;
+
+      const [summaryResult, rosterResult] = await Promise.all([
+        sb.rpc("get_ward_daily_dashboard", {
+          p_ward_id: wardId,
+          p_staffing_date: date
+        }),
+        sb.rpc("get_my_ward_roster_between", {
+          p_ward_id: wardId,
+          p_start_date: date,
+          p_end_date: date
+        })
+      ]);
+
+      if (summaryResult.error) throw summaryResult.error;
+      if (rosterResult.error) throw rosterResult.error;
+
+      const summary = summaryResult.data[0];
+      const roster = rosterResult.data || [];
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content: space-between;">
+            <div>
+              <h2>Daily Staffing</h2>
+              <p class="muted">${escapeHtml(summary.ward_code)} — ${escapeHtml(formatDate(date))}</p>
+            </div>
+            <div class="actions">
+              ${wardSelectorHtml()}
+              <div>
+                <label>Date</label>
+                <input type="date" value="${date}" onchange="setSelectedDate(this.value)" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          ${statCard(summary.present_nurses + summary.present_carers + summary.present_healthcare_assistants, "Present")}
+          ${statCard(summary.absent_total, "Absent / Off / Leave")}
+          ${statCard(summary.sick_total, "Sick")}
+          ${statCard(summary.til_out_total, "TIL out")}
+        </div>
+
+        <div class="card">
+          <div class="actions" style="justify-content: space-between;">
+            <div>
+              <h3>Establishment</h3>
+              <p class="muted">
+                Required: ${summary.required_nurses} nurses + ${summary.required_carers} carers/HCAs.
+                Nurse shortage: ${summary.nurse_shortage}.
+                Carer/HCA shortage: ${summary.carer_hca_shortage}.
+              </p>
+            </div>
+            <button class="success" onclick="submitDailyStaffing()">Submit daily staffing</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Staff rows</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Staff</th>
+                  <th>Role</th>
+                  <th>Baseline</th>
+                  <th>Live</th>
+                  <th>Source</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${roster.map(r => `
+                  <tr>
+                    <td>${escapeHtml(r.full_name)}</td>
+                    <td>${escapeHtml(labelRole(r.role))}</td>
+                    <td>${shiftBadge(r.baseline_shift_code)}</td>
+                    <td>${shiftBadge(r.live_shift_code)}</td>
+                    <td>${escapeHtml(r.source_type || "")}</td>
+                    <td>${escapeHtml(r.override_reason || "")}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    async function submitDailyStaffing() {
+      clearMessage();
+
+      const { error } = await sb.rpc("create_daily_staffing_submission", {
+        p_ward_id: appState.selectedWardId,
+        p_staffing_date: appState.selectedDate,
+        p_submitted_by_staff_id: null,
+        p_notes: "Submitted from frontend"
+      });
+
+      if (error) {
+        showError(error.message);
+        return;
+      }
+
+      showSuccess("Daily staffing submitted successfully.");
+      await renderWardDaily();
+    }
+
+    /***********************
+     * Monthly Roster
+     ***********************/
+
+    async function renderMonthlyRoster() {
+      const wardId = appState.selectedWardId;
+      const monthValue = appState.selectedMonth;
+      const { start, end, days } = monthRange(monthValue);
+
+      const { data, error } = await sb.rpc("get_my_ward_roster_between", {
+        p_ward_id: wardId,
+        p_start_date: start,
+        p_end_date: end
+      });
+
+      if (error) throw error;
+
+      const grouped = groupRosterByStaff(data || []);
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content: space-between;">
+            <div>
+              <h2>Monthly Roster</h2>
+              <p class="muted">Baseline roster versus live roster. Red dot means override/change.</p>
+            </div>
+            <div class="actions">
+              ${wardSelectorHtml()}
+              <div>
+                <label>Month</label>
+                <input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="actions">
+            ${legend("D", "Day")}
+            ${legend("N", "Night")}
+            ${legend("M", "Morning")}
+            ${legend("E", "Evening")}
+            ${legend("O", "Off")}
+            ${legend("R", "Rest")}
+            ${legend("AL", "Annual leave")}
+            ${legend("SL", "Sick")}
+            ${legend("ML", "Maternity")}
+            ${legend("ST", "Study")}
+            ${legend("TI", "TIL in")}
+            ${legend("TO", "TIL out")}
+            ${legend("OT", "Overtime")}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table class="roster-table">
+              <thead>
+                <tr>
+                  <th>Staff</th>
+                  <th>Role</th>
+                  <th>Group</th>
+                  ${days.map(d => `<th>${weekdayShort(d)}<br>${d.getDate()}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>
+                ${grouped.map(staff => `
+                  <tr>
+                    <td><strong>${escapeHtml(staff.full_name)}</strong></td>
+                    <td>${escapeHtml(labelRole(staff.role))}</td>
+                    <td>${escapeHtml(staff.roster_group || "")}</td>
+                    ${days.map(day => {
+                      const key = isoFromDate(day);
+                      const r = staff.days[key];
+                      const code = r?.live_shift_code || "";
+                      const isOverride = r?.source_type === "override";
+                      return `
+                        <td>
+                          ${shiftBadge(code)}
+                          ${isOverride ? `<span class="override-dot" title="Changed from baseline"></span>` : ""}
+                        </td>
+                      `;
+                    }).join("")}
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    /***********************
+     * Staff Management
+     ***********************/
+
+    async function renderStaffManagement() {
+      const wardId = appState.selectedWardId;
+
+      const { data, error } = await sb.rpc("get_ward_staff_members", {
+        p_ward_id: wardId
+      });
+
+      if (error) throw error;
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content: space-between;">
+            <div>
+              <h2>${appState.profile.is_sno ? "Staff Management" : "My Ward Staff"}</h2>
+              <p class="muted">Add and view ward complement staff.</p>
+            </div>
+            <div>${wardSelectorHtml()}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Add staff member</h3>
+          <div class="grid grid-3">
+            <div>
+              <label>Full name</label>
+              <input id="newStaffName" placeholder="Surname Name" />
+            </div>
+            <div>
+              <label>Corp user ID</label>
+              <input id="newStaffCorp" placeholder="e.g. BorgA123" />
+            </div>
+            <div>
+              <label>Email</label>
+              <input id="newStaffEmail" type="email" placeholder="name@gov.mt" />
+            </div>
+            <div>
+              <label>Role</label>
+              <select id="newStaffRole">
+                <option value="nurse">Staff Nurse</option>
+                <option value="carer">Carer</option>
+                <option value="healthcare_assistant">Healthcare Assistant</option>
+                ${appState.profile.is_sno ? `<option value="charge_nurse">Charge Nurse</option>` : ""}
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label>Employment type</label>
+              <select id="newStaffEmployment">
+                <option value="core">Core</option>
+                <option value="external_overtime">External overtime</option>
+                <option value="agency">Agency</option>
+                <option value="relieving_pool">Relieving pool</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label>Roster pattern</label>
+              <select id="newStaffPattern">
+                <option value="">None</option>
+                ${appState.ref.roster_patterns.map(p => `
+                  <option value="${escapeHtml(p.pattern_code)}">${escapeHtml(p.pattern_code)} — ${escapeHtml(p.pattern_name)}</option>
+                `).join("")}
+              </select>
+            </div>
+            <div>
+              <label>Roster group</label>
+              <input id="newStaffGroup" placeholder="Roster 1 / A / B" />
+            </div>
+            <div>
+              <label>Roster start date</label>
+              <input id="newStaffStartDate" type="date" />
+            </div>
+            <div>
+              <label>Start position</label>
+              <input id="newStaffStartPosition" type="number" min="1" value="1" />
+            </div>
+          </div>
+          <div style="margin-top: 14px;">
+            <button onclick="addStaffMember()">Add staff member</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Current staff</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Corp ID</th>
+                  <th>Role</th>
+                  <th>Ward</th>
+                  <th>Pattern</th>
+                  <th>Employment</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.map(s => `
+                  <tr>
+                    <td>${escapeHtml(s.full_name)}</td>
+                    <td>${escapeHtml(s.corp_user_id || "—")}</td>
+                    <td>${escapeHtml(labelRole(s.role))}</td>
+                    <td>${escapeHtml(s.ward_code)}</td>
+                    <td>${escapeHtml(s.roster_pattern_code || "—")}</td>
+                    <td>${escapeHtml(labelEmployment(s.employment_type))}</td>
+                    <td>${s.is_active ? badge("Active", "green") : badge("Inactive", "grey")}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    async function addStaffMember() {
+      clearMessage();
+
+      const fullName = document.getElementById("newStaffName").value.trim();
+      const corp = document.getElementById("newStaffCorp").value.trim();
+      const email = document.getElementById("newStaffEmail").value.trim();
+      const role = document.getElementById("newStaffRole").value;
+      const employment = document.getElementById("newStaffEmployment").value;
+      const pattern = document.getElementById("newStaffPattern").value || null;
+      const group = document.getElementById("newStaffGroup").value.trim();
+      const startDate = document.getElementById("newStaffStartDate").value || null;
+      const startPosition = Number(document.getElementById("newStaffStartPosition").value || 1);
+
+      const { error } = await sb.rpc("create_ward_staff_member", {
+        p_full_name: fullName,
+        p_corp_user_id: corp,
+        p_email: email || null,
+        p_role: role,
+        p_employment_type: employment,
+        p_home_ward_id: appState.selectedWardId,
+        p_roster_pattern_code: pattern,
+        p_roster_group: group || null,
+        p_roster_start_date: startDate,
+        p_roster_start_position: startPosition
+      });
+
+      if (error) {
+        showError(error.message);
+        return;
+      }
+
+      showSuccess("Staff member added successfully.");
+      await renderStaffManagement();
+    }
+
+    /***********************
+     * Relieving Pool
+     ***********************/
+
+    async function renderRelievingPool() {
+      const monthValue = appState.selectedMonth;
+      const { start, end } = monthRange(monthValue);
+      const wardId = appState.profile.is_sno ? null : appState.selectedWardId;
+
+      const { data, error } = await sb.rpc("get_relieving_pool_requests_safe", {
+        p_start_date: start,
+        p_end_date: end,
+        p_ward_id: wardId
+      });
+
+      if (error) throw error;
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content: space-between;">
+            <div>
+              <h2>Relieving Pool Requests</h2>
+              <p class="muted">Shortage requests generated from daily staffing submissions.</p>
+            </div>
+            <div>
+              <label>Month</label>
+              <input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Ward</th>
+                  <th>Shift</th>
+                  <th>Nurses</th>
+                  <th>Carers/HCAs</th>
+                  <th>Status</th>
+                  <th>Requested by</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(data || []).map(r => `
+                  <tr>
+                    <td>${escapeHtml(formatDate(r.request_date))}</td>
+                    <td>${escapeHtml(r.ward_code)}</td>
+                    <td>${escapeHtml(r.shift_code || "—")}</td>
+                    <td>${r.nurses_needed}</td>
+                    <td>${r.carers_needed + r.healthcare_assistants_needed}</td>
+                    <td>${statusBadge(r.request_status)}</td>
+                    <td>${escapeHtml(r.requested_by_name || "—")}</td>
+                    <td>${escapeHtml(r.reason || "")}</td>
+                  </tr>
+                `).join("") || `<tr><td colspan="8" class="muted">No requests found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    /***********************
+     * Audit History
+     ***********************/
+
+    async function renderAuditHistory() {
+      const monthValue = appState.selectedMonth;
+      const { start, end } = monthRange(monthValue);
+
+      const { data, error } = await sb.rpc("get_sno_audit_history", {
+        p_start_date: start,
+        p_end_date: end,
+        p_ward_id: null,
+        p_action_type: null,
+        p_table_name: null
+      });
+
+      if (error) throw error;
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content: space-between;">
+            <div>
+              <h2>Audit History</h2>
+              <p class="muted">SNO-only audit trail.</p>
+            </div>
+            <div>
+              <label>Month</label>
+              <input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Ward</th>
+                  <th>Action</th>
+                  <th>Table</th>
+                  <th>Changed by</th>
+                  <th>Summary</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(data || []).map(a => `
+                  <tr>
+                    <td>${escapeHtml(formatDateTime(a.created_at))}</td>
+                    <td>${escapeHtml(a.ward_code || "—")}</td>
+                    <td>${escapeHtml(a.action_type)}</td>
+                    <td>${escapeHtml(a.table_name)}</td>
+                    <td>${escapeHtml(a.changed_by_name || "—")}</td>
+                    <td>${escapeHtml(a.summary || "")}</td>
+                  </tr>
+                `).join("") || `<tr><td colspan="6" class="muted">No audit records found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    /***********************
+     * My Account
+     ***********************/
+
+    async function renderMyAccount() {
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <h2>My Account</h2>
+          <p class="muted">${escapeHtml(appState.profile.full_name)} — ${escapeHtml(appState.profile.email || "")}</p>
+        </div>
+
+        <div class="card">
+          <h3>Change password</h3>
+          <div class="grid grid-2">
+            <div>
+              <label>New password</label>
+              <input id="newPassword" type="password" />
+            </div>
+            <div>
+              <label>Confirm new password</label>
+              <input id="confirmPassword" type="password" />
+            </div>
+          </div>
+          <div style="margin-top: 14px;">
+            <button onclick="updatePassword()">Update password</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function updatePassword() {
+      clearMessage();
+
+      const p1 = document.getElementById("newPassword").value;
+      const p2 = document.getElementById("confirmPassword").value;
+
+      if (!p1 || p1.length < 6) {
+        showError("Password must be at least 6 characters.");
+        return;
+      }
+
+      if (p1 !== p2) {
+        showError("Passwords do not match.");
+        return;
+      }
+
+      const { error } = await sb.auth.updateUser({ password: p1 });
+
+      if (error) {
+        showError(error.message);
+        return;
+      }
+
+      showSuccess("Password updated successfully.");
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+    }
+
+    /***********************
+     * State setters
+     ***********************/
+
+    function setSelectedDate(value) {
+      appState.selectedDate = value;
+      renderTab(appState.activeTab);
+    }
+
+    function setSelectedMonth(value) {
+      appState.selectedMonth = value;
+      renderTab(appState.activeTab);
+    }
+
+    function setSelectedWard(value) {
+      appState.selectedWardId = value;
+      renderTab(appState.activeTab);
+    }
+
+    /***********************
+     * UI helpers
+     ***********************/
+
+    function wardSelectorHtml() {
+      if (!appState.profile.is_sno && appState.wards.length <= 1) {
+        return "";
+      }
+
+      return `
+        <div>
+          <label>Ward</label>
+          <select onchange="setSelectedWard(this.value)">
+            ${appState.wards.map(w => `
+              <option value="${w.ward_id}" ${w.ward_id === appState.selectedWardId ? "selected" : ""}>
+                ${escapeHtml(w.ward_code)}
+              </option>
+            `).join("")}
+          </select>
+        </div>
+      `;
+    }
+
+    function statCard(value, label) {
+      return `
+        <div class="stat">
+          <div class="stat-value">${value}</div>
+          <div class="stat-label">${escapeHtml(label)}</div>
+        </div>
+      `;
+    }
+
+    function badge(text, colour) {
+      return `<span class="badge ${colour}">${escapeHtml(text)}</span>`;
+    }
+
+    function wardStatusBadge(status) {
+      if (status === "fully_staffed") return badge("Fully staffed", "green");
+      if (status === "short_staffed") return badge("Short staffed", "red");
+      if (status === "not_submitted") return badge("Not submitted", "amber");
+      return badge(status || "Unknown", "grey");
+    }
+
+    function statusBadge(status) {
+      if (status === "open") return badge("Open", "amber");
+      if (status === "reviewed") return badge("Reviewed", "blue");
+      if (status === "partially_filled") return badge("Partially filled", "purple");
+      if (status === "filled") return badge("Filled", "green");
+      if (status === "cancelled") return badge("Cancelled", "grey");
+      return badge(status || "Unknown", "grey");
+    }
+
+    function shiftBadge(code) {
+      if (!code) return `<span class="shift-cell shift-O">—</span>`;
+      return `<span class="shift-cell shift-${escapeHtml(code)}">${escapeHtml(code)}</span>`;
+    }
+
+    function legend(code, label) {
+      return `<span>${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`;
+    }
+
+    function showError(message) {
+      document.getElementById("message").innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+    }
+
+    function showSuccess(message) {
+      document.getElementById("message").innerHTML = `<div class="success-msg">${escapeHtml(message)}</div>`;
+    }
+
+    function clearMessage() {
+      document.getElementById("message").innerHTML = "";
+    }
+
+    function setLoginMessage(html) {
+      document.getElementById("loginMessage").innerHTML = html;
+    }
+
+    /***********************
+     * Data helpers
+     ***********************/
+
+    function groupRosterByStaff(rows) {
+      const map = new Map();
+
+      for (const row of rows) {
+        if (!map.has(row.staff_id)) {
+          map.set(row.staff_id, {
+            staff_id: row.staff_id,
+            full_name: row.full_name,
+            role: row.role,
+            roster_group: row.roster_group,
+            days: {}
+          });
+        }
+
+        map.get(row.staff_id).days[row.shift_date] = row;
+      }
+
+      return Array.from(map.values()).sort((a, b) => {
+        const groupA = a.roster_group || "";
+        const groupB = b.roster_group || "";
+        if (groupA !== groupB) return groupA.localeCompare(groupB);
+        return a.full_name.localeCompare(b.full_name);
+      });
+    }
+
+    function monthRange(monthValue) {
+      const [year, month] = monthValue.split("-").map(Number);
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+
+      const days = [];
+      const cursor = new Date(startDate);
+
+      while (cursor <= endDate) {
+        days.push(new Date(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      return {
+        start: isoFromDate(startDate),
+        end: isoFromDate(endDate),
+        days
+      };
+    }
+
+    function todayISO() {
+      return isoFromDate(new Date());
+    }
+
+    function monthISO(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      return `${y}-${m}`;
+    }
+
+    function isoFromDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const [y, m, d] = String(value).split("-");
+      return `${d}/${m}/${y}`;
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "";
+      const dt = new Date(value);
+      return dt.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function weekdayShort(date) {
+      return date.toLocaleDateString("en-GB", { weekday: "short" });
+    }
+
+    function labelRole(role) {
+      const labels = {
+        sno: "Senior Nursing Officer",
+        charge_nurse: "Charge Nurse",
+        nurse: "Staff Nurse",
+        carer: "Carer",
+        healthcare_assistant: "Healthcare Assistant",
+        other: "Other"
+      };
+      return labels[role] || role || "";
+    }
+
+    function labelEmployment(value) {
+      const labels = {
+        core: "Core",
+        relieving_pool: "Relieving Pool",
+        external_overtime: "External Overtime",
+        agency: "Agency",
+        other: "Other"
+      };
+      return labels[value] || value || "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
