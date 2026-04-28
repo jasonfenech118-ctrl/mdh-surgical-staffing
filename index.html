@@ -74,14 +74,8 @@
   </main>
 
   <script>
-    /************************************************************
-     * PASTE YOUR SUPABASE DETAILS HERE ONLY.
-     * Do NOT put these two lines below </script>, below </body>, or below </html>.
-     * Do NOT use the service_role key.
-     ************************************************************/
-
-    const SUPABASE_URL_RAW = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
-    const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY_HERE";
+    const SUPABASE_URL_RAW = "https://dedcykelhdqwktkmkeiv.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_mdp0ij0wBpGmqwWnDtNKHA_TF1zNzvw";
 
     const SUPABASE_URL = SUPABASE_URL_RAW.replace(/\/rest\/v1\/?$/i, "").replace(/\/$/i, "");
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -334,6 +328,5 @@
     function labelEmployment(value){ const labels={core:"Core",relieving_pool:"Relieving Pool",external_overtime:"External Overtime",agency:"Agency",other:"Other"}; return labels[value]||value||""; }
     function escapeHtml(value){ return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
   </script>
-</body>NEXT_PUBLIC_SUPABASE_URL=https://dedcykelhdqwktkmkeiv.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_mdp0ij0wBpGmqwWnDtNKHA_TF1zNzvw
+</body>
 </html>
