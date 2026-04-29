@@ -39,7 +39,7 @@
     .top-user{text-align:right;font-size:12px;line-height:1.45;color:var(--muted)}
     .top-user strong{color:var(--text);font-weight:700}
 
-    .container{max-width:1500px;margin:18px auto;padding:0 12px}
+    .container{max-width:1600px;margin:18px auto;padding:0 12px}
 
     .card{
       background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:var(--radius);
@@ -112,14 +112,6 @@
     tr:last-child td{border-bottom:0}
     tbody tr:hover{background:#fbfdff}
 
-    .roster-table{min-width:1180px;table-layout:fixed}
-    .roster-table th,.roster-table td{padding:7px 5px;text-align:center;font-size:12px}
-    .roster-table th:first-child,.roster-table td:first-child{
-      width:230px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);
-    }
-    .roster-table th:first-child{background:#f9fbfd;z-index:3}
-    .staff-sub{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px}
-
     .muted{color:var(--muted)}
     .hidden{display:none!important}
 
@@ -128,6 +120,8 @@
     .info{background:var(--primary-soft);color:var(--primary-dark);border:1px solid var(--primary-border);padding:11px 13px;border-radius:12px;margin:10px 0;font-weight:600}
 
     .shift-cell{display:inline-flex;justify-content:center;align-items:center;min-width:30px;height:26px;border-radius:9px;font-weight:900;font-size:11px;border:1px solid transparent}
+    button.shift-cell{padding:0;box-shadow:none;cursor:pointer}
+    button.shift-cell:hover{filter:brightness(.97)}
     .shift-D,.shift-M,.shift-E{background:var(--primary-soft);color:var(--primary-dark);border-color:var(--primary-border)}
     .shift-N{background:#e7edff;color:#3857a6;border-color:#cfd9fb}
     .shift-O,.shift-R{background:var(--grey-soft);color:var(--grey);border-color:var(--grey-border)}
@@ -135,7 +129,30 @@
     .shift-SL{background:var(--red-soft);color:var(--red);border-color:var(--red-border)}
     .shift-ML,.shift-ST{background:var(--purple-soft);color:var(--purple);border-color:var(--purple-border)}
     .shift-TI,.shift-TO,.shift-OT{background:var(--green-soft);color:var(--green);border-color:var(--green-border)}
-    .override-dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:var(--red);margin-left:4px;vertical-align:middle}
+    .override-dot{display:block;width:6px;height:6px;border-radius:999px;background:var(--red);margin:3px auto 0}
+
+    .roster-hero h1{font-size:34px;margin-bottom:2px}
+    .roster-controls{display:grid;grid-template-columns:1.4fr 1.4fr 1.4fr;gap:12px;margin-bottom:16px}
+    .roster-control-box{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow-soft)}
+    .roster-nav{display:flex;align-items:end;gap:8px;flex-wrap:wrap}
+    .mini-input{width:76px;padding:7px 8px;border-radius:9px}
+    .wide-input{min-width:170px}
+
+    .roster-table{min-width:1280px;table-layout:fixed}
+    .roster-table th,.roster-table td{padding:7px 4px;text-align:center;font-size:12px}
+    .roster-table th:first-child,.roster-table td:first-child{
+      width:250px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);
+    }
+    .roster-table th:first-child{background:#f9fbfd;z-index:3}
+    .staff-sub{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px}
+    .day-head{display:flex;flex-direction:column;gap:2px;align-items:center;line-height:1.1}
+    .holiday-label{font-size:9px;color:var(--amber);font-weight:900;max-width:48px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .holiday-col{background:var(--amber-soft)!important}
+    .today-col{outline:2px solid var(--green-border);outline-offset:-2px}
+    .section-row td{background:#f6f9fc!important;color:#1f3f5f;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .extra-summary-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .compact-table{min-width:900px}
+    .compact-table th,.compact-table td{padding:9px 10px}
 
     .bar-list{display:grid;gap:10px}
     .bar-row{display:grid;grid-template-columns:170px 1fr 50px;gap:10px;align-items:center}
@@ -144,11 +161,8 @@
     .bar-fill{height:100%;border-radius:999px;background:var(--primary)}
     .bar-value{text-align:right;font-weight:800;color:#1f3f5f}
 
-    .mini-input{width:70px;padding:7px 8px;border-radius:9px}
-    .wide-input{min-width:170px}
-
     @media(max-width:850px){
-      .grid-2,.grid-3,.grid-4,.stat-grid{grid-template-columns:1fr}
+      .grid-2,.grid-3,.grid-4,.stat-grid,.roster-controls{grid-template-columns:1fr}
       header{align-items:flex-start;flex-direction:column}
       .top-user{text-align:left}
       .bar-row{grid-template-columns:1fr}
@@ -202,9 +216,18 @@
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let appState = {
-      session:null,ref:null,profile:null,wards:[],activeTab:null,
-      selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date()),
-      selectedAuditWardId:"",staffRows:[]
+      session:null,
+      ref:null,
+      profile:null,
+      wards:[],
+      activeTab:null,
+      selectedWardId:null,
+      selectedDate:todayISO(),
+      selectedMonth:monthISO(new Date()),
+      selectedAuditWardId:"",
+      staffRows:[],
+      monthlyRosterRows:[],
+      monthlyExtraRows:[]
     };
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -325,7 +348,11 @@
 
     async function signOut(){
       await sb.auth.signOut();
-      appState = {session:null,ref:null,profile:null,wards:[],activeTab:null,selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date()),selectedAuditWardId:"",staffRows:[]};
+      appState = {
+        session:null,ref:null,profile:null,wards:[],activeTab:null,selectedWardId:null,
+        selectedDate:todayISO(),selectedMonth:monthISO(new Date()),selectedAuditWardId:"",
+        staffRows:[],monthlyRosterRows:[],monthlyExtraRows:[]
+      };
       showLogin();
     }
 
@@ -435,7 +462,7 @@
                     <td>${escapeHtml(cleanStaffName(r.full_name))}</td>
                     <td>${escapeHtml(labelRole(r.role))}</td>
                     <td>${shiftBadge(r.baseline_shift_code)}</td>
-                    <td>${shiftBadge(r.live_shift_code)}</td>
+                    <td>${shiftButton(r.staff_id, r.shift_date, r.live_shift_code, r.source_type==="override")}</td>
                     <td>${escapeHtml(r.override_reason||"")}</td>
                   </tr>
                 `).join("") || `<tr><td colspan="5" class="muted">No staff rows found.</td></tr>`}
@@ -462,23 +489,109 @@
       const wardId = requireSelectedWard();
       const monthValue = appState.selectedMonth;
       const { start, end, days } = monthRange(monthValue);
+      const selectedW = selectedWard();
 
-      const { data, error } = await sb.rpc("get_my_ward_roster_between", { p_ward_id: wardId, p_start_date: start, p_end_date: end });
-      if(error) throw error;
+      const [rosterResult, holidayResult, extraResult, staffResult] = await Promise.all([
+        sb.rpc("get_my_ward_roster_between", { p_ward_id: wardId, p_start_date: start, p_end_date: end }),
+        sb.rpc("get_malta_public_holidays", { p_start_date: start, p_end_date: end }),
+        sb.rpc("get_roster_extra_entries_safe", { p_start_date: start, p_end_date: end, p_ward_id: wardId, p_include_cancelled: false }),
+        sb.rpc("get_ward_staff_members", { p_ward_id: wardId })
+      ]);
 
-      const grouped = groupRosterByStaff(data || []);
+      if(rosterResult.error) throw rosterResult.error;
+      if(holidayResult.error) throw holidayResult.error;
+      if(extraResult.error) throw extraResult.error;
+      if(staffResult.error) throw staffResult.error;
+
+      const grouped = groupRosterByStaff(rosterResult.data || []);
+      const holidays = holidayResult.data || [];
+      const extraRows = extraResult.data || [];
+      const staffList = (staffResult.data || []).filter(s => truthy(s.is_active));
+
+      appState.monthlyRosterRows = grouped;
+      appState.monthlyExtraRows = extraRows;
+      appState.staffRows = staffList;
+
+      const holidayMap = {};
+      for(const h of holidays) holidayMap[h.holiday_date] = h;
 
       document.getElementById("content").innerHTML = `
-        <div class="card">
-          <div class="actions" style="justify-content:space-between">
-            <div><h2>Monthly Roster</h2><p class="muted">Roster/pattern is shown under the staff name. Red dot means override/change.</p></div>
-            <div class="actions">${wardSelectorHtml()}<div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div></div>
+        <div class="card roster-hero">
+          <div class="actions" style="justify-content:space-between;align-items:flex-start">
+            <div>
+              <h2>Monthly Roster</h2>
+              <h1>${escapeHtml(selectedW?.ward_name || "Selected Ward")}</h1>
+              <p class="muted">${escapeHtml(selectedW?.ward_code || "")} · ${escapeHtml(monthLabel(monthValue))} · Click any shift cell to change status</p>
+            </div>
+            <div class="roster-nav">
+              ${wardSelectorHtml()}
+              <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+              <div><label>Jump to date</label><input id="rosterJumpDate" type="date"></div>
+              <button class="secondary" type="button" onclick="jumpRosterDate()">Jump</button>
+              <button class="secondary" type="button" onclick="changeRosterMonth(-1)">← Prev</button>
+              <button class="secondary" type="button" onclick="goRosterToday()">Today</button>
+              <button class="secondary" type="button" onclick="changeRosterMonth(1)">Next →</button>
+            </div>
           </div>
         </div>
 
         <div class="card">
           <div class="actions">
-            ${legend("D","Day")}${legend("N","Night")}${legend("O","Off")}${legend("R","Rest")}${legend("AL","Annual leave")}${legend("SL","Sick")}${legend("ML","Maternity")}${legend("ST","Study")}${legend("TI","TIL in")}${legend("TO","TIL out")}${legend("OT","Overtime")}
+            ${legend("D","Day")}
+            ${legend("N","Night")}
+            ${legend("O","Off")}
+            ${legend("R","Rest")}
+            ${legend("AL","Annual leave")}
+            ${legend("SL","Sick")}
+            ${legend("ML","Maternity")}
+            ${legend("ST","Study")}
+            ${legend("TI","TIL in")}
+            ${legend("TO","TIL out")}
+            ${legend("OT","Overtime")}
+          </div>
+        </div>
+
+        <div class="roster-controls">
+          <div class="roster-control-box">
+            <h3>Add OT Nurse</h3>
+            <div class="grid">
+              <div><label>Nurse name</label><input id="otStaffName" placeholder="Enter nurse name"></div>
+              <div class="grid grid-3">
+                <div><label>Date</label><input id="otDate" type="date" value="${todayISO()}"></div>
+                <div><label>Start</label><input id="otStart" type="time" value="07:00"></div>
+                <div><label>Working until</label><input id="otEnd" type="time" value="19:00"></div>
+              </div>
+              <div><label>Notes</label><input id="otNotes" placeholder="Optional"></div>
+              <button type="button" onclick="addRosterExtraEntryFromForm('overtime')">+ Add OT Nurse</button>
+            </div>
+          </div>
+
+          <div class="roster-control-box">
+            <h3>Add TIL / TOL</h3>
+            <div class="grid">
+              <div><label>Staff member</label>${staffSelectHtml("tilStaffId", staffList)}</div>
+              <div class="grid grid-3">
+                <div><label>Type</label><select id="tilType"><option value="til_out">TIL Out</option><option value="til_in">TIL In</option></select></div>
+                <div><label>Date</label><input id="tilDate" type="date" value="${todayISO()}"></div>
+                <div><label>Start</label><input id="tilStart" type="time" value="07:00"></div>
+              </div>
+              <div class="grid grid-2">
+                <div><label>Until</label><input id="tilEnd" type="time"></div>
+                <div><label>Notes</label><input id="tilNotes" placeholder="Optional"></div>
+              </div>
+              <button type="button" onclick="addTilEntryFromForm()">+ Add TIL</button>
+            </div>
+          </div>
+
+          <div class="roster-control-box">
+            <h3>Month Summary</h3>
+            <table style="min-width:0">
+              <tr><td>Public holidays</td><td><strong>${holidays.length}</strong></td></tr>
+              <tr><td>OT entries</td><td><strong>${extraRows.filter(e=>e.entry_type==="overtime").length}</strong></td></tr>
+              <tr><td>TIL In</td><td><strong>${extraRows.filter(e=>e.entry_type==="til_in").length}</strong></td></tr>
+              <tr><td>TIL Out</td><td><strong>${extraRows.filter(e=>e.entry_type==="til_out").length}</strong></td></tr>
+            </table>
+            <p class="muted" style="margin-bottom:0">Public holidays and roster changes are highlighted in the calendar.</p>
           </div>
         </div>
 
@@ -487,8 +600,18 @@
             <table class="roster-table">
               <thead>
                 <tr>
-                  <th>Staff</th>
-                  ${days.map(d=>`<th>${weekdayShort(d)}<br>${d.getDate()}</th>`).join("")}
+                  <th>Staff Member</th>
+                  ${days.map(d => {
+                    const key = isoFromDate(d);
+                    const h = holidayMap[key];
+                    return `<th class="${h ? "holiday-col" : ""} ${key===todayISO() ? "today-col" : ""}">
+                      <div class="day-head">
+                        <span>${weekdayShort(d)}</span>
+                        <span>${d.getDate()}</span>
+                        ${h ? `<span class="holiday-label" title="${escapeHtml(h.holiday_name)}">${escapeHtml(h.short_label)}</span>` : ""}
+                      </div>
+                    </th>`;
+                  }).join("")}
                 </tr>
               </thead>
               <tbody>
@@ -503,14 +626,199 @@
                       const r=staff.days[key];
                       const code=r?.live_shift_code||"";
                       const isOverride=r?.source_type==="override";
-                      return `<td>${shiftBadge(code)}${isOverride?`<span class="override-dot" title="Changed from baseline"></span>`:""}</td>`;
+                      const h = holidayMap[key];
+                      return `<td class="${h ? "holiday-col" : ""} ${key===todayISO() ? "today-col" : ""}">
+                        ${shiftButton(staff.staff_id, key, code, isOverride)}
+                      </td>`;
                     }).join("")}
                   </tr>
-                `).join("") || `<tr><td colspan="${days.length+1}" class="muted">No roster rows found.</td></tr>`}
+                `).join("") || `<tr><td colspan="${days.length+1}" class="muted">No core roster rows found.</td></tr>`}
+
+                ${renderExtraCalendarSection("Overtime Staff", extraRows.filter(e=>e.entry_type==="overtime"), days, holidayMap, "OT")}
+                ${renderExtraCalendarSection("TIL Staff", extraRows.filter(e=>e.entry_type==="til_in" || e.entry_type==="til_out"), days, holidayMap, null)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        ${renderExtraSummary("Overtime Nurses", extraRows.filter(e=>e.entry_type==="overtime"))}
+        ${renderExtraSummary("Time in Lieu / TIL", extraRows.filter(e=>e.entry_type==="til_in" || e.entry_type==="til_out"))}
+      `;
+    }
+
+    function renderExtraCalendarSection(title, rows, days, holidayMap, fixedCode){
+      if(!rows.length) return "";
+
+      return `
+        <tr class="section-row"><td colspan="${days.length+1}">${escapeHtml(title)}</td></tr>
+        ${rows.map(entry => `
+          <tr>
+            <td>
+              <strong>${escapeHtml(cleanStaffName(entry.staff_name))}</strong>
+              <div class="staff-sub">${escapeHtml(entryTypeLabel(entry.entry_type))}${entry.hours ? ` · ${escapeHtml(entry.hours)}h` : ""}</div>
+            </td>
+            ${days.map(day => {
+              const key = isoFromDate(day);
+              const h = holidayMap[key];
+              const code = fixedCode || extraEntryCode(entry.entry_type);
+              return `<td class="${h ? "holiday-col" : ""} ${key===todayISO() ? "today-col" : ""}">
+                ${entry.entry_date === key ? shiftBadge(code) : ""}
+              </td>`;
+            }).join("")}
+          </tr>
+        `).join("")}
+      `;
+    }
+
+    function renderExtraSummary(title, rows){
+      return `
+        <div class="card">
+          <div class="extra-summary-title">
+            <h3>${escapeHtml(title)}</h3>
+            <span class="muted">${rows.length} active entr${rows.length===1 ? "y" : "ies"}</span>
+          </div>
+          <div class="table-wrap">
+            <table class="compact-table">
+              <thead>
+                <tr><th>Type</th><th>Staff</th><th>Date</th><th>Start</th><th>Until</th><th>Hours</th><th>Notes</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                ${rows.map(r => `
+                  <tr>
+                    <td>${escapeHtml(entryTypeLabel(r.entry_type))}</td>
+                    <td>${escapeHtml(cleanStaffName(r.staff_name))}</td>
+                    <td>${escapeHtml(formatDate(r.entry_date))}</td>
+                    <td>${escapeHtml(formatTime(r.start_time) || "—")}</td>
+                    <td>${escapeHtml(formatTime(r.end_time) || "—")}</td>
+                    <td>${escapeHtml(r.hours ?? "—")}</td>
+                    <td>${escapeHtml(r.notes || "")}</td>
+                    <td><button class="danger small" type="button" onclick="cancelRosterExtraEntry('${escapeHtml(r.entry_id)}')">Delete</button></td>
+                  </tr>
+                `).join("") || `<tr><td colspan="8" class="muted">No entries.</td></tr>`}
               </tbody>
             </table>
           </div>
         </div>`;
+    }
+
+    async function addRosterExtraEntryFromForm(type){
+      clearMessage();
+
+      const name = document.getElementById("otStaffName").value.trim();
+      const date = document.getElementById("otDate").value;
+      const start = document.getElementById("otStart").value || null;
+      const end = document.getElementById("otEnd").value || null;
+      const notes = document.getElementById("otNotes").value.trim() || null;
+
+      if(!name){ showError("Nurse name is required."); return; }
+      if(!date){ showError("Date is required."); return; }
+
+      const { error } = await sb.rpc("add_roster_extra_entry", {
+        p_ward_id:appState.selectedWardId,
+        p_entry_type:type,
+        p_entry_date:date,
+        p_staff_id:null,
+        p_staff_name:name,
+        p_start_time:start,
+        p_end_time:end,
+        p_hours:null,
+        p_notes:notes
+      });
+
+      if(error){ showError(error.message); return; }
+
+      showSuccess("Overtime entry added.");
+      await renderMonthlyRoster();
+    }
+
+    async function addTilEntryFromForm(){
+      clearMessage();
+
+      const staffId = document.getElementById("tilStaffId").value || null;
+      const type = document.getElementById("tilType").value;
+      const date = document.getElementById("tilDate").value;
+      const start = document.getElementById("tilStart").value || null;
+      const end = document.getElementById("tilEnd").value || null;
+      const notes = document.getElementById("tilNotes").value.trim() || null;
+
+      if(!staffId){ showError("Staff member is required."); return; }
+      if(!date){ showError("Date is required."); return; }
+
+      const { error } = await sb.rpc("add_roster_extra_entry", {
+        p_ward_id:appState.selectedWardId,
+        p_entry_type:type,
+        p_entry_date:date,
+        p_staff_id:staffId,
+        p_staff_name:null,
+        p_start_time:start,
+        p_end_time:end,
+        p_hours:null,
+        p_notes:notes
+      });
+
+      if(error){ showError(error.message); return; }
+
+      showSuccess("TIL entry added.");
+      await renderMonthlyRoster();
+    }
+
+    async function cancelRosterExtraEntry(entryId){
+      clearMessage();
+      const confirmed = window.confirm("Delete this roster extra entry? It will be removed from the active roster but kept in audit history.");
+      if(!confirmed) return;
+
+      const reason = window.prompt("Reason:", "Deleted from roster screen");
+      if(reason === null) return;
+
+      const { error } = await sb.rpc("cancel_roster_extra_entry", {
+        p_entry_id:entryId,
+        p_cancellation_reason:reason || "Deleted from roster screen"
+      });
+
+      if(error){ showError(error.message); return; }
+
+      showSuccess("Roster entry deleted/cancelled.");
+      await renderMonthlyRoster();
+    }
+
+    async function editRosterShift(staffId, shiftDate, currentCode){
+      clearMessage();
+
+      const code = window.prompt(
+        "Enter new shift/status code:\n\nD = Day\nN = Night\nO = Off\nR = Rest\nAL = Annual Leave\nSL = Sick Leave\nML = Maternity Leave\nST = Study Leave\nTI = TIL In\nTO = TIL Out\nOT = Overtime\n\nCurrent: " + (currentCode || "—"),
+        currentCode || ""
+      );
+
+      if(code === null) return;
+
+      const cleanCode = code.trim().toUpperCase();
+      const allowed = new Set(["D","N","O","R","AL","SL","ML","ST","TI","TO","OT","M","E"]);
+
+      if(!allowed.has(cleanCode)){
+        showError("Invalid shift/status code.");
+        return;
+      }
+
+      const reason = window.prompt("Reason for change:", reasonForShift(cleanCode));
+      if(reason === null) return;
+
+      const notes = window.prompt("Notes:", "");
+      if(notes === null) return;
+
+      const { error } = await sb.rpc("upsert_ward_roster_override", {
+        p_ward_id:appState.selectedWardId,
+        p_staff_id:staffId,
+        p_shift_date:shiftDate,
+        p_shift_code:cleanCode,
+        p_override_reason:reason || reasonForShift(cleanCode),
+        p_notes:notes || null
+      });
+
+      if(error){ showError(error.message); return; }
+
+      showSuccess("Roster status updated.");
+      if(appState.activeTab === "wardDaily") await renderWardDaily();
+      else await renderMonthlyRoster();
     }
 
     async function renderStaffManagement(){
@@ -970,6 +1278,29 @@
     function setSelectedWard(value){ appState.selectedWardId=value; renderTab(appState.activeTab); }
     function setSelectedAuditWard(value){ appState.selectedAuditWardId=value; renderTab(appState.activeTab); }
 
+    function changeRosterMonth(delta){
+      const [year,month] = appState.selectedMonth.split("-").map(Number);
+      const d = new Date(year, month - 1 + delta, 1);
+      appState.selectedMonth = monthISO(d);
+      renderMonthlyRoster();
+    }
+
+    function goRosterToday(){
+      const d = new Date();
+      appState.selectedMonth = monthISO(d);
+      appState.selectedDate = todayISO();
+      renderMonthlyRoster();
+    }
+
+    function jumpRosterDate(){
+      const value = document.getElementById("rosterJumpDate").value;
+      if(!value){ showError("Choose a jump date."); return; }
+      const [y,m] = value.split("-");
+      appState.selectedMonth = `${y}-${m}`;
+      appState.selectedDate = value;
+      renderMonthlyRoster();
+    }
+
     function wardSelectorHtml(){
       if(!appState.profile?.is_sno && appState.wards.length<=1) return "";
       return `
@@ -998,6 +1329,14 @@
             `).join("")}
           </select>
         </div>`;
+    }
+
+    function staffSelectHtml(id, rows){
+      return `
+        <select id="${escapeHtml(id)}">
+          <option value="">Select staff...</option>
+          ${rows.map(s => `<option value="${escapeHtml(s.id || s.staff_id)}">${escapeHtml(cleanStaffName(s.full_name))} — ${escapeHtml(labelRole(s.role))}</option>`).join("")}
+        </select>`;
     }
 
     function roleSelectHtml(id, selected="nurse"){
@@ -1144,6 +1483,16 @@
       return `<span class="shift-cell shift-${escapeHtml(code)}">${escapeHtml(code)}</span>`;
     }
 
+    function shiftButton(staffId, shiftDate, code, isOverride){
+      const cleanCode = code || "—";
+      return `
+        <button type="button" class="shift-cell shift-${escapeHtml(cleanCode)}" onclick="editRosterShift('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}','${escapeHtml(code || "")}')" title="Click to change">
+          ${escapeHtml(cleanCode)}
+        </button>
+        ${isOverride ? `<span class="override-dot" title="Changed from baseline"></span>` : ""}
+      `;
+    }
+
     function legend(code,label){ return `<span>${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`; }
     function showError(message){ document.getElementById("message").innerHTML=`<div class="error">${escapeHtml(message)}</div>`; }
     function showSuccess(message){ document.getElementById("message").innerHTML=`<div class="success-msg">${escapeHtml(message)}</div>`; }
@@ -1200,11 +1549,47 @@
     function dateOnly(value){ if(!value) return ""; return String(value).slice(0,10); }
     function formatDate(value){ if(!value)return""; const [y,m,d]=String(value).split("-"); return `${d}/${m}/${y}`; }
     function formatDateTime(value){ if(!value)return""; const dt=new Date(value); return dt.toLocaleString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
+    function formatTime(value){ if(!value) return ""; return String(value).slice(0,5); }
     function weekdayShort(date){ return date.toLocaleDateString("en-GB",{weekday:"short"}); }
+    function monthLabel(monthValue){
+      const [y,m] = monthValue.split("-").map(Number);
+      return new Date(y, m-1, 1).toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+    }
 
     function labelRole(role){
       const labels={sno:"Senior Nursing Officer",charge_nurse:"Charge Nurse",nurse:"Staff Nurse",carer:"Carer",healthcare_assistant:"Healthcare Assistant",other:"Other"};
       return labels[role]||role||"";
+    }
+
+    function entryTypeLabel(type){
+      const labels={overtime:"Overtime",til_in:"TIL In",til_out:"TIL Out"};
+      return labels[type] || type || "";
+    }
+
+    function extraEntryCode(type){
+      if(type === "overtime") return "OT";
+      if(type === "til_in") return "TI";
+      if(type === "til_out") return "TO";
+      return "";
+    }
+
+    function reasonForShift(code){
+      const map = {
+        AL:"annual_leave",
+        SL:"sick_leave",
+        ML:"maternity_leave",
+        ST:"study_leave",
+        TI:"til_in",
+        TO:"til_out",
+        OT:"overtime",
+        O:"off",
+        R:"rest",
+        D:"manual_day_change",
+        N:"manual_night_change",
+        M:"manual_morning_change",
+        E:"manual_evening_change"
+      };
+      return map[code] || "manual_roster_change";
     }
 
     function numberValue(value){ const n = Number(value); return Number.isFinite(n) ? n : 0; }
