@@ -10,66 +10,27 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{
-      --primary:#4f8fcf;
-      --primary-dark:#2f6fae;
-      --primary-soft:#eef7ff;
-      --primary-border:#c9e2f7;
-
-      --green:#2f8f5b;
-      --green-soft:#eaf8f0;
-      --green-border:#ccebd9;
-
-      --red:#b85c5c;
-      --red-soft:#fff0f0;
-      --red-border:#f2cdcd;
-
-      --amber:#b9852f;
-      --amber-soft:#fff8e8;
-      --amber-border:#f3dfad;
-
-      --purple:#7a69c7;
-      --purple-soft:#f3f0ff;
-      --purple-border:#ddd6ff;
-
-      --grey:#6f7d8d;
-      --grey-soft:#f5f7fa;
-      --grey-border:#e5eaf0;
-
-      --bg:#f7fafd;
-      --card:#ffffff;
-      --text:#243142;
-      --muted:#718096;
-      --border:#e1e8f0;
-      --header:#f4faff;
-      --shadow:0 10px 28px rgba(55,94,130,.08);
-      --shadow-soft:0 3px 12px rgba(55,94,130,.06);
-      --radius:16px;
+      --primary:#4f8fcf;--primary-dark:#2f6fae;--primary-soft:#eef7ff;--primary-border:#c9e2f7;
+      --green:#2f8f5b;--green-soft:#eaf8f0;--green-border:#ccebd9;
+      --red:#b85c5c;--red-soft:#fff0f0;--red-border:#f2cdcd;
+      --amber:#b9852f;--amber-soft:#fff8e8;--amber-border:#f3dfad;
+      --purple:#7a69c7;--purple-soft:#f3f0ff;--purple-border:#ddd6ff;
+      --grey:#6f7d8d;--grey-soft:#f5f7fa;--grey-border:#e5eaf0;
+      --bg:#f7fafd;--card:#ffffff;--text:#243142;--muted:#718096;--border:#e1e8f0;
+      --shadow-soft:0 3px 12px rgba(55,94,130,.06);--radius:16px;
     }
 
     *{box-sizing:border-box}
 
     body{
-      margin:0;
-      font-family:"Inter",Arial,Helvetica,sans-serif;
+      margin:0;font-family:"Inter",Arial,Helvetica,sans-serif;
       background:linear-gradient(180deg,#f3f9ff 0%,#f8fbfd 260px,#f7fafd 100%);
-      color:var(--text);
-      font-size:14px;
-      letter-spacing:-.01em;
+      color:var(--text);font-size:14px;letter-spacing:-.01em;
     }
 
     header{
-      background:rgba(255,255,255,.86);
-      color:var(--text);
-      padding:16px 24px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      border-bottom:1px solid var(--border);
-      backdrop-filter:blur(12px);
-      position:sticky;
-      top:0;
-      z-index:10;
+      background:rgba(255,255,255,.86);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;
+      border-bottom:1px solid var(--border);backdrop-filter:blur(12px);position:sticky;top:0;z-index:10;
     }
 
     .brand{display:flex;flex-direction:column;gap:3px}
@@ -78,15 +39,11 @@
     .top-user{text-align:right;font-size:12px;line-height:1.45;color:var(--muted)}
     .top-user strong{color:var(--text);font-weight:700}
 
-    .container{max-width:1360px;margin:24px auto;padding:0 18px}
+    .container{max-width:1500px;margin:18px auto;padding:0 12px}
 
     .card{
-      background:rgba(255,255,255,.94);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow-soft);
-      padding:18px;
-      margin-bottom:16px;
+      background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:var(--radius);
+      box-shadow:var(--shadow-soft);padding:18px;margin-bottom:16px;
     }
 
     .login-wrap{max-width:440px;margin:78px auto}
@@ -99,43 +56,24 @@
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700}
 
     input,select,textarea{
-      width:100%;
-      padding:11px 12px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:#fff;
-      font-size:14px;
-      outline:none;
-      color:var(--text);
-      font-family:inherit;
-      transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+      width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:12px;background:#fff;
+      font-size:14px;outline:none;color:var(--text);font-family:inherit;
     }
 
     input:focus,select:focus,textarea:focus{
-      border-color:var(--primary);
-      box-shadow:0 0 0 4px rgba(79,143,207,.14);
-      background:#fff;
+      border-color:var(--primary);box-shadow:0 0 0 4px rgba(79,143,207,.14);
     }
 
     button{
-      border:0;
-      border-radius:12px;
-      padding:10px 15px;
-      font-weight:800;
-      cursor:pointer;
-      background:var(--primary);
-      color:#fff;
-      font-family:inherit;
-      box-shadow:0 4px 12px rgba(79,143,207,.20);
-      transition:transform .12s ease,box-shadow .12s ease,background .12s ease;
+      border:0;border-radius:12px;padding:10px 15px;font-weight:800;cursor:pointer;
+      background:var(--primary);color:#fff;font-family:inherit;box-shadow:0 4px 12px rgba(79,143,207,.20);
     }
 
-    button:hover{background:var(--primary-dark);box-shadow:0 6px 16px rgba(79,143,207,.26)}
-    button:active{transform:translateY(1px)}
+    button:hover{background:var(--primary-dark)}
     button.secondary{background:#fff;color:var(--text);border:1px solid var(--border);box-shadow:none}
     button.secondary:hover{background:var(--grey-soft)}
-    button.danger{background:var(--red);box-shadow:0 4px 12px rgba(184,92,92,.20)}
-    button.success{background:var(--green);box-shadow:0 4px 12px rgba(47,143,91,.20)}
+    button.danger{background:var(--red)}
+    button.success{background:var(--green)}
     button.small{padding:7px 10px;border-radius:10px;font-size:12px}
     button:disabled{opacity:.55;cursor:not-allowed}
 
@@ -143,42 +81,19 @@
     .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
     .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
     .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-
     .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
     .tabs{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:16px;
-      background:rgba(255,255,255,.72);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:8px;
-      box-shadow:var(--shadow-soft);
+      display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;background:rgba(255,255,255,.72);
+      border:1px solid var(--border);border-radius:18px;padding:8px;box-shadow:var(--shadow-soft);
     }
 
-    .tab{
-      background:transparent;
-      color:var(--muted);
-      border:1px solid transparent;
-      padding:10px 12px;
-      box-shadow:none;
-    }
-
+    .tab{background:transparent;color:var(--muted);border:1px solid transparent;padding:10px 12px;box-shadow:none}
     .tab:hover{background:var(--primary-soft);color:var(--primary-dark);box-shadow:none}
     .tab.active{background:#fff;color:var(--primary-dark);border-color:var(--primary-border);box-shadow:0 4px 12px rgba(79,143,207,.10)}
 
     .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
-
-    .stat{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:16px;
-      box-shadow:var(--shadow-soft);
-    }
-
+    .stat{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow-soft)}
     .stat-value{font-size:30px;font-weight:800;margin-bottom:5px;color:#1f3f5f;letter-spacing:-.05em}
     .stat-label{color:var(--muted);font-size:12px;font-weight:600}
 
@@ -197,6 +112,14 @@
     tr:last-child td{border-bottom:0}
     tbody tr:hover{background:#fbfdff}
 
+    .roster-table{min-width:1180px;table-layout:fixed}
+    .roster-table th,.roster-table td{padding:7px 5px;text-align:center;font-size:12px}
+    .roster-table th:first-child,.roster-table td:first-child{
+      width:230px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);
+    }
+    .roster-table th:first-child{background:#f9fbfd;z-index:3}
+    .staff-sub{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px}
+
     .muted{color:var(--muted)}
     .hidden{display:none!important}
 
@@ -204,60 +127,7 @@
     .success-msg{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border);padding:11px 13px;border-radius:12px;margin:10px 0;font-weight:600}
     .info{background:var(--primary-soft);color:var(--primary-dark);border:1px solid var(--primary-border);padding:11px 13px;border-radius:12px;margin:10px 0;font-weight:600}
 
-    .ward-hero{
-      background:linear-gradient(135deg,#ffffff 0%,#f0f8ff 100%);
-      border-color:var(--primary-border);
-    }
-
-    .eyebrow{
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      font-size:11px;
-      font-weight:900;
-      color:var(--primary-dark);
-      margin-bottom:5px;
-    }
-
-    .ward-name-big{
-      font-size:34px;
-      line-height:1.05;
-      font-weight:900;
-      color:#163555;
-      letter-spacing:-.055em;
-      margin-bottom:8px;
-    }
-
-    .ward-meta{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      align-items:center;
-      color:var(--muted);
-      font-weight:600;
-    }
-
-    .roster-table{min-width:1560px}
-    .roster-table th:first-child,
-    .roster-table td:first-child{
-      min-width:270px;
-      width:270px;
-      max-width:330px;
-      position:sticky;
-      left:0;
-      background:#fff;
-      z-index:2;
-      box-shadow:1px 0 0 var(--border);
-    }
-
-    .roster-table th:first-child{
-      background:#f9fbfd;
-      z-index:3;
-    }
-
-    .staff-name-main{font-weight:900;color:#223449;white-space:normal}
-    .staff-name-sub{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
-
-    .shift-cell{display:inline-flex;justify-content:center;align-items:center;min-width:32px;height:27px;border-radius:9px;font-weight:900;font-size:12px;border:1px solid transparent}
+    .shift-cell{display:inline-flex;justify-content:center;align-items:center;min-width:30px;height:26px;border-radius:9px;font-weight:900;font-size:11px;border:1px solid transparent}
     .shift-D,.shift-M,.shift-E{background:var(--primary-soft);color:var(--primary-dark);border-color:var(--primary-border)}
     .shift-N{background:#e7edff;color:#3857a6;border-color:#cfd9fb}
     .shift-O,.shift-R{background:var(--grey-soft);color:var(--grey);border-color:var(--grey-border)}
@@ -265,44 +135,7 @@
     .shift-SL{background:var(--red-soft);color:var(--red);border-color:var(--red-border)}
     .shift-ML,.shift-ST{background:var(--purple-soft);color:var(--purple);border-color:var(--purple-border)}
     .shift-TI,.shift-TO,.shift-OT{background:var(--green-soft);color:var(--green);border-color:var(--green-border)}
-    .override-dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:var(--red);margin-left:5px;vertical-align:middle}
-
-    .shift-click{
-      background:transparent;
-      color:inherit;
-      box-shadow:none;
-      padding:0;
-      border-radius:9px;
-      border:1px solid transparent;
-      min-width:38px;
-    }
-
-    .shift-click:hover{
-      background:var(--primary-soft);
-      border-color:var(--primary-border);
-      box-shadow:none;
-    }
-
-    .date-highlight{
-      background:var(--amber-soft)!important;
-      color:var(--amber)!important;
-    }
-
-    .form-panel{
-      border:1px solid var(--primary-border);
-      background:linear-gradient(180deg,#f8fcff 0%,#fff 100%);
-      border-radius:16px;
-      padding:16px;
-      margin-top:14px;
-    }
-
-    .section-title{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:12px;
-    }
+    .override-dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:var(--red);margin-left:4px;vertical-align:middle}
 
     .bar-list{display:grid;gap:10px}
     .bar-row{display:grid;grid-template-columns:170px 1fr 50px;gap:10px;align-items:center}
@@ -311,16 +144,15 @@
     .bar-fill{height:100%;border-radius:999px;background:var(--primary)}
     .bar-value{text-align:right;font-weight:800;color:#1f3f5f}
 
+    .mini-input{width:70px;padding:7px 8px;border-radius:9px}
+    .wide-input{min-width:170px}
+
     @media(max-width:850px){
       .grid-2,.grid-3,.grid-4,.stat-grid{grid-template-columns:1fr}
       header{align-items:flex-start;flex-direction:column}
       .top-user{text-align:left}
-      .container{margin:16px auto;padding:0 12px}
       .bar-row{grid-template-columns:1fr}
       .bar-value{text-align:left}
-      .ward-name-big{font-size:28px}
-      .roster-table th:first-child,
-      .roster-table td:first-child{position:static;min-width:240px}
     }
   </style>
 </head>
@@ -351,7 +183,10 @@
       <div class="card">
         <div class="actions" style="justify-content:space-between">
           <div><h1 id="mainTitle">Dashboard</h1><div class="muted" id="mainSubtitle"></div></div>
-          <div class="actions"><button class="secondary" type="button" onclick="reloadCurrentTab()">Refresh</button><button class="danger" type="button" onclick="signOut()">Sign out</button></div>
+          <div class="actions">
+            <button class="secondary" type="button" onclick="reloadCurrentTab()">Refresh</button>
+            <button class="danger" type="button" onclick="signOut()">Sign out</button>
+          </div>
         </div>
       </div>
       <div class="tabs" id="tabs"></div>
@@ -363,24 +198,13 @@
   <script>
     const SUPABASE_URL_RAW = "https://dedcykelhdqwktkmkeiv.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_mdp0ij0wBpGmqwWnDtNKHA_TF1zNzvw";
-
     const SUPABASE_URL = SUPABASE_URL_RAW.replace(/\/rest\/v1\/?$/i, "").replace(/\/$/i, "");
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let appState = {
-      session:null,
-      ref:null,
-      profile:null,
-      wards:[],
-      activeTab:null,
-      selectedWardId:null,
-      selectedDate:todayISO(),
-      selectedMonth:monthISO(new Date()),
-      highlightedDate:null,
-      staffRows:[],
-      dailyRosterRows:[],
-      monthlyRosterRows:[],
-      monthlyGroupedRows:[]
+      session:null,ref:null,profile:null,wards:[],activeTab:null,
+      selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date()),
+      selectedAuditWardId:"",staffRows:[]
     };
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -463,8 +287,9 @@
     }
 
     function buildTabs(){
-      const tabs = getTabs();
-      document.getElementById("tabs").innerHTML = tabs.map(([key,label]) => `<button type="button" class="tab ${appState.activeTab===key?"active":""}" onclick="renderTab('${key}')">${label}</button>`).join("");
+      document.getElementById("tabs").innerHTML = getTabs().map(([key,label]) =>
+        `<button type="button" class="tab ${appState.activeTab===key?"active":""}" onclick="renderTab('${key}')">${label}</button>`
+      ).join("");
     }
 
     async function renderTab(tabKey){
@@ -500,11 +325,7 @@
 
     async function signOut(){
       await sb.auth.signOut();
-      appState = {
-        session:null,ref:null,profile:null,wards:[],activeTab:null,
-        selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date()),
-        highlightedDate:null,staffRows:[],dailyRosterRows:[],monthlyRosterRows:[],monthlyGroupedRows:[]
-      };
+      appState = {session:null,ref:null,profile:null,wards:[],activeTab:null,selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date()),selectedAuditWardId:"",staffRows:[]};
       showLogin();
     }
 
@@ -522,10 +343,7 @@
       document.getElementById("content").innerHTML = `
         <div class="card">
           <div class="actions" style="justify-content:space-between">
-            <div>
-              <h2>Today’s Overview</h2>
-              <p class="muted">All wards must submit daily staffing by 07:00.</p>
-            </div>
+            <div><h2>Today’s Overview</h2><p class="muted">All wards must submit daily staffing by 07:00.</p></div>
             <div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div>
           </div>
         </div>
@@ -540,10 +358,7 @@
         <div class="grid grid-3">
           ${rows.map(r=>`
             <div class="card">
-              <div class="actions" style="justify-content:space-between">
-                <h3>${escapeHtml(r.ward_code)}</h3>
-                ${wardStatusBadge(r.ward_status)}
-              </div>
+              <div class="actions" style="justify-content:space-between"><h3>${escapeHtml(r.ward_code)}</h3>${wardStatusBadge(r.ward_status)}</div>
               <p class="muted">${escapeHtml(r.ward_name)}</p>
               <table style="min-width:0">
                 <tr><td>Required nurses</td><td><strong>${numberValue(r.required_nurses)}</strong></td></tr>
@@ -562,7 +377,6 @@
     async function renderWardDaily(){
       const wardId = requireSelectedWard();
       const date = appState.selectedDate;
-      const ward = selectedWard();
 
       const [summaryResult, rosterResult] = await Promise.all([
         sb.rpc("get_ward_daily_dashboard", { p_ward_id: wardId, p_staffing_date: date }),
@@ -574,7 +388,7 @@
 
       const s = (summaryResult.data || [])[0];
       const roster = rosterResult.data || [];
-      appState.dailyRosterRows = roster;
+      const w = selectedWard();
 
       if(!s){
         document.getElementById("content").innerHTML = `<div class="card"><div class="info">No dashboard summary returned for this ward/date.</div></div>`;
@@ -582,18 +396,12 @@
       }
 
       document.getElementById("content").innerHTML = `
-        <div class="card ward-hero">
-          <div class="actions" style="justify-content:space-between;align-items:flex-start">
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
             <div>
-              <div class="eyebrow">Ward Dashboard</div>
-              <div class="ward-name-big">${escapeHtml(ward?.ward_name || s.ward_name || "Selected Ward")}</div>
-              <div class="ward-meta">
-                <span>${escapeHtml(ward?.ward_code || s.ward_code || "")}</span>
-                <span>•</span>
-                <span>${escapeHtml(formatDate(date))}</span>
-                <span>•</span>
-                <span>Daily staffing report</span>
-              </div>
+              <h2>Ward Dashboard</h2>
+              <h1 style="margin-bottom:4px">${escapeHtml(w?.ward_name || s.ward_name || s.ward_code)}</h1>
+              <p class="muted">${escapeHtml(formatDate(date))}</p>
             </div>
             <div class="actions">${wardSelectorHtml()}<div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div></div>
           </div>
@@ -612,47 +420,25 @@
               <h3>Establishment</h3>
               <p class="muted">Required: ${numberValue(s.required_nurses)} nurses + ${numberValue(s.required_carers)} carers/HCAs. Nurse shortage: ${numberValue(s.nurse_shortage)}. Carer/HCA shortage: ${numberValue(s.carer_hca_shortage)}.</p>
             </div>
-            <button class="success" type="button" onclick="submitDailyStaffing()">Submit daily staffing to SNO</button>
+            <button class="success" type="button" onclick="submitDailyStaffing()">Submit daily staffing</button>
           </div>
         </div>
 
-        ${shiftEditPanelHtml()}
-
         <div class="card">
-          <div class="section-title">
-            <div>
-              <h3>Staff rows</h3>
-              <p class="muted">Use Change Status to amend today’s live staffing before submitting to the SNO.</p>
-            </div>
-          </div>
+          <h3>Staff rows</h3>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th>Staff</th>
-                  <th>Role</th>
-                  <th>Roster</th>
-                  <th>Baseline</th>
-                  <th>Current status</th>
-                  <th>Reason</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Staff</th><th>Role</th><th>Baseline</th><th>Live</th><th>Reason</th></tr></thead>
               <tbody>
                 ${roster.map(r=>`
                   <tr>
-                    <td>
-                      <div class="staff-name-main">${escapeHtml(displayStaffName(r.full_name))}</div>
-                      <div class="staff-name-sub">${escapeHtml(r.ward_code || ward?.ward_code || "")}</div>
-                    </td>
+                    <td>${escapeHtml(cleanStaffName(r.full_name))}</td>
                     <td>${escapeHtml(labelRole(r.role))}</td>
-                    <td>${escapeHtml(staffRosterLabel(r))}</td>
                     <td>${shiftBadge(r.baseline_shift_code)}</td>
                     <td>${shiftBadge(r.live_shift_code)}</td>
-                    <td>${escapeHtml(labelOverrideReason(r.override_reason || ""))}</td>
-                    <td><button type="button" class="secondary small" onclick="openShiftEditor('${escapeHtml(r.staff_id)}','${escapeHtml(date)}','daily')">Change Status</button></td>
+                    <td>${escapeHtml(r.override_reason||"")}</td>
                   </tr>
-                `).join("") || `<tr><td colspan="7" class="muted">No staff rows found.</td></tr>`}
+                `).join("") || `<tr><td colspan="5" class="muted">No staff rows found.</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -675,74 +461,26 @@
     async function renderMonthlyRoster(){
       const wardId = requireSelectedWard();
       const monthValue = appState.selectedMonth;
-      const ward = selectedWard();
       const { start, end, days } = monthRange(monthValue);
 
       const { data, error } = await sb.rpc("get_my_ward_roster_between", { p_ward_id: wardId, p_start_date: start, p_end_date: end });
       if(error) throw error;
 
-      appState.monthlyRosterRows = data || [];
-      const grouped = groupRosterByStaff(appState.monthlyRosterRows);
-      appState.monthlyGroupedRows = grouped;
+      const grouped = groupRosterByStaff(data || []);
 
       document.getElementById("content").innerHTML = `
-        <div class="card ward-hero">
-          <div class="actions" style="justify-content:space-between;align-items:flex-start">
-            <div>
-              <div class="eyebrow">Monthly Roster</div>
-              <div class="ward-name-big">${escapeHtml(ward?.ward_name || "Selected Ward")}</div>
-              <div class="ward-meta">
-                <span>${escapeHtml(ward?.ward_code || "")}</span>
-                <span>•</span>
-                <span>${escapeHtml(monthValue)}</span>
-                <span>•</span>
-                <span>Click any shift cell to change status</span>
-              </div>
-            </div>
-            <div class="actions">
-              ${wardSelectorHtml()}
-              <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
-              <div><label>Jump to date</label><input type="date" value="${appState.highlightedDate || ""}" onchange="jumpMonthlyDate(this.value)"></div>
-            </div>
-          </div>
-        </div>
-
         <div class="card">
-          <div class="grid grid-3">
-            <div>
-              <label>Search staff</label>
-              <input id="monthlyRosterSearch" placeholder="Type nurse / charge nurse name..." oninput="filterMonthlyRosterRows(this.value)">
-            </div>
-            <div>
-              <label>Selected ward</label>
-              <input value="${escapeHtml(ward?.ward_name || "")}" disabled>
-            </div>
-            <div>
-              <label>Tip</label>
-              <input value="Click a shift code to change it" disabled>
-            </div>
+          <div class="actions" style="justify-content:space-between">
+            <div><h2>Monthly Roster</h2><p class="muted">Roster/pattern is shown under the staff name. Red dot means override/change.</p></div>
+            <div class="actions">${wardSelectorHtml()}<div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div></div>
           </div>
         </div>
 
         <div class="card">
           <div class="actions">
-            ${legend("D","Day")}
-            ${legend("N","Night")}
-            ${legend("M","Morning")}
-            ${legend("E","Evening")}
-            ${legend("O","Off")}
-            ${legend("R","Rest")}
-            ${legend("AL","Annual leave")}
-            ${legend("SL","Sick")}
-            ${legend("ML","Maternity")}
-            ${legend("ST","Study")}
-            ${legend("TI","TIL in")}
-            ${legend("TO","TIL out")}
-            ${legend("OT","Overtime")}
+            ${legend("D","Day")}${legend("N","Night")}${legend("O","Off")}${legend("R","Rest")}${legend("AL","Annual leave")}${legend("SL","Sick")}${legend("ML","Maternity")}${legend("ST","Study")}${legend("TI","TIL in")}${legend("TO","TIL out")}${legend("OT","Overtime")}
           </div>
         </div>
-
-        ${shiftEditPanelHtml()}
 
         <div class="card">
           <div class="table-wrap">
@@ -750,38 +488,25 @@
               <thead>
                 <tr>
                   <th>Staff</th>
-                  <th>Role</th>
-                  <th>Roster</th>
-                  ${days.map(d=>{
-                    const key = isoFromDate(d);
-                    const cls = appState.highlightedDate === key ? "date-highlight" : "";
-                    return `<th class="${cls}">${weekdayShort(d)}<br>${d.getDate()}</th>`;
-                  }).join("")}
+                  ${days.map(d=>`<th>${weekdayShort(d)}<br>${d.getDate()}</th>`).join("")}
                 </tr>
               </thead>
               <tbody>
                 ${grouped.map(staff=>`
-                  <tr class="monthly-roster-row" data-search="${escapeHtml((displayStaffName(staff.full_name) + " " + labelRole(staff.role) + " " + staffRosterLabel(staff)).toLowerCase())}">
+                  <tr>
                     <td>
-                      <div class="staff-name-main">${escapeHtml(displayStaffName(staff.full_name))}</div>
-                      <div class="staff-name-sub">${escapeHtml(staffRosterLabel(staff))}</div>
+                      <strong>${escapeHtml(cleanStaffName(staff.full_name))}</strong>
+                      <div class="staff-sub">${escapeHtml(labelRole(staff.role))} · ${escapeHtml(staffRosterLabel(staff))}</div>
                     </td>
-                    <td>${escapeHtml(labelRole(staff.role))}</td>
-                    <td>${escapeHtml(staffRosterLabel(staff))}</td>
                     ${days.map(day=>{
                       const key=isoFromDate(day);
                       const r=staff.days[key];
                       const code=r?.live_shift_code||"";
                       const isOverride=r?.source_type==="override";
-                      const cls = appState.highlightedDate === key ? "date-highlight" : "";
-                      return `<td class="${cls}">
-                        <button class="shift-click" type="button" onclick="openShiftEditor('${escapeHtml(staff.staff_id)}','${escapeHtml(key)}','monthly')" title="Click to change ${escapeHtml(displayStaffName(staff.full_name))} on ${escapeHtml(formatDate(key))}">
-                          ${shiftBadge(code)}${isOverride?`<span class="override-dot" title="Changed from baseline"></span>`:""}
-                        </button>
-                      </td>`;
+                      return `<td>${shiftBadge(code)}${isOverride?`<span class="override-dot" title="Changed from baseline"></span>`:""}</td>`;
                     }).join("")}
                   </tr>
-                `).join("") || `<tr><td colspan="${days.length+3}" class="muted">No roster rows found.</td></tr>`}
+                `).join("") || `<tr><td colspan="${days.length+1}" class="muted">No roster rows found.</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -800,56 +525,39 @@
           <div class="actions" style="justify-content:space-between">
             <div>
               <h2>${appState.profile.is_sno ? "Staff Management" : "My Ward Staff"}</h2>
-              <p class="muted">Ward complement only. Employment type is fixed as core; overtime and relieving pool are handled separately.</p>
+              <p class="muted">Ward complement only. Employment type is fixed as core.</p>
             </div>
             <div>${wardSelectorHtml()}</div>
           </div>
         </div>
 
         <div class="card">
-          <div class="section-title">
-            <div>
-              <h3>Add staff member</h3>
-              <p class="muted">Assign staff to mandatory Roster 1–Roster 5 or to an approved day-only pattern.</p>
-            </div>
-          </div>
-
+          <h3>Add staff member</h3>
           <div class="grid grid-3">
             <div><label>Full name</label><input id="newStaffName" placeholder="Surname Name"></div>
             <div><label>Corp user ID</label><input id="newStaffCorp" placeholder="e.g. BorgA123"></div>
             <div><label>Email</label><input id="newStaffEmail" type="email" placeholder="name@gov.mt"></div>
-
             <div><label>Role</label>${roleSelectHtml("newStaffRole")}</div>
             <div><label>Roster</label>${rosterAssignmentSelectHtml("newStaffRosterAssignment")}</div>
             <div><label>Roster start date</label><input id="newStaffStartDate" type="date"></div>
           </div>
-
-          <div style="margin-top:14px">
-            <button type="button" onclick="addStaffMember()">Add staff member</button>
-          </div>
+          <div style="margin-top:14px"><button type="button" onclick="addStaffMember()">Add staff member</button></div>
         </div>
 
         <div id="editStaffPanel" class="card hidden">
-          <div class="section-title">
-            <div>
-              <h3>Edit staff member</h3>
-              <p class="muted">Charge nurses cannot add, edit, or deactivate another charge nurse. SNO can manage charge nurses.</p>
-            </div>
+          <div class="actions" style="justify-content:space-between">
+            <div><h3>Edit staff member</h3><p class="muted">SNO can manage charge nurses. Ward charge nurses can manage normal ward staff.</p></div>
             <button type="button" class="secondary small" onclick="cancelEditStaff()">Close</button>
           </div>
-
           <input id="editStaffId" type="hidden">
-
           <div class="grid grid-3">
             <div><label>Full name</label><input id="editStaffName"></div>
             <div><label>Corp user ID</label><input id="editStaffCorp"></div>
             <div><label>Email</label><input id="editStaffEmail" type="email"></div>
-
             <div><label>Role</label>${roleSelectHtml("editStaffRole")}</div>
             <div><label>Roster</label>${rosterAssignmentSelectHtml("editStaffRosterAssignment")}</div>
             <div><label>Roster start date</label><input id="editStaffStartDate" type="date"></div>
           </div>
-
           <div class="actions" style="margin-top:14px">
             <button type="button" onclick="updateStaffMember()">Save changes</button>
             <button type="button" class="secondary" onclick="cancelEditStaff()">Cancel</button>
@@ -860,21 +568,11 @@
           <h3>Current staff</h3>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Corp ID</th>
-                  <th>Role</th>
-                  <th>Ward</th>
-                  <th>Roster</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Name</th><th>Corp ID</th><th>Role</th><th>Ward</th><th>Roster</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 ${appState.staffRows.map(s=>`
                   <tr>
-                    <td><strong>${escapeHtml(displayStaffName(s.full_name))}</strong></td>
+                    <td><strong>${escapeHtml(cleanStaffName(s.full_name))}</strong></td>
                     <td>${escapeHtml(s.corp_user_id || "—")}</td>
                     <td>${escapeHtml(labelRole(s.role))}</td>
                     <td>${escapeHtml(s.ward_code || selectedWard()?.ward_code || "")}</td>
@@ -883,7 +581,7 @@
                     <td>
                       <div class="actions">
                         <button type="button" class="secondary small" onclick="startEditStaff('${escapeHtml(s.id || s.staff_id)}')">Edit</button>
-                        ${canShowDeactivateButton(s) ? `<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id || s.staff_id)}','${escapeHtml(displayStaffName(s.full_name))}')">Delete</button>` : `<span class="muted">SNO only</span>`}
+                        ${canShowDeactivateButton(s) ? `<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id || s.staff_id)}','${escapeHtml(s.full_name)}')">Delete</button>` : `<span class="muted">SNO only</span>`}
                       </div>
                     </td>
                   </tr>
@@ -896,7 +594,6 @@
 
     async function addStaffMember(){
       clearMessage();
-
       const name = document.getElementById("newStaffName").value.trim();
       const corp = document.getElementById("newStaffCorp").value.trim();
       const role = document.getElementById("newStaffRole").value;
@@ -907,7 +604,7 @@
       if(!role){ showError("Role is required."); return; }
       if(!assignment.type){ showError("Roster assignment is required."); return; }
 
-      const payload = {
+      const { error } = await sb.rpc("create_ward_staff_member", {
         p_full_name:name,
         p_corp_user_id:corp,
         p_email:document.getElementById("newStaffEmail").value.trim() || null,
@@ -920,30 +617,26 @@
         p_roster_start_date:document.getElementById("newStaffStartDate").value || null,
         p_roster_group:null,
         p_employment_type:null
-      };
+      });
 
-      const { error } = await sb.rpc("create_ward_staff_member", payload);
       if(error){ showError(error.message); return; }
-
       showSuccess("Staff member added successfully.");
       await renderStaffManagement();
     }
 
     function startEditStaff(staffId){
       clearMessage();
-
       const staff = appState.staffRows.find(s => String(s.id || s.staff_id) === String(staffId));
       if(!staff){ showError("Could not find staff member in the current table."); return; }
 
       document.getElementById("editStaffPanel").classList.remove("hidden");
       document.getElementById("editStaffId").value = staff.id || staff.staff_id;
-      document.getElementById("editStaffName").value = staff.full_name || "";
+      document.getElementById("editStaffName").value = cleanStaffName(staff.full_name || "");
       document.getElementById("editStaffCorp").value = staff.corp_user_id || "";
       document.getElementById("editStaffEmail").value = staff.email || "";
       document.getElementById("editStaffRole").value = staff.role || "nurse";
       document.getElementById("editStaffRosterAssignment").value = rosterAssignmentValueFromStaff(staff);
       document.getElementById("editStaffStartDate").value = dateOnly(staff.roster_start_date) || "";
-
       document.getElementById("editStaffPanel").scrollIntoView({ behavior:"smooth", block:"start" });
     }
 
@@ -954,14 +647,13 @@
 
     async function updateStaffMember(){
       clearMessage();
-
       const staffId = document.getElementById("editStaffId").value;
       const assignment = parseRosterAssignment(document.getElementById("editStaffRosterAssignment").value);
 
       if(!staffId){ showError("No staff member selected."); return; }
       if(!assignment.type){ showError("Roster assignment is required."); return; }
 
-      const payload = {
+      const { error } = await sb.rpc("update_ward_staff_member", {
         p_staff_id:staffId,
         p_full_name:document.getElementById("editStaffName").value.trim(),
         p_corp_user_id:document.getElementById("editStaffCorp").value.trim(),
@@ -974,18 +666,15 @@
         p_roster_pattern_code:assignment.type === "pattern" ? assignment.code : null,
         p_roster_start_date:document.getElementById("editStaffStartDate").value || null,
         p_roster_group:null
-      };
+      });
 
-      const { error } = await sb.rpc("update_ward_staff_member", payload);
       if(error){ showError(error.message); return; }
-
       showSuccess("Staff member updated successfully.");
       await renderStaffManagement();
     }
 
     async function deactivateStaffMember(staffId, staffName){
       clearMessage();
-
       const confirmed = window.confirm(`Deactivate ${staffName}?\n\nThis is a safe delete. It will hide the staff member from active lists but preserve history.`);
       if(!confirmed) return;
 
@@ -998,7 +687,6 @@
       });
 
       if(error){ showError(error.message); return; }
-
       showSuccess("Staff member deactivated successfully.");
       await renderStaffManagement();
     }
@@ -1019,49 +707,145 @@
       });
 
       if(error) throw error;
+      const rows = data || [];
 
       document.getElementById("content").innerHTML = `
         <div class="card">
           <div class="actions" style="justify-content:space-between">
             <div>
               <h2>Relieving Pool Requests</h2>
-              <p class="muted">Shortage requests generated from daily staffing submissions.</p>
+              <p class="muted">SNO action screen: allocate staff, timestamp allocation, verify by phone call, and reset mistaken entries.</p>
             </div>
             <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
           </div>
         </div>
 
+        <div class="stat-grid">
+          ${statCard(rows.length,"Requests")}
+          ${statCard(rows.filter(r=>r.request_status==="open").length,"Open")}
+          ${statCard(rows.filter(r=>r.request_status==="partially_filled").length,"Partially filled")}
+          ${statCard(rows.filter(r=>r.request_status==="filled").length,"Filled")}
+        </div>
+
         <div class="card">
           <div class="table-wrap">
-            <table>
-              <thead><tr><th>Date</th><th>Ward</th><th>Shift</th><th>Nurses needed</th><th>Carers/HCAs needed</th><th>Status</th><th>Requested by</th><th>Reason</th></tr></thead>
+            <table style="min-width:1450px">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Ward</th><th>Needed</th><th>Allocated / sent</th><th>Status</th><th>Timestamps</th><th>Allocate now</th><th>Actions</th>
+                </tr>
+              </thead>
               <tbody>
-                ${(data||[]).map(r=>`
-                  <tr>
-                    <td>${escapeHtml(formatDate(r.request_date))}</td>
-                    <td>${escapeHtml(r.ward_code)}</td>
-                    <td>${escapeHtml(r.shift_code||"—")}</td>
-                    <td>${numberValue(r.nurses_needed)}</td>
-                    <td>${numberValue(r.carers_needed)+numberValue(r.healthcare_assistants_needed)}</td>
-                    <td>${statusBadge(r.request_status)}</td>
-                    <td>${escapeHtml(r.requested_by_name||"—")}</td>
-                    <td>${escapeHtml(r.reason||"")}</td>
-                  </tr>
-                `).join("") || `<tr><td colspan="8" class="muted">No requests found.</td></tr>`}
+                ${rows.map(r=>{
+                  const key=safeKey(r.request_id);
+                  return `
+                    <tr>
+                      <td>${escapeHtml(formatDate(r.request_date))}</td>
+                      <td><strong>${escapeHtml(r.ward_code)}</strong><br><span class="muted">${escapeHtml(r.ward_name||"")}</span></td>
+                      <td>
+                        Nurses: <strong>${numberValue(r.nurses_needed)}</strong><br>
+                        Carers: <strong>${numberValue(r.carers_needed)}</strong><br>
+                        HCAs: <strong>${numberValue(r.healthcare_assistants_needed)}</strong>
+                      </td>
+                      <td>
+                        Nurses: <strong>${numberValue(r.nurses_allocated)}</strong><br>
+                        Carers: <strong>${numberValue(r.carers_allocated)}</strong><br>
+                        HCAs: <strong>${numberValue(r.healthcare_assistants_allocated)}</strong>
+                      </td>
+                      <td>${statusBadge(r.request_status)}<br><span class="muted">${escapeHtml(r.reason||"")}</span></td>
+                      <td>
+                        Requested: ${escapeHtml(formatDateTime(r.requested_at) || "—")}<br>
+                        Reviewed: ${escapeHtml(formatDateTime(r.reviewed_at) || "—")}<br>
+                        Sent: ${escapeHtml(formatDateTime(r.allocated_at) || "—")}<br>
+                        Verified: ${escapeHtml(formatDateTime(r.verified_at) || "—")}
+                      </td>
+                      <td>
+                        <div class="actions">
+                          <div><label>Nurses</label><input class="mini-input" id="nurses_${key}" type="number" min="0" value="${numberValue(r.nurses_allocated)}"></div>
+                          <div><label>Carers</label><input class="mini-input" id="carers_${key}" type="number" min="0" value="${numberValue(r.carers_allocated)}"></div>
+                          <div><label>HCAs</label><input class="mini-input" id="hcas_${key}" type="number" min="0" value="${numberValue(r.healthcare_assistants_allocated)}"></div>
+                        </div>
+                        <div style="margin-top:8px"><label>Allocation notes</label><input class="wide-input" id="notes_${key}" value="${escapeHtml(r.allocation_notes||"")}"></div>
+                        <div style="margin-top:8px"><button class="success small" type="button" onclick="allocateRelievingPoolRequest('${escapeHtml(r.request_id)}','${key}')">Save allocation / sent</button></div>
+                      </td>
+                      <td>
+                        <div class="actions">
+                          <button class="secondary small" type="button" onclick="verifyRelievingPoolRequest('${escapeHtml(r.request_id)}')">Verify phone call</button>
+                          <button class="danger small" type="button" onclick="resetRelievingPoolAllocation('${escapeHtml(r.request_id)}')">Reset</button>
+                        </div>
+                        <p class="muted">Allocated by: ${escapeHtml(r.allocated_by_name||"—")}<br>Verified by: ${escapeHtml(r.verified_by_name||"—")}</p>
+                      </td>
+                    </tr>`;
+                }).join("") || `<tr><td colspan="8" class="muted">No requests found.</td></tr>`}
               </tbody>
             </table>
           </div>
         </div>`;
     }
 
+    async function allocateRelievingPoolRequest(requestId, key){
+      clearMessage();
+
+      const nurses = Number(document.getElementById(`nurses_${key}`).value || 0);
+      const carers = Number(document.getElementById(`carers_${key}`).value || 0);
+      const hcas = Number(document.getElementById(`hcas_${key}`).value || 0);
+      const notes = document.getElementById(`notes_${key}`).value || null;
+
+      const { error } = await sb.rpc("allocate_relieving_pool_request", {
+        p_request_id:requestId,
+        p_nurses_allocated:nurses,
+        p_carers_allocated:carers,
+        p_healthcare_assistants_allocated:hcas,
+        p_allocation_notes:notes
+      });
+
+      if(error){ showError(error.message); return; }
+      showSuccess("Relieving pool allocation saved. Sent timestamp recorded.");
+      await renderRelievingPool();
+    }
+
+    async function verifyRelievingPoolRequest(requestId){
+      clearMessage();
+      const notes = window.prompt("Verification notes after phone call:", "Verified by phone call with ward");
+      if(notes === null) return;
+
+      const { error } = await sb.rpc("verify_relieving_pool_request", {
+        p_request_id:requestId,
+        p_verification_notes:notes
+      });
+
+      if(error){ showError(error.message); return; }
+      showSuccess("Verification timestamp saved.");
+      await renderRelievingPool();
+    }
+
+    async function resetRelievingPoolAllocation(requestId){
+      clearMessage();
+      const confirmed = window.confirm("Reset allocation and verification for this request?");
+      if(!confirmed) return;
+
+      const notes = window.prompt("Reset/correction notes:", "Reset due to correction");
+      if(notes === null) return;
+
+      const { error } = await sb.rpc("reset_relieving_pool_allocation", {
+        p_request_id:requestId,
+        p_reset_notes:notes
+      });
+
+      if(error){ showError(error.message); return; }
+      showSuccess("Relieving pool allocation reset.");
+      await renderRelievingPool();
+    }
+
     async function renderAuditVisuals(){
       const monthValue = appState.selectedMonth;
       const { start, end } = monthRange(monthValue);
+      const wardId = appState.selectedAuditWardId || null;
 
       const { data, error } = await sb.rpc("get_sno_audit_history", {
         p_start_date:start,
         p_end_date:end,
-        p_ward_id:null,
+        p_ward_id:wardId,
         p_action_type:null,
         p_table_name:null
       });
@@ -1083,9 +867,12 @@
           <div class="actions" style="justify-content:space-between">
             <div>
               <h2>Audit KPIs</h2>
-              <p class="muted">SNO-only visual audit monitoring. This is separate from the raw audit history table.</p>
+              <p class="muted">SNO-only visual audit monitoring. This first version analyses audit records by ward, action, table, and user.</p>
             </div>
-            <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+            <div class="actions">
+              ${auditWardSelectorHtml()}
+              <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+            </div>
           </div>
         </div>
 
@@ -1108,11 +895,12 @@
     async function renderAuditHistory(){
       const monthValue = appState.selectedMonth;
       const { start, end } = monthRange(monthValue);
+      const wardId = appState.selectedAuditWardId || null;
 
       const { data, error } = await sb.rpc("get_sno_audit_history", {
         p_start_date:start,
         p_end_date:end,
-        p_ward_id:null,
+        p_ward_id:wardId,
         p_action_type:null,
         p_table_name:null
       });
@@ -1122,11 +910,11 @@
       document.getElementById("content").innerHTML = `
         <div class="card">
           <div class="actions" style="justify-content:space-between">
-            <div>
-              <h2>Audit History</h2>
-              <p class="muted">SNO-only raw audit trail.</p>
+            <div><h2>Audit History</h2><p class="muted">Raw audit trail filtered by month and ward.</p></div>
+            <div class="actions">
+              ${auditWardSelectorHtml()}
+              <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
             </div>
-            <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
           </div>
         </div>
 
@@ -1153,11 +941,7 @@
 
     async function renderMyAccount(){
       document.getElementById("content").innerHTML = `
-        <div class="card">
-          <h2>My Account</h2>
-          <p class="muted">${escapeHtml(appState.profile.full_name)} — ${escapeHtml(appState.profile.email||"")}</p>
-        </div>
-
+        <div class="card"><h2>My Account</h2><p class="muted">${escapeHtml(appState.profile.full_name)} — ${escapeHtml(appState.profile.email||"")}</p></div>
         <div class="card">
           <h3>Change password</h3>
           <div class="grid grid-2">
@@ -1172,235 +956,22 @@
       clearMessage();
       const p1=document.getElementById("newPassword").value;
       const p2=document.getElementById("confirmPassword").value;
-
       if(!p1 || p1.length<6){ showError("Password must be at least 6 characters."); return; }
       if(p1!==p2){ showError("Passwords do not match."); return; }
-
       const { error } = await sb.auth.updateUser({ password:p1 });
       if(error){ showError(error.message); return; }
-
       showSuccess("Password updated successfully.");
       document.getElementById("newPassword").value="";
       document.getElementById("confirmPassword").value="";
     }
 
-    function shiftEditPanelHtml(){
-      return `
-        <div id="shiftEditPanel" class="card form-panel hidden">
-          <div class="section-title">
-            <div>
-              <h3 id="shiftEditTitle">Change staff status</h3>
-              <p class="muted" id="shiftEditSubtitle">Select the new status and save.</p>
-            </div>
-            <button type="button" class="secondary small" onclick="closeShiftEditor()">Close</button>
-          </div>
-
-          <input id="shiftEditStaffId" type="hidden">
-          <input id="shiftEditDate" type="hidden">
-          <input id="shiftEditContext" type="hidden">
-
-          <div class="grid grid-3">
-            <div>
-              <label>New status / shift</label>
-              <select id="shiftEditCode">${shiftOptionsHtml()}</select>
-            </div>
-            <div>
-              <label>Reason</label>
-              <input id="shiftEditReasonPreview" disabled>
-            </div>
-            <div>
-              <label>Date</label>
-              <input id="shiftEditDateDisplay" disabled>
-            </div>
-          </div>
-
-          <div style="margin-top:14px">
-            <label>Notes</label>
-            <textarea id="shiftEditNotes" rows="2" placeholder="Optional note for audit trail / SNO context"></textarea>
-          </div>
-
-          <div class="actions" style="margin-top:14px">
-            <button type="button" onclick="saveShiftEdit()">Save status change</button>
-            <button type="button" class="secondary" onclick="closeShiftEditor()">Cancel</button>
-          </div>
-        </div>`;
-    }
-
-    function openShiftEditor(staffId, shiftDate, context){
-      clearMessage();
-
-      const rows = context === "daily" ? appState.dailyRosterRows : appState.monthlyRosterRows;
-      let row = rows.find(r => String(r.staff_id) === String(staffId) && dateOnly(r.shift_date) === shiftDate);
-      let staff = null;
-
-      if(context === "monthly"){
-        staff = appState.monthlyGroupedRows.find(s => String(s.staff_id) === String(staffId));
-      }
-
-      if(!row && staff){
-        row = {
-          staff_id:staff.staff_id,
-          full_name:staff.full_name,
-          role:staff.role,
-          live_shift_code:"",
-          baseline_shift_code:"",
-          override_reason:""
-        };
-      }
-
-      if(!row){
-        row = rows.find(r => String(r.staff_id) === String(staffId));
-      }
-
-      if(!row){
-        showError("Could not find this staff/date row.");
-        return;
-      }
-
-      const panel = document.getElementById("shiftEditPanel");
-      const code = row.live_shift_code || row.baseline_shift_code || "D";
-
-      document.getElementById("shiftEditStaffId").value = staffId;
-      document.getElementById("shiftEditDate").value = shiftDate;
-      document.getElementById("shiftEditContext").value = context;
-      document.getElementById("shiftEditCode").innerHTML = shiftOptionsHtml(code);
-      document.getElementById("shiftEditReasonPreview").value = labelOverrideReason(reasonFromShiftCode(code));
-      document.getElementById("shiftEditDateDisplay").value = formatDate(shiftDate);
-      document.getElementById("shiftEditNotes").value = "";
-
-      document.getElementById("shiftEditTitle").textContent = `Change status — ${displayStaffName(row.full_name)}`;
-      document.getElementById("shiftEditSubtitle").textContent = `${labelRole(row.role)} • ${formatDate(shiftDate)} • current: ${code || "—"}`;
-
-      document.getElementById("shiftEditCode").onchange = function(){
-        document.getElementById("shiftEditReasonPreview").value = labelOverrideReason(reasonFromShiftCode(this.value));
-      };
-
-      panel.classList.remove("hidden");
-      panel.scrollIntoView({behavior:"smooth", block:"start"});
-    }
-
-    function closeShiftEditor(){
-      const panel = document.getElementById("shiftEditPanel");
-      if(panel) panel.classList.add("hidden");
-    }
-
-    async function saveShiftEdit(){
-      clearMessage();
-
-      const staffId = document.getElementById("shiftEditStaffId").value;
-      const shiftDate = document.getElementById("shiftEditDate").value;
-      const context = document.getElementById("shiftEditContext").value;
-      const code = document.getElementById("shiftEditCode").value;
-      const notes = document.getElementById("shiftEditNotes").value.trim();
-
-      if(!staffId || !shiftDate || !code){
-        showError("Staff, date and status are required.");
-        return;
-      }
-
-      const { error } = await sb.rpc("upsert_ward_roster_override", {
-        p_ward_id:appState.selectedWardId,
-        p_staff_id:staffId,
-        p_shift_date:shiftDate,
-        p_shift_code:code,
-        p_override_reason:reasonFromShiftCode(code),
-        p_notes:notes || `Changed to ${code} from frontend`
-      });
-
-      if(error){
-        showError(error.message);
-        return;
-      }
-
-      closeShiftEditor();
-      showSuccess("Status changed successfully.");
-
-      if(context === "daily") await renderWardDaily();
-      else await renderMonthlyRoster();
-    }
-
-    function shiftOptionsHtml(selected=""){
-      const order = ["D","N","M","E","O","R","AL","SL","ML","ST","TI","TO","OT"];
-      const ref = appState.ref?.shift_types || [];
-      const byCode = new Map(ref.map(s => [String(s.shift_code || "").toUpperCase(), s]));
-
-      return order.map(code => {
-        const item = byCode.get(code);
-        const label = item?.shift_name ? `${code} — ${item.shift_name}` : `${code} — ${fallbackShiftName(code)}`;
-        return `<option value="${escapeHtml(code)}" ${String(selected).toUpperCase()===code ? "selected" : ""}>${escapeHtml(label)}</option>`;
-      }).join("");
-    }
-
-    function reasonFromShiftCode(code){
-      const c = String(code || "").toUpperCase();
-      if(c === "AL") return "annual_leave";
-      if(c === "SL") return "sick_leave";
-      if(c === "ML") return "maternity_leave";
-      if(c === "ST") return "study_leave";
-      if(c === "TI") return "til_in";
-      if(c === "TO") return "til_out";
-      if(c === "OT") return "overtime";
-      return "duty_change";
-    }
-
-    function fallbackShiftName(code){
-      const labels = {
-        D:"Day shift",
-        N:"Night shift",
-        M:"Morning shift",
-        E:"Evening shift",
-        O:"Off day",
-        R:"Rest day",
-        AL:"Annual leave",
-        SL:"Sick leave",
-        ML:"Maternity leave",
-        ST:"Study leave",
-        TI:"TIL in",
-        TO:"TIL out",
-        OT:"Overtime"
-      };
-      return labels[code] || code;
-    }
-
-    function labelOverrideReason(reason){
-      const labels = {
-        annual_leave:"Annual leave",
-        correction:"Correction",
-        duty_change:"Duty change",
-        manual_change:"Manual change",
-        maternity_leave:"Maternity leave",
-        other:"Other",
-        overtime:"Overtime",
-        sick_leave:"Sick leave",
-        study_leave:"Study leave",
-        til_in:"TIL in",
-        til_out:"TIL out"
-      };
-      return labels[reason] || reason || "—";
-    }
-
     function setSelectedDate(value){ appState.selectedDate=value; renderTab(appState.activeTab); }
     function setSelectedMonth(value){ appState.selectedMonth=value; renderTab(appState.activeTab); }
     function setSelectedWard(value){ appState.selectedWardId=value; renderTab(appState.activeTab); }
-
-    function jumpMonthlyDate(value){
-      if(!value) return;
-      appState.highlightedDate = value;
-      appState.selectedMonth = value.slice(0,7);
-      renderMonthlyRoster();
-    }
-
-    function filterMonthlyRosterRows(value){
-      const q = String(value || "").trim().toLowerCase();
-      document.querySelectorAll(".monthly-roster-row").forEach(row => {
-        const hay = row.getAttribute("data-search") || "";
-        row.style.display = hay.includes(q) ? "" : "none";
-      });
-    }
+    function setSelectedAuditWard(value){ appState.selectedAuditWardId=value; renderTab(appState.activeTab); }
 
     function wardSelectorHtml(){
       if(!appState.profile?.is_sno && appState.wards.length<=1) return "";
-
       return `
         <div>
           <label>Ward</label>
@@ -1414,18 +985,24 @@
         </div>`;
     }
 
+    function auditWardSelectorHtml(){
+      return `
+        <div>
+          <label>Ward</label>
+          <select onchange="setSelectedAuditWard(this.value)">
+            <option value="" ${appState.selectedAuditWardId===""?"selected":""}>All wards</option>
+            ${appState.wards.map(w=>`
+              <option value="${escapeHtml(w.ward_id)}" ${w.ward_id===appState.selectedAuditWardId?"selected":""}>
+                ${escapeHtml(w.ward_code)}${w.ward_name ? ` — ${escapeHtml(w.ward_name)}` : ""}
+              </option>
+            `).join("")}
+          </select>
+        </div>`;
+    }
+
     function roleSelectHtml(id, selected="nurse"){
-      const options = [
-        ["nurse","Staff Nurse"],
-        ["carer","Carer"],
-        ["healthcare_assistant","Healthcare Assistant"],
-        ["other","Other"]
-      ];
-
-      if(appState.profile?.is_sno){
-        options.splice(1, 0, ["charge_nurse","Charge Nurse"]);
-      }
-
+      const options = [["nurse","Staff Nurse"],["carer","Carer"],["healthcare_assistant","Healthcare Assistant"],["other","Other"]];
+      if(appState.profile?.is_sno) options.splice(1,0,["charge_nurse","Charge Nurse"]);
       return `<select id="${escapeHtml(id)}">${options.map(([value,label]) => `<option value="${value}" ${value===selected?"selected":""}>${escapeHtml(label)}</option>`).join("")}</select>`;
     }
 
@@ -1442,16 +1019,7 @@
         return `<option value="pattern:${escapeHtml(code)}" ${selected===`pattern:${code}`?"selected":""}>${escapeHtml(label)}</option>`;
       }).join("");
 
-      return `
-        <select id="${escapeHtml(id)}">
-          <option value="">Select roster...</option>
-          <optgroup label="Mandatory hospital roster groups">
-            ${groupOptions}
-          </optgroup>
-          <optgroup label="Special day-only patterns">
-            ${patternOptions}
-          </optgroup>
-        </select>`;
+      return `<select id="${escapeHtml(id)}"><option value="">Select roster...</option><optgroup label="Mandatory Roster 1–Roster 5">${groupOptions}</optgroup><optgroup label="Special day-only patterns">${patternOptions}</optgroup></select>`;
     }
 
     function parseRosterAssignment(value){
@@ -1462,18 +1030,8 @@
     }
 
     function rosterAssignmentValueFromStaff(staff){
-      if(staff.roster_group_template_id){
-        const template = rosterGroupTemplates().find(t => String(t.id) === String(staff.roster_group_template_id));
-        if(template) return `group:${templateCode(template)}`;
-      }
-
       const groupCode = staff.roster_code || staff.roster_name || staff.roster_group;
-      if(looksLikeMandatoryRoster(groupCode)){
-        const template = rosterGroupTemplates().find(t => sameRoster(templateCode(t), groupCode) || sameRoster(templateLabel(t), groupCode));
-        if(template) return `group:${templateCode(template)}`;
-        return `group:${groupCode}`;
-      }
-
+      if(staff.roster_group_template_id || looksLikeMandatoryRoster(groupCode)) return `group:${groupCode}`;
       if(staff.roster_pattern_code) return `pattern:${staff.roster_pattern_code}`;
       return "";
     }
@@ -1481,58 +1039,37 @@
     function rosterGroupTemplates(){
       const items = appState.ref?.roster_group_templates || [];
       if(items.length) return items;
-
       return [
-        { roster_code:"ROSTER_1", roster_name:"Roster 1" },
-        { roster_code:"ROSTER_2", roster_name:"Roster 2" },
-        { roster_code:"ROSTER_3", roster_name:"Roster 3" },
-        { roster_code:"ROSTER_4", roster_name:"Roster 4" },
-        { roster_code:"ROSTER_5", roster_name:"Roster 5" }
+        { roster_code:"Roster 1", roster_name:"Roster 1" },
+        { roster_code:"Roster 2", roster_name:"Roster 2" },
+        { roster_code:"Roster 3", roster_name:"Roster 3" },
+        { roster_code:"Roster 4", roster_name:"Roster 4" },
+        { roster_code:"Roster 5", roster_name:"Roster 5" }
       ];
     }
 
     function rosterPatterns(){
       const allowed = new Set(["DDOO","DDODO","DDDOO"]);
-      return (appState.ref?.roster_patterns || [])
-        .filter(p => allowed.has(patternCode(p)));
+      return (appState.ref?.roster_patterns || []).filter(p => allowed.has(patternCode(p)));
     }
 
-    function templateCode(t){ return t.roster_code || t.code || t.roster_name || t.name || ""; }
-    function templateLabel(t){ return t.roster_name || t.name || formatRosterCode(t.roster_code || t.code) || ""; }
+    function templateCode(t){ return t.roster_name || t.roster_code || t.code || t.name || ""; }
+    function templateLabel(t){ return t.roster_name || t.name || t.roster_code || t.code || ""; }
     function patternCode(p){ return String(p.pattern_code || p.code || "").toUpperCase(); }
-    function patternLabel(p){
-      const code = patternCode(p);
-      const name = p.pattern_name || p.name || "";
-      return name ? `${code} — ${name}` : code;
-    }
+    function patternLabel(p){ const code=patternCode(p); const name=p.pattern_name || p.name || ""; return name ? `${code} — ${name}` : code; }
 
     function staffRosterLabel(staff){
-      if(staff.roster_name) return formatRosterCode(staff.roster_name);
-      if(staff.roster_code) return formatRosterCode(staff.roster_code);
-      if(staff.roster_group) return formatRosterCode(staff.roster_group);
+      if(staff.roster_name) return staff.roster_name;
+      if(staff.roster_code) return String(staff.roster_code).replaceAll("_"," ");
+      if(staff.roster_group) return staff.roster_group;
       if(staff.roster_pattern_code) return staff.roster_pattern_code;
       if(staff.pattern_code) return staff.pattern_code;
       return "—";
     }
 
-    function sameRoster(a,b){
-      return normalizeRoster(a) === normalizeRoster(b);
-    }
-
-    function normalizeRoster(value){
-      return String(value || "").toLowerCase().replace(/[\s_\-]/g,"");
-    }
-
     function looksLikeMandatoryRoster(value){
-      const v = normalizeRoster(value);
+      const v = String(value || "").toLowerCase().replace(/\s+/g,"").replaceAll("_","");
       return ["roster1","roster2","roster3","roster4","roster5","r1","r2","r3","r4","r5"].includes(v);
-    }
-
-    function formatRosterCode(value){
-      const v = String(value || "");
-      const match = v.match(/^ROSTER[_\s-]*(\d+)$/i);
-      if(match) return `Roster ${match[1]}`;
-      return v;
     }
 
     function canShowDeactivateButton(staff){
@@ -1543,24 +1080,18 @@
     }
 
     function requireSelectedWard(){
-      if(!appState.selectedWardId){
-        throw new Error("No ward selected or no ward access was returned for this account.");
-      }
+      if(!appState.selectedWardId) throw new Error("No ward selected or no ward access was returned for this account.");
       return appState.selectedWardId;
     }
 
-    function selectedWard(){
-      return appState.wards.find(w => w.ward_id === appState.selectedWardId) || null;
-    }
+    function selectedWard(){ return appState.wards.find(w => w.ward_id === appState.selectedWardId) || null; }
 
     function wardAccessLabel(){
       if(!appState.wards.length) return "No ward access returned";
       return `Access: ${appState.wards.map(w => w.ward_name ? `${w.ward_name} (${w.ward_code})` : w.ward_code).join(", ")}`;
     }
 
-    function statCard(value,label){
-      return `<div class="stat"><div class="stat-value">${numberValue(value)}</div><div class="stat-label">${escapeHtml(label)}</div></div>`;
-    }
+    function statCard(value,label){ return `<div class="stat"><div class="stat-value">${numberValue(value)}</div><div class="stat-label">${escapeHtml(label)}</div></div>`; }
 
     function barCard(title, counts){
       const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
@@ -1614,7 +1145,6 @@
     }
 
     function legend(code,label){ return `<span>${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`; }
-
     function showError(message){ document.getElementById("message").innerHTML=`<div class="error">${escapeHtml(message)}</div>`; }
     function showSuccess(message){ document.getElementById("message").innerHTML=`<div class="success-msg">${escapeHtml(message)}</div>`; }
     function clearMessage(){ document.getElementById("message").innerHTML=""; }
@@ -1636,27 +1166,14 @@
             days:{}
           });
         }
-        map.get(row.staff_id).days[dateOnly(row.shift_date)]=row;
+        map.get(row.staff_id).days[row.shift_date]=row;
       }
 
       return Array.from(map.values()).sort((a,b)=>{
         const ga=staffRosterLabel(a), gb=staffRosterLabel(b);
         if(ga!==gb)return ga.localeCompare(gb);
-        return displayStaffName(a.full_name || "").localeCompare(displayStaffName(b.full_name || ""));
+        return String(a.full_name || "").localeCompare(String(b.full_name || ""));
       });
-    }
-
-    function displayStaffName(name){
-      let out = String(name || "").trim();
-
-      const codes = appState.wards.map(w => w.ward_code).filter(Boolean).sort((a,b)=>b.length-a.length);
-      for(const code of codes){
-        out = out.replace(new RegExp("^" + escapeRegExp(code) + "[\\s\\-_:]+","i"), "");
-      }
-
-      out = out.replace(/^Surgical\s+Ward\s+\d+\s*[\-_:]+\s*/i, "");
-      out = out.replace(/^Surgical\s+Assessment\s+Unit\s+\d+\s*[\-_:]+\s*/i, "");
-      return out.trim();
     }
 
     function monthRange(monthValue){
@@ -1665,13 +1182,16 @@
       const endDate=new Date(year,month,0);
       const days=[];
       const cursor=new Date(startDate);
-
-      while(cursor<=endDate){
-        days.push(new Date(cursor));
-        cursor.setDate(cursor.getDate()+1);
-      }
-
+      while(cursor<=endDate){days.push(new Date(cursor));cursor.setDate(cursor.getDate()+1);}
       return {start:isoFromDate(startDate),end:isoFromDate(endDate),days};
+    }
+
+    function cleanStaffName(name){
+      return String(name || "")
+        .replace(/^SW\d+\s+/i,"")
+        .replace(/^SAU1\s+/i,"")
+        .replace(/\s+/g," ")
+        .trim();
     }
 
     function todayISO(){ return isoFromDate(new Date()); }
@@ -1683,34 +1203,13 @@
     function weekdayShort(date){ return date.toLocaleDateString("en-GB",{weekday:"short"}); }
 
     function labelRole(role){
-      const labels={
-        sno:"Senior Nursing Officer",
-        charge_nurse:"Charge Nurse",
-        nurse:"Staff Nurse",
-        carer:"Carer",
-        healthcare_assistant:"Healthcare Assistant",
-        other:"Other"
-      };
+      const labels={sno:"Senior Nursing Officer",charge_nurse:"Charge Nurse",nurse:"Staff Nurse",carer:"Carer",healthcare_assistant:"Healthcare Assistant",other:"Other"};
       return labels[role]||role||"";
     }
 
-    function labelEmployment(value){
-      const labels={core:"Core",relieving_pool:"Relieving Pool",external_overtime:"External Overtime",agency:"Agency",other:"Other"};
-      return labels[value]||value||"";
-    }
-
-    function numberValue(value){
-      const n = Number(value);
-      return Number.isFinite(n) ? n : 0;
-    }
-
-    function truthy(value){
-      return value === true || value === "true" || value === 1 || value === "1";
-    }
-
-    function escapeRegExp(value){
-      return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    }
+    function numberValue(value){ const n = Number(value); return Number.isFinite(n) ? n : 0; }
+    function truthy(value){ return value === true || value === "true" || value === 1 || value === "1"; }
+    function safeKey(value){ return String(value || "").replace(/[^a-zA-Z0-9]/g,"_"); }
 
     function escapeHtml(value){
       return String(value??"")
