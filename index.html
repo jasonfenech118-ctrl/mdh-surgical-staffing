@@ -78,7 +78,7 @@
     .top-user{text-align:right;font-size:12px;line-height:1.45;color:var(--muted)}
     .top-user strong{color:var(--text);font-weight:700}
 
-    .container{max-width:1200px;margin:24px auto;padding:0 18px}
+    .container{max-width:1260px;margin:24px auto;padding:0 18px}
 
     .card{
       background:rgba(255,255,255,.94);
@@ -136,6 +136,8 @@
     button.secondary:hover{background:var(--grey-soft)}
     button.danger{background:var(--red);box-shadow:0 4px 12px rgba(184,92,92,.20)}
     button.success{background:var(--green);box-shadow:0 4px 12px rgba(47,143,91,.20)}
+    button.small{padding:7px 10px;border-radius:10px;font-size:12px}
+    button:disabled{opacity:.55;cursor:not-allowed}
 
     .grid{display:grid;gap:14px}
     .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -167,7 +169,7 @@
     .tab:hover{background:var(--primary-soft);color:var(--primary-dark);box-shadow:none}
     .tab.active{background:#fff;color:var(--primary-dark);border-color:var(--primary-border);box-shadow:0 4px 12px rgba(79,143,207,.10)}
 
-    .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
 
     .stat{
       background:#fff;
@@ -202,7 +204,7 @@
     .success-msg{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border);padding:11px 13px;border-radius:12px;margin:10px 0;font-weight:600}
     .info{background:var(--primary-soft);color:var(--primary-dark);border:1px solid var(--primary-border);padding:11px 13px;border-radius:12px;margin:10px 0;font-weight:600}
 
-    .roster-table{min-width:1100px}
+    .roster-table{min-width:1160px}
     .shift-cell{display:inline-flex;justify-content:center;align-items:center;min-width:32px;height:27px;border-radius:9px;font-weight:900;font-size:12px;border:1px solid transparent}
     .shift-D,.shift-M,.shift-E{background:var(--primary-soft);color:var(--primary-dark);border-color:var(--primary-border)}
     .shift-N{background:#e7edff;color:#3857a6;border-color:#cfd9fb}
@@ -213,11 +215,36 @@
     .shift-TI,.shift-TO,.shift-OT{background:var(--green-soft);color:var(--green);border-color:var(--green-border)}
     .override-dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:var(--red);margin-left:5px;vertical-align:middle}
 
+    .form-panel{
+      border:1px solid var(--primary-border);
+      background:linear-gradient(180deg,#f8fcff 0%,#fff 100%);
+      border-radius:16px;
+      padding:16px;
+      margin-top:14px;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .bar-list{display:grid;gap:10px}
+    .bar-row{display:grid;grid-template-columns:170px 1fr 50px;gap:10px;align-items:center}
+    .bar-label{font-weight:700;color:#3a4858;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .bar-track{height:12px;border-radius:999px;background:var(--grey-soft);border:1px solid var(--grey-border);overflow:hidden}
+    .bar-fill{height:100%;border-radius:999px;background:var(--primary)}
+    .bar-value{text-align:right;font-weight:800;color:#1f3f5f}
+
     @media(max-width:850px){
       .grid-2,.grid-3,.grid-4,.stat-grid{grid-template-columns:1fr}
       header{align-items:flex-start;flex-direction:column}
       .top-user{text-align:left}
       .container{margin:16px auto;padding:0 12px}
+      .bar-row{grid-template-columns:1fr}
+      .bar-value{text-align:left}
     }
   </style>
 </head>
@@ -265,8 +292,15 @@
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let appState = {
-      session:null, ref:null, profile:null, wards:[], activeTab:null,
-      selectedWardId:null, selectedDate:todayISO(), selectedMonth:monthISO(new Date())
+      session:null,
+      ref:null,
+      profile:null,
+      wards:[],
+      activeTab:null,
+      selectedWardId:null,
+      selectedDate:todayISO(),
+      selectedMonth:monthISO(new Date()),
+      staffRows:[]
     };
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -292,31 +326,64 @@
     function showApp(){
       document.getElementById("loginScreen").classList.add("hidden");
       document.getElementById("appScreen").classList.remove("hidden");
+
       const p = appState.profile;
       document.getElementById("topUser").innerHTML = `<strong>${escapeHtml(p.full_name)}</strong><br>${labelRole(p.role)}`;
       document.getElementById("mainTitle").textContent = p.is_sno ? "Senior Nursing Officer Dashboard" : "Ward Dashboard";
-      document.getElementById("mainSubtitle").textContent = p.is_sno ? "All surgical wards overview" : `Access: ${appState.wards.map(w=>w.ward_code).join(", ")}`;
+      document.getElementById("mainSubtitle").textContent = p.is_sno ? "All surgical wards overview" : wardAccessLabel();
+
+      const validTabs = getTabs().map(t => t[0]);
+      if(!appState.activeTab || !validTabs.includes(appState.activeTab)){
+        appState.activeTab = p.is_sno ? "snoOverview" : "wardDaily";
+      }
+
       buildTabs();
-      if(!appState.activeTab) appState.activeTab = p.is_sno ? "snoOverview" : "wardDaily";
       renderTab(appState.activeTab);
     }
 
     async function loadReferenceData(){
       const { data, error } = await sb.rpc("get_app_reference_data");
       if(error){ showError(error.message); throw error; }
-      appState.ref = data;
+
+      appState.ref = data || {};
       appState.profile = data.profile;
-      appState.wards = data.accessible_wards || [];
-      if(!appState.selectedWardId && appState.wards.length > 0) appState.selectedWardId = appState.wards[0].ward_id;
+
+      const rawWards = data.accessible_wards || data.wards || [];
+      appState.wards = rawWards.map(w => ({
+        ward_id:w.ward_id || w.id,
+        ward_code:w.ward_code || w.code || "",
+        ward_name:w.ward_name || w.name || ""
+      })).filter(w => w.ward_id);
+
+      if(appState.wards.length > 0){
+        const stillValid = appState.wards.some(w => w.ward_id === appState.selectedWardId);
+        if(!appState.selectedWardId || !stillValid) appState.selectedWardId = appState.wards[0].ward_id;
+      }
+    }
+
+    function getTabs(){
+      if(appState.profile?.is_sno){
+        return [
+          ["snoOverview","Today’s Overview"],
+          ["monthlyRoster","Monthly Roster"],
+          ["staffManagement","Staff Management"],
+          ["relievingPool","Relieving Pool"],
+          ["auditVisuals","Audit KPIs"],
+          ["auditHistory","Audit History"],
+          ["myAccount","My Account"]
+        ];
+      }
+
+      return [
+        ["wardDaily","Daily Staffing"],
+        ["monthlyRoster","Monthly Roster"],
+        ["staffManagement","My Ward Staff"],
+        ["myAccount","My Account"]
+      ];
     }
 
     function buildTabs(){
-      const tabs = [];
-      if(appState.profile.is_sno){
-        tabs.push(["snoOverview","Today’s Overview"],["monthlyRoster","Monthly Roster"],["staffManagement","Staff Management"],["relievingPool","Relieving Pool"],["auditHistory","Audit History"],["myAccount","My Account"]);
-      }else{
-        tabs.push(["wardDaily","Daily Staffing"],["monthlyRoster","Monthly Roster"],["staffManagement","My Ward Staff"],["relievingPool","Relieving Pool"],["myAccount","My Account"]);
-      }
+      const tabs = getTabs();
       document.getElementById("tabs").innerHTML = tabs.map(([key,label]) => `<button type="button" class="tab ${appState.activeTab===key?"active":""}" onclick="renderTab('${key}')">${label}</button>`).join("");
     }
 
@@ -325,15 +392,19 @@
       buildTabs();
       clearMessage();
       document.getElementById("content").innerHTML = `<div class="card"><p class="muted">Loading...</p></div>`;
+
       try{
         if(tabKey==="snoOverview") await renderSnoOverview();
-        if(tabKey==="wardDaily") await renderWardDaily();
-        if(tabKey==="monthlyRoster") await renderMonthlyRoster();
-        if(tabKey==="staffManagement") await renderStaffManagement();
-        if(tabKey==="relievingPool") await renderRelievingPool();
-        if(tabKey==="auditHistory") await renderAuditHistory();
-        if(tabKey==="myAccount") await renderMyAccount();
-      }catch(err){ showError(err.message || String(err)); }
+        else if(tabKey==="wardDaily") await renderWardDaily();
+        else if(tabKey==="monthlyRoster") await renderMonthlyRoster();
+        else if(tabKey==="staffManagement") await renderStaffManagement();
+        else if(tabKey==="relievingPool") await renderRelievingPool();
+        else if(tabKey==="auditVisuals") await renderAuditVisuals();
+        else if(tabKey==="auditHistory") await renderAuditHistory();
+        else if(tabKey==="myAccount") await renderMyAccount();
+      }catch(err){
+        showError(err.message || String(err));
+      }
     }
 
     function reloadCurrentTab(){ renderTab(appState.activeTab); }
@@ -349,7 +420,7 @@
 
     async function signOut(){
       await sb.auth.signOut();
-      appState = {session:null,ref:null,profile:null,wards:[],activeTab:null,selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date())};
+      appState = {session:null,ref:null,profile:null,wards:[],activeTab:null,selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date()),staffRows:[]};
       showLogin();
     }
 
@@ -357,117 +428,601 @@
       const date = appState.selectedDate;
       const { data, error } = await sb.rpc("get_sno_daily_overview", { p_staffing_date: date });
       if(error) throw error;
-      const total = data.length, full = data.filter(r=>r.ward_status==="fully_staffed").length, short = data.filter(r=>r.ward_status==="short_staffed").length, not = data.filter(r=>r.ward_status==="not_submitted").length;
+
+      const rows = data || [];
+      const total = rows.length;
+      const full = rows.filter(r=>r.ward_status==="fully_staffed").length;
+      const short = rows.filter(r=>r.ward_status==="short_staffed").length;
+      const not = rows.filter(r=>r.ward_status==="not_submitted").length;
+
       document.getElementById("content").innerHTML = `
-        <div class="card"><div class="actions" style="justify-content:space-between"><div><h2>Today’s Overview</h2><p class="muted">All wards must submit daily staffing by 07:00.</p></div><div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div></div></div>
-        <div class="stat-grid">${statCard(total,"Total wards")}${statCard(full,"Fully staffed")}${statCard(short,"Short staffed")}${statCard(not,"Not submitted")}</div>
-        <div class="grid grid-3" style="margin-top:16px">${data.map(r=>`
-          <div class="card"><div class="actions" style="justify-content:space-between"><h3>${escapeHtml(r.ward_code)}</h3>${wardStatusBadge(r.ward_status)}</div><p class="muted">${escapeHtml(r.ward_name)}</p>
-          <table style="min-width:0"><tr><td>Required nurses</td><td><strong>${r.required_nurses}</strong></td></tr><tr><td>Required carers/HCAs</td><td><strong>${r.required_carers}</strong></td></tr><tr><td>Present nurses</td><td><strong>${r.present_nurses}</strong></td></tr><tr><td>Present carers/HCAs</td><td><strong>${r.present_carers + r.present_healthcare_assistants}</strong></td></tr><tr><td>Sick</td><td><strong>${r.sick_total}</strong></td></tr><tr><td>Leave</td><td><strong>${r.leave_total}</strong></td></tr><tr><td>Shortage</td><td><strong>${r.total_shortage}</strong></td></tr></table></div>`).join("")}</div>`;
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h2>Today’s Overview</h2>
+              <p class="muted">All wards must submit daily staffing by 07:00.</p>
+            </div>
+            <div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          ${statCard(total,"Total wards")}
+          ${statCard(full,"Fully staffed")}
+          ${statCard(short,"Short staffed")}
+          ${statCard(not,"Not submitted")}
+        </div>
+
+        <div class="grid grid-3">
+          ${rows.map(r=>`
+            <div class="card">
+              <div class="actions" style="justify-content:space-between">
+                <h3>${escapeHtml(r.ward_code)}</h3>
+                ${wardStatusBadge(r.ward_status)}
+              </div>
+              <p class="muted">${escapeHtml(r.ward_name)}</p>
+              <table style="min-width:0">
+                <tr><td>Required nurses</td><td><strong>${numberValue(r.required_nurses)}</strong></td></tr>
+                <tr><td>Required carers/HCAs</td><td><strong>${numberValue(r.required_carers)}</strong></td></tr>
+                <tr><td>Present nurses</td><td><strong>${numberValue(r.present_nurses)}</strong></td></tr>
+                <tr><td>Present carers/HCAs</td><td><strong>${numberValue(r.present_carers) + numberValue(r.present_healthcare_assistants)}</strong></td></tr>
+                <tr><td>Sick</td><td><strong>${numberValue(r.sick_total)}</strong></td></tr>
+                <tr><td>Leave</td><td><strong>${numberValue(r.leave_total)}</strong></td></tr>
+                <tr><td>Shortage</td><td><strong>${numberValue(r.total_shortage)}</strong></td></tr>
+              </table>
+            </div>
+          `).join("")}
+        </div>`;
     }
 
     async function renderWardDaily(){
-      const wardId = appState.selectedWardId, date = appState.selectedDate;
+      const wardId = requireSelectedWard();
+      const date = appState.selectedDate;
+
       const [summaryResult, rosterResult] = await Promise.all([
         sb.rpc("get_ward_daily_dashboard", { p_ward_id: wardId, p_staffing_date: date }),
         sb.rpc("get_my_ward_roster_between", { p_ward_id: wardId, p_start_date: date, p_end_date: date })
       ]);
+
       if(summaryResult.error) throw summaryResult.error;
       if(rosterResult.error) throw rosterResult.error;
-      const s = summaryResult.data[0];
+
+      const s = (summaryResult.data || [])[0];
       const roster = rosterResult.data || [];
+
+      if(!s){
+        document.getElementById("content").innerHTML = `<div class="card"><div class="info">No dashboard summary returned for this ward/date.</div></div>`;
+        return;
+      }
+
       document.getElementById("content").innerHTML = `
-        <div class="card"><div class="actions" style="justify-content:space-between"><div><h2>Daily Staffing</h2><p class="muted">${escapeHtml(s.ward_code)} — ${escapeHtml(formatDate(date))}</p></div><div class="actions">${wardSelectorHtml()}<div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div></div></div></div>
-        <div class="stat-grid">${statCard(s.present_nurses+s.present_carers+s.present_healthcare_assistants,"Present")}${statCard(s.absent_total,"Absent / Off / Leave")}${statCard(s.sick_total,"Sick")}${statCard(s.til_out_total,"TIL out")}</div>
-        <div class="card"><div class="actions" style="justify-content:space-between"><div><h3>Establishment</h3><p class="muted">Required: ${s.required_nurses} nurses + ${s.required_carers} carers/HCAs. Nurse shortage: ${s.nurse_shortage}. Carer/HCA shortage: ${s.carer_hca_shortage}.</p></div><button class="success" type="button" onclick="submitDailyStaffing()">Submit daily staffing</button></div></div>
-        <div class="card"><h3>Staff rows</h3><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Role</th><th>Baseline</th><th>Live</th><th>Source</th><th>Reason</th></tr></thead><tbody>${roster.map(r=>`<tr><td>${escapeHtml(r.full_name)}</td><td>${escapeHtml(labelRole(r.role))}</td><td>${shiftBadge(r.baseline_shift_code)}</td><td>${shiftBadge(r.live_shift_code)}</td><td>${escapeHtml(r.source_type||"")}</td><td>${escapeHtml(r.override_reason||"")}</td></tr>`).join("")}</tbody></table></div></div>`;
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h2>Daily Staffing</h2>
+              <p class="muted">${escapeHtml(s.ward_code)} — ${escapeHtml(formatDate(date))}</p>
+            </div>
+            <div class="actions">${wardSelectorHtml()}<div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div></div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          ${statCard(numberValue(s.present_nurses)+numberValue(s.present_carers)+numberValue(s.present_healthcare_assistants),"Present")}
+          ${statCard(numberValue(s.absent_total),"Absent / Off / Leave")}
+          ${statCard(numberValue(s.sick_total),"Sick")}
+          ${statCard(numberValue(s.til_out_total),"TIL out")}
+        </div>
+
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h3>Establishment</h3>
+              <p class="muted">Required: ${numberValue(s.required_nurses)} nurses + ${numberValue(s.required_carers)} carers/HCAs. Nurse shortage: ${numberValue(s.nurse_shortage)}. Carer/HCA shortage: ${numberValue(s.carer_hca_shortage)}.</p>
+            </div>
+            <button class="success" type="button" onclick="submitDailyStaffing()">Submit daily staffing</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Staff rows</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Staff</th><th>Role</th><th>Baseline</th><th>Live</th><th>Source</th><th>Reason</th></tr></thead>
+              <tbody>
+                ${roster.map(r=>`
+                  <tr>
+                    <td>${escapeHtml(r.full_name)}</td>
+                    <td>${escapeHtml(labelRole(r.role))}</td>
+                    <td>${shiftBadge(r.baseline_shift_code)}</td>
+                    <td>${shiftBadge(r.live_shift_code)}</td>
+                    <td>${escapeHtml(r.source_type||"")}</td>
+                    <td>${escapeHtml(r.override_reason||"")}</td>
+                  </tr>
+                `).join("") || `<tr><td colspan="6" class="muted">No staff rows found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
     }
 
     async function submitDailyStaffing(){
       clearMessage();
-      const { error } = await sb.rpc("create_daily_staffing_submission", { p_ward_id: appState.selectedWardId, p_staffing_date: appState.selectedDate, p_submitted_by_staff_id: null, p_notes: "Submitted from frontend" });
+      const { error } = await sb.rpc("create_daily_staffing_submission", {
+        p_ward_id: appState.selectedWardId,
+        p_staffing_date: appState.selectedDate,
+        p_submitted_by_staff_id: null,
+        p_notes: "Submitted from frontend"
+      });
       if(error){ showError(error.message); return; }
       showSuccess("Daily staffing submitted successfully.");
       await renderWardDaily();
     }
 
     async function renderMonthlyRoster(){
-      const wardId = appState.selectedWardId, monthValue = appState.selectedMonth;
+      const wardId = requireSelectedWard();
+      const monthValue = appState.selectedMonth;
       const { start, end, days } = monthRange(monthValue);
+
       const { data, error } = await sb.rpc("get_my_ward_roster_between", { p_ward_id: wardId, p_start_date: start, p_end_date: end });
       if(error) throw error;
+
       const grouped = groupRosterByStaff(data || []);
+
       document.getElementById("content").innerHTML = `
-        <div class="card"><div class="actions" style="justify-content:space-between"><div><h2>Monthly Roster</h2><p class="muted">Baseline roster versus live roster. Red dot means override/change.</p></div><div class="actions">${wardSelectorHtml()}<div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div></div></div></div>
-        <div class="card"><div class="actions">${legend("D","Day")}${legend("N","Night")}${legend("M","Morning")}${legend("E","Evening")}${legend("O","Off")}${legend("R","Rest")}${legend("AL","Annual leave")}${legend("SL","Sick")}${legend("ML","Maternity")}${legend("ST","Study")}${legend("TI","TIL in")}${legend("TO","TIL out")}${legend("OT","Overtime")}</div></div>
-        <div class="card"><div class="table-wrap"><table class="roster-table"><thead><tr><th>Staff</th><th>Role</th><th>Group</th>${days.map(d=>`<th>${weekdayShort(d)}<br>${d.getDate()}</th>`).join("")}</tr></thead><tbody>${grouped.map(staff=>`<tr><td><strong>${escapeHtml(staff.full_name)}</strong></td><td>${escapeHtml(labelRole(staff.role))}</td><td>${escapeHtml(staff.roster_group||"")}</td>${days.map(day=>{const key=isoFromDate(day);const r=staff.days[key];const code=r?.live_shift_code||"";const isOverride=r?.source_type==="override";return `<td>${shiftBadge(code)}${isOverride?`<span class="override-dot" title="Changed from baseline"></span>`:""}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h2>Monthly Roster</h2>
+              <p class="muted">Baseline roster versus live roster. Red dot means override/change.</p>
+            </div>
+            <div class="actions">${wardSelectorHtml()}<div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="actions">
+            ${legend("D","Day")}
+            ${legend("N","Night")}
+            ${legend("M","Morning")}
+            ${legend("E","Evening")}
+            ${legend("O","Off")}
+            ${legend("R","Rest")}
+            ${legend("AL","Annual leave")}
+            ${legend("SL","Sick")}
+            ${legend("ML","Maternity")}
+            ${legend("ST","Study")}
+            ${legend("TI","TIL in")}
+            ${legend("TO","TIL out")}
+            ${legend("OT","Overtime")}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table class="roster-table">
+              <thead>
+                <tr>
+                  <th>Staff</th>
+                  <th>Role</th>
+                  <th>Roster</th>
+                  ${days.map(d=>`<th>${weekdayShort(d)}<br>${d.getDate()}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>
+                ${grouped.map(staff=>`
+                  <tr>
+                    <td><strong>${escapeHtml(staff.full_name)}</strong></td>
+                    <td>${escapeHtml(labelRole(staff.role))}</td>
+                    <td>${escapeHtml(staffRosterLabel(staff))}</td>
+                    ${days.map(day=>{
+                      const key=isoFromDate(day);
+                      const r=staff.days[key];
+                      const code=r?.live_shift_code||"";
+                      const isOverride=r?.source_type==="override";
+                      return `<td>${shiftBadge(code)}${isOverride?`<span class="override-dot" title="Changed from baseline"></span>`:""}</td>`;
+                    }).join("")}
+                  </tr>
+                `).join("") || `<tr><td colspan="${days.length+3}" class="muted">No roster rows found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
     }
 
     async function renderStaffManagement(){
-      const wardId = appState.selectedWardId;
+      const wardId = requireSelectedWard();
       const { data, error } = await sb.rpc("get_ward_staff_members", { p_ward_id: wardId });
       if(error) throw error;
+
+      appState.staffRows = data || [];
+
       document.getElementById("content").innerHTML = `
-        <div class="card"><div class="actions" style="justify-content:space-between"><div><h2>${appState.profile.is_sno?"Staff Management":"My Ward Staff"}</h2><p class="muted">Add and view ward complement staff.</p></div><div>${wardSelectorHtml()}</div></div></div>
-        <div class="card"><h3>Add staff member</h3><div class="grid grid-3">
-          <div><label>Full name</label><input id="newStaffName" placeholder="Surname Name"></div><div><label>Corp user ID</label><input id="newStaffCorp" placeholder="e.g. BorgA123"></div><div><label>Email</label><input id="newStaffEmail" type="email" placeholder="name@gov.mt"></div>
-          <div><label>Role</label><select id="newStaffRole"><option value="nurse">Staff Nurse</option><option value="carer">Carer</option><option value="healthcare_assistant">Healthcare Assistant</option>${appState.profile.is_sno?`<option value="charge_nurse">Charge Nurse</option>`:""}<option value="other">Other</option></select></div>
-          <div><label>Employment type</label><select id="newStaffEmployment"><option value="core">Core</option><option value="external_overtime">External overtime</option><option value="agency">Agency</option><option value="relieving_pool">Relieving pool</option><option value="other">Other</option></select></div>
-          <div><label>Roster pattern</label><select id="newStaffPattern"><option value="">None</option>${appState.ref.roster_patterns.map(p=>`<option value="${escapeHtml(p.pattern_code)}">${escapeHtml(p.pattern_code)} — ${escapeHtml(p.pattern_name)}</option>`).join("")}</select></div>
-          <div><label>Roster group</label><input id="newStaffGroup" placeholder="Roster 1 / A / B"></div><div><label>Roster start date</label><input id="newStaffStartDate" type="date"></div><div><label>Start position</label><input id="newStaffStartPosition" type="number" min="1" value="1"></div>
-        </div><div style="margin-top:14px"><button type="button" onclick="addStaffMember()">Add staff member</button></div></div>
-        <div class="card"><h3>Current staff</h3><div class="table-wrap"><table><thead><tr><th>Name</th><th>Corp ID</th><th>Role</th><th>Ward</th><th>Pattern</th><th>Employment</th><th>Status</th></tr></thead><tbody>${data.map(s=>`<tr><td>${escapeHtml(s.full_name)}</td><td>${escapeHtml(s.corp_user_id||"—")}</td><td>${escapeHtml(labelRole(s.role))}</td><td>${escapeHtml(s.ward_code)}</td><td>${escapeHtml(s.roster_pattern_code||"—")}</td><td>${escapeHtml(labelEmployment(s.employment_type))}</td><td>${s.is_active?badge("Active","green"):badge("Inactive","grey")}</td></tr>`).join("")}</tbody></table></div></div>`;
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h2>${appState.profile.is_sno ? "Staff Management" : "My Ward Staff"}</h2>
+              <p class="muted">Ward complement only. Employment type is fixed as core; overtime and relieving pool are handled separately.</p>
+            </div>
+            <div>${wardSelectorHtml()}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h3>Add staff member</h3>
+              <p class="muted">Assign staff to mandatory Roster 1–Roster 5 or to an approved day-only pattern.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-3">
+            <div><label>Full name</label><input id="newStaffName" placeholder="Surname Name"></div>
+            <div><label>Corp user ID</label><input id="newStaffCorp" placeholder="e.g. BorgA123"></div>
+            <div><label>Email</label><input id="newStaffEmail" type="email" placeholder="name@gov.mt"></div>
+
+            <div><label>Role</label>${roleSelectHtml("newStaffRole")}</div>
+            <div><label>Roster</label>${rosterAssignmentSelectHtml("newStaffRosterAssignment")}</div>
+            <div><label>Roster start date</label><input id="newStaffStartDate" type="date"></div>
+          </div>
+
+          <div style="margin-top:14px">
+            <button type="button" onclick="addStaffMember()">Add staff member</button>
+          </div>
+        </div>
+
+        <div id="editStaffPanel" class="card hidden">
+          <div class="section-title">
+            <div>
+              <h3>Edit staff member</h3>
+              <p class="muted">Charge nurses cannot add, edit, or deactivate another charge nurse. SNO can manage charge nurses.</p>
+            </div>
+            <button type="button" class="secondary small" onclick="cancelEditStaff()">Close</button>
+          </div>
+
+          <input id="editStaffId" type="hidden">
+
+          <div class="grid grid-3">
+            <div><label>Full name</label><input id="editStaffName"></div>
+            <div><label>Corp user ID</label><input id="editStaffCorp"></div>
+            <div><label>Email</label><input id="editStaffEmail" type="email"></div>
+
+            <div><label>Role</label>${roleSelectHtml("editStaffRole")}</div>
+            <div><label>Roster</label>${rosterAssignmentSelectHtml("editStaffRosterAssignment")}</div>
+            <div><label>Roster start date</label><input id="editStaffStartDate" type="date"></div>
+          </div>
+
+          <div class="actions" style="margin-top:14px">
+            <button type="button" onclick="updateStaffMember()">Save changes</button>
+            <button type="button" class="secondary" onclick="cancelEditStaff()">Cancel</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Current staff</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Corp ID</th>
+                  <th>Role</th>
+                  <th>Ward</th>
+                  <th>Roster</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${appState.staffRows.map(s=>`
+                  <tr>
+                    <td><strong>${escapeHtml(s.full_name)}</strong></td>
+                    <td>${escapeHtml(s.corp_user_id || "—")}</td>
+                    <td>${escapeHtml(labelRole(s.role))}</td>
+                    <td>${escapeHtml(s.ward_code || selectedWard()?.ward_code || "")}</td>
+                    <td>${escapeHtml(staffRosterLabel(s))}</td>
+                    <td>${truthy(s.is_active) ? badge("Active","green") : badge("Inactive","grey")}</td>
+                    <td>
+                      <div class="actions">
+                        <button type="button" class="secondary small" onclick="startEditStaff('${escapeHtml(s.id || s.staff_id)}')">Edit</button>
+                        ${canShowDeactivateButton(s) ? `<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id || s.staff_id)}','${escapeHtml(s.full_name)}')">Delete</button>` : `<span class="muted">SNO only</span>`}
+                      </div>
+                    </td>
+                  </tr>
+                `).join("") || `<tr><td colspan="7" class="muted">No staff found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
     }
 
     async function addStaffMember(){
       clearMessage();
-      const { error } = await sb.rpc("create_ward_staff_member", {
-        p_full_name:document.getElementById("newStaffName").value.trim(),
-        p_corp_user_id:document.getElementById("newStaffCorp").value.trim(),
+
+      const name = document.getElementById("newStaffName").value.trim();
+      const corp = document.getElementById("newStaffCorp").value.trim();
+      const role = document.getElementById("newStaffRole").value;
+      const assignment = parseRosterAssignment(document.getElementById("newStaffRosterAssignment").value);
+
+      if(!name){ showError("Full name is required."); return; }
+      if(!corp){ showError("Corp user ID is required."); return; }
+      if(!role){ showError("Role is required."); return; }
+      if(!assignment.type){ showError("Roster assignment is required."); return; }
+
+      const payload = {
+        p_full_name:name,
+        p_corp_user_id:corp,
         p_email:document.getElementById("newStaffEmail").value.trim() || null,
-        p_role:document.getElementById("newStaffRole").value,
-        p_employment_type:document.getElementById("newStaffEmployment").value,
+        p_role:role,
         p_home_ward_id:appState.selectedWardId,
-        p_roster_pattern_code:document.getElementById("newStaffPattern").value || null,
-        p_roster_group:document.getElementById("newStaffGroup").value.trim() || null,
+        p_roster_group_template_id:null,
+        p_roster_group_code:assignment.type === "group" ? assignment.code : null,
+        p_roster_pattern_id:null,
+        p_roster_pattern_code:assignment.type === "pattern" ? assignment.code : null,
         p_roster_start_date:document.getElementById("newStaffStartDate").value || null,
-        p_roster_start_position:Number(document.getElementById("newStaffStartPosition").value || 1)
-      });
+        p_roster_group:null,
+        p_employment_type:null
+      };
+
+      const { error } = await sb.rpc("create_ward_staff_member", payload);
       if(error){ showError(error.message); return; }
+
       showSuccess("Staff member added successfully.");
       await renderStaffManagement();
     }
 
+    function startEditStaff(staffId){
+      clearMessage();
+
+      const staff = appState.staffRows.find(s => String(s.id || s.staff_id) === String(staffId));
+      if(!staff){ showError("Could not find staff member in the current table."); return; }
+
+      document.getElementById("editStaffPanel").classList.remove("hidden");
+      document.getElementById("editStaffId").value = staff.id || staff.staff_id;
+      document.getElementById("editStaffName").value = staff.full_name || "";
+      document.getElementById("editStaffCorp").value = staff.corp_user_id || "";
+      document.getElementById("editStaffEmail").value = staff.email || "";
+      document.getElementById("editStaffRole").value = staff.role || "nurse";
+      document.getElementById("editStaffRosterAssignment").value = rosterAssignmentValueFromStaff(staff);
+      document.getElementById("editStaffStartDate").value = dateOnly(staff.roster_start_date) || "";
+
+      document.getElementById("editStaffPanel").scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+
+    function cancelEditStaff(){
+      document.getElementById("editStaffPanel").classList.add("hidden");
+      document.getElementById("editStaffId").value = "";
+    }
+
+    async function updateStaffMember(){
+      clearMessage();
+
+      const staffId = document.getElementById("editStaffId").value;
+      const assignment = parseRosterAssignment(document.getElementById("editStaffRosterAssignment").value);
+
+      if(!staffId){ showError("No staff member selected."); return; }
+      if(!assignment.type){ showError("Roster assignment is required."); return; }
+
+      const payload = {
+        p_staff_id:staffId,
+        p_full_name:document.getElementById("editStaffName").value.trim(),
+        p_corp_user_id:document.getElementById("editStaffCorp").value.trim(),
+        p_email:document.getElementById("editStaffEmail").value.trim() || null,
+        p_role:document.getElementById("editStaffRole").value,
+        p_home_ward_id:appState.selectedWardId,
+        p_roster_group_template_id:null,
+        p_roster_group_code:assignment.type === "group" ? assignment.code : null,
+        p_roster_pattern_id:null,
+        p_roster_pattern_code:assignment.type === "pattern" ? assignment.code : null,
+        p_roster_start_date:document.getElementById("editStaffStartDate").value || null,
+        p_roster_group:null
+      };
+
+      const { error } = await sb.rpc("update_ward_staff_member", payload);
+      if(error){ showError(error.message); return; }
+
+      showSuccess("Staff member updated successfully.");
+      await renderStaffManagement();
+    }
+
+    async function deactivateStaffMember(staffId, staffName){
+      clearMessage();
+
+      const confirmed = window.confirm(`Deactivate ${staffName}?\n\nThis is a safe delete. It will hide the staff member from active lists but preserve history.`);
+      if(!confirmed) return;
+
+      const reason = window.prompt("Reason for deactivation:", "Removed from ward complement");
+      if(reason === null) return;
+
+      const { error } = await sb.rpc("deactivate_ward_staff_member", {
+        p_staff_id:staffId,
+        p_reason:reason || "Removed from ward complement"
+      });
+
+      if(error){ showError(error.message); return; }
+
+      showSuccess("Staff member deactivated successfully.");
+      await renderStaffManagement();
+    }
+
     async function renderRelievingPool(){
+      if(!appState.profile.is_sno){
+        document.getElementById("content").innerHTML = `<div class="card"><div class="info">Relieving Pool management is SNO-only. Ward users submit daily staffing; the SNO reviews shortage requests.</div></div>`;
+        return;
+      }
+
       const monthValue = appState.selectedMonth;
       const { start, end } = monthRange(monthValue);
-      const wardId = appState.profile.is_sno ? null : appState.selectedWardId;
-      const { data, error } = await sb.rpc("get_relieving_pool_requests_safe", { p_start_date:start, p_end_date:end, p_ward_id:wardId });
+
+      const { data, error } = await sb.rpc("get_relieving_pool_requests_safe", {
+        p_start_date:start,
+        p_end_date:end,
+        p_ward_id:null
+      });
+
       if(error) throw error;
-      document.getElementById("content").innerHTML = `<div class="card"><div class="actions" style="justify-content:space-between"><div><h2>Relieving Pool Requests</h2><p class="muted">Shortage requests generated from daily staffing submissions.</p></div><div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Ward</th><th>Shift</th><th>Nurses</th><th>Carers/HCAs</th><th>Status</th><th>Requested by</th><th>Reason</th></tr></thead><tbody>${(data||[]).map(r=>`<tr><td>${escapeHtml(formatDate(r.request_date))}</td><td>${escapeHtml(r.ward_code)}</td><td>${escapeHtml(r.shift_code||"—")}</td><td>${r.nurses_needed}</td><td>${r.carers_needed+r.healthcare_assistants_needed}</td><td>${statusBadge(r.request_status)}</td><td>${escapeHtml(r.requested_by_name||"—")}</td><td>${escapeHtml(r.reason||"")}</td></tr>`).join("") || `<tr><td colspan="8" class="muted">No requests found.</td></tr>`}</tbody></table></div></div>`;
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h2>Relieving Pool Requests</h2>
+              <p class="muted">Shortage requests generated from daily staffing submissions.</p>
+            </div>
+            <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Ward</th><th>Shift</th><th>Nurses needed</th><th>Carers/HCAs needed</th><th>Status</th><th>Requested by</th><th>Reason</th></tr></thead>
+              <tbody>
+                ${(data||[]).map(r=>`
+                  <tr>
+                    <td>${escapeHtml(formatDate(r.request_date))}</td>
+                    <td>${escapeHtml(r.ward_code)}</td>
+                    <td>${escapeHtml(r.shift_code||"—")}</td>
+                    <td>${numberValue(r.nurses_needed)}</td>
+                    <td>${numberValue(r.carers_needed)+numberValue(r.healthcare_assistants_needed)}</td>
+                    <td>${statusBadge(r.request_status)}</td>
+                    <td>${escapeHtml(r.requested_by_name||"—")}</td>
+                    <td>${escapeHtml(r.reason||"")}</td>
+                  </tr>
+                `).join("") || `<tr><td colspan="8" class="muted">No requests found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    async function renderAuditVisuals(){
+      const monthValue = appState.selectedMonth;
+      const { start, end } = monthRange(monthValue);
+
+      const { data, error } = await sb.rpc("get_sno_audit_history", {
+        p_start_date:start,
+        p_end_date:end,
+        p_ward_id:null,
+        p_action_type:null,
+        p_table_name:null
+      });
+
+      if(error) throw error;
+
+      const rows = data || [];
+      const byAction = countBy(rows, r => r.action_type || "unknown");
+      const byTable = countBy(rows, r => r.table_name || "unknown");
+      const byWard = countBy(rows, r => r.ward_code || "No ward");
+      const byUser = countBy(rows, r => r.changed_by_name || "Unknown");
+
+      const staffChanges = rows.filter(r => r.table_name === "staff" || r.table_name === "staff_ward_access").length;
+      const rosterChanges = rows.filter(r => r.table_name === "roster_overrides").length;
+      const submissionChanges = rows.filter(r => r.table_name === "daily_staffing_submissions").length;
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h2>Audit KPIs</h2>
+              <p class="muted">SNO-only visual audit monitoring. This is separate from the raw audit history table.</p>
+            </div>
+            <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          ${statCard(rows.length,"Total audit events")}
+          ${statCard(staffChanges,"Staff/permission changes")}
+          ${statCard(rosterChanges,"Roster changes")}
+          ${statCard(submissionChanges,"Daily submission changes")}
+        </div>
+
+        <div class="grid grid-2">
+          ${barCard("Events by action", byAction)}
+          ${barCard("Events by table", byTable)}
+          ${barCard("Events by ward", byWard)}
+          ${barCard("Events by user", byUser)}
+        </div>
+      `;
     }
 
     async function renderAuditHistory(){
       const monthValue = appState.selectedMonth;
       const { start, end } = monthRange(monthValue);
-      const { data, error } = await sb.rpc("get_sno_audit_history", { p_start_date:start, p_end_date:end, p_ward_id:null, p_action_type:null, p_table_name:null });
+
+      const { data, error } = await sb.rpc("get_sno_audit_history", {
+        p_start_date:start,
+        p_end_date:end,
+        p_ward_id:null,
+        p_action_type:null,
+        p_table_name:null
+      });
+
       if(error) throw error;
-      document.getElementById("content").innerHTML = `<div class="card"><div class="actions" style="justify-content:space-between"><div><h2>Audit History</h2><p class="muted">SNO-only audit trail.</p></div><div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date & Time</th><th>Ward</th><th>Action</th><th>Table</th><th>Changed by</th><th>Summary</th></tr></thead><tbody>${(data||[]).map(a=>`<tr><td>${escapeHtml(formatDateTime(a.created_at))}</td><td>${escapeHtml(a.ward_code||"—")}</td><td>${escapeHtml(a.action_type)}</td><td>${escapeHtml(a.table_name)}</td><td>${escapeHtml(a.changed_by_name||"—")}</td><td>${escapeHtml(a.summary||"")}</td></tr>`).join("") || `<tr><td colspan="6" class="muted">No audit records found.</td></tr>`}</tbody></table></div></div>`;
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h2>Audit History</h2>
+              <p class="muted">SNO-only raw audit trail.</p>
+            </div>
+            <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date & Time</th><th>Ward</th><th>Action</th><th>Table</th><th>Changed by</th><th>Summary</th></tr></thead>
+              <tbody>
+                ${(data||[]).map(a=>`
+                  <tr>
+                    <td>${escapeHtml(formatDateTime(a.created_at))}</td>
+                    <td>${escapeHtml(a.ward_code||"—")}</td>
+                    <td>${escapeHtml(a.action_type)}</td>
+                    <td>${escapeHtml(a.table_name)}</td>
+                    <td>${escapeHtml(a.changed_by_name||"—")}</td>
+                    <td>${escapeHtml(a.summary||"")}</td>
+                  </tr>
+                `).join("") || `<tr><td colspan="6" class="muted">No audit records found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
     }
 
     async function renderMyAccount(){
-      document.getElementById("content").innerHTML = `<div class="card"><h2>My Account</h2><p class="muted">${escapeHtml(appState.profile.full_name)} — ${escapeHtml(appState.profile.email||"")}</p></div><div class="card"><h3>Change password</h3><div class="grid grid-2"><div><label>New password</label><input id="newPassword" type="password"></div><div><label>Confirm new password</label><input id="confirmPassword" type="password"></div></div><div style="margin-top:14px"><button type="button" onclick="updatePassword()">Update password</button></div></div>`;
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <h2>My Account</h2>
+          <p class="muted">${escapeHtml(appState.profile.full_name)} — ${escapeHtml(appState.profile.email||"")}</p>
+        </div>
+
+        <div class="card">
+          <h3>Change password</h3>
+          <div class="grid grid-2">
+            <div><label>New password</label><input id="newPassword" type="password"></div>
+            <div><label>Confirm new password</label><input id="confirmPassword" type="password"></div>
+          </div>
+          <div style="margin-top:14px"><button type="button" onclick="updatePassword()">Update password</button></div>
+        </div>`;
     }
 
     async function updatePassword(){
       clearMessage();
-      const p1=document.getElementById("newPassword").value, p2=document.getElementById("confirmPassword").value;
+      const p1=document.getElementById("newPassword").value;
+      const p2=document.getElementById("confirmPassword").value;
+
       if(!p1 || p1.length<6){ showError("Password must be at least 6 characters."); return; }
       if(p1!==p2){ showError("Passwords do not match."); return; }
+
       const { error } = await sb.auth.updateUser({ password:p1 });
       if(error){ showError(error.message); return; }
+
       showSuccess("Password updated successfully.");
-      document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value="";
+      document.getElementById("newPassword").value="";
+      document.getElementById("confirmPassword").value="";
     }
 
     function setSelectedDate(value){ appState.selectedDate=value; renderTab(appState.activeTab); }
@@ -475,15 +1030,197 @@
     function setSelectedWard(value){ appState.selectedWardId=value; renderTab(appState.activeTab); }
 
     function wardSelectorHtml(){
-      if(!appState.profile.is_sno && appState.wards.length<=1) return "";
-      return `<div><label>Ward</label><select onchange="setSelectedWard(this.value)">${appState.wards.map(w=>`<option value="${w.ward_id}" ${w.ward_id===appState.selectedWardId?"selected":""}>${escapeHtml(w.ward_code)}</option>`).join("")}</select></div>`;
+      if(!appState.profile?.is_sno && appState.wards.length<=1) return "";
+
+      return `
+        <div>
+          <label>Ward</label>
+          <select onchange="setSelectedWard(this.value)">
+            ${appState.wards.map(w=>`
+              <option value="${escapeHtml(w.ward_id)}" ${w.ward_id===appState.selectedWardId?"selected":""}>
+                ${escapeHtml(w.ward_code)}${w.ward_name ? ` — ${escapeHtml(w.ward_name)}` : ""}
+              </option>
+            `).join("")}
+          </select>
+        </div>`;
     }
-    function statCard(value,label){ return `<div class="stat"><div class="stat-value">${value}</div><div class="stat-label">${escapeHtml(label)}</div></div>`; }
+
+    function roleSelectHtml(id, selected="nurse"){
+      const options = [
+        ["nurse","Staff Nurse"],
+        ["carer","Carer"],
+        ["healthcare_assistant","Healthcare Assistant"],
+        ["other","Other"]
+      ];
+
+      if(appState.profile?.is_sno){
+        options.splice(1, 0, ["charge_nurse","Charge Nurse"]);
+      }
+
+      return `<select id="${escapeHtml(id)}">${options.map(([value,label]) => `<option value="${value}" ${value===selected?"selected":""}>${escapeHtml(label)}</option>`).join("")}</select>`;
+    }
+
+    function rosterAssignmentSelectHtml(id, selected=""){
+      const groupOptions = rosterGroupTemplates().map(t => {
+        const code = templateCode(t);
+        const label = templateLabel(t);
+        return `<option value="group:${escapeHtml(code)}" ${selected===`group:${code}`?"selected":""}>${escapeHtml(label)}</option>`;
+      }).join("");
+
+      const patternOptions = rosterPatterns().map(p => {
+        const code = patternCode(p);
+        const label = patternLabel(p);
+        return `<option value="pattern:${escapeHtml(code)}" ${selected===`pattern:${code}`?"selected":""}>${escapeHtml(label)}</option>`;
+      }).join("");
+
+      return `
+        <select id="${escapeHtml(id)}">
+          <option value="">Select roster...</option>
+          <optgroup label="Mandatory hospital roster groups">
+            ${groupOptions}
+          </optgroup>
+          <optgroup label="Special day-only patterns">
+            ${patternOptions}
+          </optgroup>
+        </select>`;
+    }
+
+    function parseRosterAssignment(value){
+      if(!value) return { type:null, code:null };
+      const idx = value.indexOf(":");
+      if(idx < 0) return { type:null, code:null };
+      return { type:value.slice(0, idx), code:value.slice(idx + 1) };
+    }
+
+    function rosterAssignmentValueFromStaff(staff){
+      const groupCode = staff.roster_code || staff.roster_name || staff.roster_group;
+      if(staff.roster_group_template_id || looksLikeMandatoryRoster(groupCode)) return `group:${groupCode}`;
+      if(staff.roster_pattern_code) return `pattern:${staff.roster_pattern_code}`;
+      return "";
+    }
+
+    function rosterGroupTemplates(){
+      const items = appState.ref?.roster_group_templates || [];
+      if(items.length) return items;
+
+      return [
+        { roster_code:"Roster 1", roster_name:"Roster 1" },
+        { roster_code:"Roster 2", roster_name:"Roster 2" },
+        { roster_code:"Roster 3", roster_name:"Roster 3" },
+        { roster_code:"Roster 4", roster_name:"Roster 4" },
+        { roster_code:"Roster 5", roster_name:"Roster 5" }
+      ];
+    }
+
+    function rosterPatterns(){
+      const allowed = new Set(["DDOO","DDODO","DDDOO"]);
+      return (appState.ref?.roster_patterns || [])
+        .filter(p => allowed.has(patternCode(p)));
+    }
+
+    function templateCode(t){ return t.roster_code || t.code || t.roster_name || t.name || ""; }
+    function templateLabel(t){ return t.roster_name || t.name || t.roster_code || t.code || ""; }
+    function patternCode(p){ return String(p.pattern_code || p.code || "").toUpperCase(); }
+    function patternLabel(p){
+      const code = patternCode(p);
+      const name = p.pattern_name || p.name || "";
+      return name ? `${code} — ${name}` : code;
+    }
+
+    function staffRosterLabel(staff){
+      if(staff.roster_name) return staff.roster_name;
+      if(staff.roster_code) return staff.roster_code;
+      if(staff.roster_group) return staff.roster_group;
+      if(staff.roster_pattern_code) return staff.roster_pattern_code;
+      if(staff.pattern_code) return staff.pattern_code;
+      return "—";
+    }
+
+    function looksLikeMandatoryRoster(value){
+      const v = String(value || "").toLowerCase().replace(/\s+/g,"");
+      return ["roster1","roster2","roster3","roster4","roster5","r1","r2","r3","r4","r5"].includes(v);
+    }
+
+    function canShowDeactivateButton(staff){
+      if(!truthy(staff.is_active)) return false;
+      if(staff.role === "sno") return false;
+      if(staff.role === "charge_nurse" && !appState.profile?.is_sno) return false;
+      return true;
+    }
+
+    function requireSelectedWard(){
+      if(!appState.selectedWardId){
+        throw new Error("No ward selected or no ward access was returned for this account.");
+      }
+      return appState.selectedWardId;
+    }
+
+    function selectedWard(){
+      return appState.wards.find(w => w.ward_id === appState.selectedWardId) || null;
+    }
+
+    function wardAccessLabel(){
+      if(!appState.wards.length) return "No ward access returned";
+      return `Access: ${appState.wards.map(w => w.ward_name ? `${w.ward_name} (${w.ward_code})` : w.ward_code).join(", ")}`;
+    }
+
+    function statCard(value,label){
+      return `<div class="stat"><div class="stat-value">${numberValue(value)}</div><div class="stat-label">${escapeHtml(label)}</div></div>`;
+    }
+
+    function barCard(title, counts){
+      const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      const max = entries.length ? Math.max(...entries.map(e=>e[1])) : 1;
+
+      return `
+        <div class="card">
+          <h3>${escapeHtml(title)}</h3>
+          <div class="bar-list">
+            ${entries.map(([label,value]) => `
+              <div class="bar-row">
+                <div class="bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${Math.max(3, Math.round((value/max)*100))}%"></div></div>
+                <div class="bar-value">${value}</div>
+              </div>
+            `).join("") || `<p class="muted">No data.</p>`}
+          </div>
+        </div>`;
+    }
+
+    function countBy(rows, fn){
+      const out = {};
+      for(const row of rows){
+        const key = String(fn(row) || "Unknown");
+        out[key] = (out[key] || 0) + 1;
+      }
+      return out;
+    }
+
     function badge(text,colour){ return `<span class="badge ${colour}">${escapeHtml(text)}</span>`; }
-    function wardStatusBadge(status){ if(status==="fully_staffed")return badge("Fully staffed","green"); if(status==="short_staffed")return badge("Short staffed","red"); if(status==="not_submitted")return badge("Not submitted","amber"); return badge(status||"Unknown","grey"); }
-    function statusBadge(status){ if(status==="open")return badge("Open","amber"); if(status==="reviewed")return badge("Reviewed","blue"); if(status==="partially_filled")return badge("Partially filled","purple"); if(status==="filled")return badge("Filled","green"); if(status==="cancelled")return badge("Cancelled","grey"); return badge(status||"Unknown","grey"); }
-    function shiftBadge(code){ if(!code) return `<span class="shift-cell shift-O">—</span>`; return `<span class="shift-cell shift-${escapeHtml(code)}">${escapeHtml(code)}</span>`; }
+
+    function wardStatusBadge(status){
+      if(status==="fully_staffed")return badge("Fully staffed","green");
+      if(status==="short_staffed")return badge("Short staffed","red");
+      if(status==="not_submitted")return badge("Not submitted","amber");
+      return badge(status||"Unknown","grey");
+    }
+
+    function statusBadge(status){
+      if(status==="open")return badge("Open","amber");
+      if(status==="reviewed")return badge("Reviewed","blue");
+      if(status==="partially_filled")return badge("Partially filled","purple");
+      if(status==="filled")return badge("Filled","green");
+      if(status==="cancelled")return badge("Cancelled","grey");
+      return badge(status||"Unknown","grey");
+    }
+
+    function shiftBadge(code){
+      if(!code) return `<span class="shift-cell shift-O">—</span>`;
+      return `<span class="shift-cell shift-${escapeHtml(code)}">${escapeHtml(code)}</span>`;
+    }
+
     function legend(code,label){ return `<span>${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`; }
+
     function showError(message){ document.getElementById("message").innerHTML=`<div class="error">${escapeHtml(message)}</div>`; }
     function showSuccess(message){ document.getElementById("message").innerHTML=`<div class="success-msg">${escapeHtml(message)}</div>`; }
     function clearMessage(){ document.getElementById("message").innerHTML=""; }
@@ -491,26 +1228,87 @@
 
     function groupRosterByStaff(rows){
       const map=new Map();
+
       for(const row of rows){
-        if(!map.has(row.staff_id)) map.set(row.staff_id,{staff_id:row.staff_id,full_name:row.full_name,role:row.role,roster_group:row.roster_group,days:{}});
+        if(!map.has(row.staff_id)){
+          map.set(row.staff_id,{
+            staff_id:row.staff_id,
+            full_name:row.full_name,
+            role:row.role,
+            roster_group:row.roster_group,
+            roster_code:row.roster_code,
+            roster_name:row.roster_name,
+            roster_pattern_code:row.roster_pattern_code,
+            days:{}
+          });
+        }
         map.get(row.staff_id).days[row.shift_date]=row;
       }
-      return Array.from(map.values()).sort((a,b)=>{const ga=a.roster_group||"", gb=b.roster_group||""; if(ga!==gb)return ga.localeCompare(gb); return a.full_name.localeCompare(b.full_name);});
+
+      return Array.from(map.values()).sort((a,b)=>{
+        const ga=staffRosterLabel(a), gb=staffRosterLabel(b);
+        if(ga!==gb)return ga.localeCompare(gb);
+        return String(a.full_name || "").localeCompare(String(b.full_name || ""));
+      });
     }
+
     function monthRange(monthValue){
-      const [year,month]=monthValue.split("-").map(Number);const startDate=new Date(year,month-1,1);const endDate=new Date(year,month,0);const days=[];const cursor=new Date(startDate);
-      while(cursor<=endDate){days.push(new Date(cursor));cursor.setDate(cursor.getDate()+1);}
+      const [year,month]=monthValue.split("-").map(Number);
+      const startDate=new Date(year,month-1,1);
+      const endDate=new Date(year,month,0);
+      const days=[];
+      const cursor=new Date(startDate);
+
+      while(cursor<=endDate){
+        days.push(new Date(cursor));
+        cursor.setDate(cursor.getDate()+1);
+      }
+
       return {start:isoFromDate(startDate),end:isoFromDate(endDate),days};
     }
+
     function todayISO(){ return isoFromDate(new Date()); }
     function monthISO(date){ const y=date.getFullYear(); const m=String(date.getMonth()+1).padStart(2,"0"); return `${y}-${m}`; }
     function isoFromDate(date){ const y=date.getFullYear(); const m=String(date.getMonth()+1).padStart(2,"0"); const d=String(date.getDate()).padStart(2,"0"); return `${y}-${m}-${d}`; }
+    function dateOnly(value){ if(!value) return ""; return String(value).slice(0,10); }
     function formatDate(value){ if(!value)return""; const [y,m,d]=String(value).split("-"); return `${d}/${m}/${y}`; }
     function formatDateTime(value){ if(!value)return""; const dt=new Date(value); return dt.toLocaleString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
     function weekdayShort(date){ return date.toLocaleDateString("en-GB",{weekday:"short"}); }
-    function labelRole(role){ const labels={sno:"Senior Nursing Officer",charge_nurse:"Charge Nurse",nurse:"Staff Nurse",carer:"Carer",healthcare_assistant:"Healthcare Assistant",other:"Other"}; return labels[role]||role||""; }
-    function labelEmployment(value){ const labels={core:"Core",relieving_pool:"Relieving Pool",external_overtime:"External Overtime",agency:"Agency",other:"Other"}; return labels[value]||value||""; }
-    function escapeHtml(value){ return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+
+    function labelRole(role){
+      const labels={
+        sno:"Senior Nursing Officer",
+        charge_nurse:"Charge Nurse",
+        nurse:"Staff Nurse",
+        carer:"Carer",
+        healthcare_assistant:"Healthcare Assistant",
+        other:"Other"
+      };
+      return labels[role]||role||"";
+    }
+
+    function labelEmployment(value){
+      const labels={core:"Core",relieving_pool:"Relieving Pool",external_overtime:"External Overtime",agency:"Agency",other:"Other"};
+      return labels[value]||value||"";
+    }
+
+    function numberValue(value){
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function truthy(value){
+      return value === true || value === "true" || value === 1 || value === "1";
+    }
+
+    function escapeHtml(value){
+      return String(value??"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
   </script>
 </body>
 </html>
