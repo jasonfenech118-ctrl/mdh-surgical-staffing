@@ -78,7 +78,7 @@
     .top-user{text-align:right;font-size:12px;line-height:1.45;color:var(--muted)}
     .top-user strong{color:var(--text);font-weight:700}
 
-    .container{max-width:1260px;margin:24px auto;padding:0 18px}
+    .container{max-width:1360px;margin:24px auto;padding:0 18px}
 
     .card{
       background:rgba(255,255,255,.94);
@@ -204,7 +204,59 @@
     .success-msg{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border);padding:11px 13px;border-radius:12px;margin:10px 0;font-weight:600}
     .info{background:var(--primary-soft);color:var(--primary-dark);border:1px solid var(--primary-border);padding:11px 13px;border-radius:12px;margin:10px 0;font-weight:600}
 
-    .roster-table{min-width:1160px}
+    .ward-hero{
+      background:linear-gradient(135deg,#ffffff 0%,#f0f8ff 100%);
+      border-color:var(--primary-border);
+    }
+
+    .eyebrow{
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-size:11px;
+      font-weight:900;
+      color:var(--primary-dark);
+      margin-bottom:5px;
+    }
+
+    .ward-name-big{
+      font-size:34px;
+      line-height:1.05;
+      font-weight:900;
+      color:#163555;
+      letter-spacing:-.055em;
+      margin-bottom:8px;
+    }
+
+    .ward-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      color:var(--muted);
+      font-weight:600;
+    }
+
+    .roster-table{min-width:1560px}
+    .roster-table th:first-child,
+    .roster-table td:first-child{
+      min-width:270px;
+      width:270px;
+      max-width:330px;
+      position:sticky;
+      left:0;
+      background:#fff;
+      z-index:2;
+      box-shadow:1px 0 0 var(--border);
+    }
+
+    .roster-table th:first-child{
+      background:#f9fbfd;
+      z-index:3;
+    }
+
+    .staff-name-main{font-weight:900;color:#223449;white-space:normal}
+    .staff-name-sub{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
+
     .shift-cell{display:inline-flex;justify-content:center;align-items:center;min-width:32px;height:27px;border-radius:9px;font-weight:900;font-size:12px;border:1px solid transparent}
     .shift-D,.shift-M,.shift-E{background:var(--primary-soft);color:var(--primary-dark);border-color:var(--primary-border)}
     .shift-N{background:#e7edff;color:#3857a6;border-color:#cfd9fb}
@@ -214,6 +266,27 @@
     .shift-ML,.shift-ST{background:var(--purple-soft);color:var(--purple);border-color:var(--purple-border)}
     .shift-TI,.shift-TO,.shift-OT{background:var(--green-soft);color:var(--green);border-color:var(--green-border)}
     .override-dot{display:inline-block;width:7px;height:7px;border-radius:999px;background:var(--red);margin-left:5px;vertical-align:middle}
+
+    .shift-click{
+      background:transparent;
+      color:inherit;
+      box-shadow:none;
+      padding:0;
+      border-radius:9px;
+      border:1px solid transparent;
+      min-width:38px;
+    }
+
+    .shift-click:hover{
+      background:var(--primary-soft);
+      border-color:var(--primary-border);
+      box-shadow:none;
+    }
+
+    .date-highlight{
+      background:var(--amber-soft)!important;
+      color:var(--amber)!important;
+    }
 
     .form-panel{
       border:1px solid var(--primary-border);
@@ -245,6 +318,9 @@
       .container{margin:16px auto;padding:0 12px}
       .bar-row{grid-template-columns:1fr}
       .bar-value{text-align:left}
+      .ward-name-big{font-size:28px}
+      .roster-table th:first-child,
+      .roster-table td:first-child{position:static;min-width:240px}
     }
   </style>
 </head>
@@ -300,7 +376,11 @@
       selectedWardId:null,
       selectedDate:todayISO(),
       selectedMonth:monthISO(new Date()),
-      staffRows:[]
+      highlightedDate:null,
+      staffRows:[],
+      dailyRosterRows:[],
+      monthlyRosterRows:[],
+      monthlyGroupedRows:[]
     };
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -420,7 +500,11 @@
 
     async function signOut(){
       await sb.auth.signOut();
-      appState = {session:null,ref:null,profile:null,wards:[],activeTab:null,selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date()),staffRows:[]};
+      appState = {
+        session:null,ref:null,profile:null,wards:[],activeTab:null,
+        selectedWardId:null,selectedDate:todayISO(),selectedMonth:monthISO(new Date()),
+        highlightedDate:null,staffRows:[],dailyRosterRows:[],monthlyRosterRows:[],monthlyGroupedRows:[]
+      };
       showLogin();
     }
 
@@ -478,6 +562,7 @@
     async function renderWardDaily(){
       const wardId = requireSelectedWard();
       const date = appState.selectedDate;
+      const ward = selectedWard();
 
       const [summaryResult, rosterResult] = await Promise.all([
         sb.rpc("get_ward_daily_dashboard", { p_ward_id: wardId, p_staffing_date: date }),
@@ -489,6 +574,7 @@
 
       const s = (summaryResult.data || [])[0];
       const roster = rosterResult.data || [];
+      appState.dailyRosterRows = roster;
 
       if(!s){
         document.getElementById("content").innerHTML = `<div class="card"><div class="info">No dashboard summary returned for this ward/date.</div></div>`;
@@ -496,11 +582,18 @@
       }
 
       document.getElementById("content").innerHTML = `
-        <div class="card">
-          <div class="actions" style="justify-content:space-between">
+        <div class="card ward-hero">
+          <div class="actions" style="justify-content:space-between;align-items:flex-start">
             <div>
-              <h2>Daily Staffing</h2>
-              <p class="muted">${escapeHtml(s.ward_code)} — ${escapeHtml(formatDate(date))}</p>
+              <div class="eyebrow">Ward Dashboard</div>
+              <div class="ward-name-big">${escapeHtml(ward?.ward_name || s.ward_name || "Selected Ward")}</div>
+              <div class="ward-meta">
+                <span>${escapeHtml(ward?.ward_code || s.ward_code || "")}</span>
+                <span>•</span>
+                <span>${escapeHtml(formatDate(date))}</span>
+                <span>•</span>
+                <span>Daily staffing report</span>
+              </div>
             </div>
             <div class="actions">${wardSelectorHtml()}<div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div></div>
           </div>
@@ -519,26 +612,47 @@
               <h3>Establishment</h3>
               <p class="muted">Required: ${numberValue(s.required_nurses)} nurses + ${numberValue(s.required_carers)} carers/HCAs. Nurse shortage: ${numberValue(s.nurse_shortage)}. Carer/HCA shortage: ${numberValue(s.carer_hca_shortage)}.</p>
             </div>
-            <button class="success" type="button" onclick="submitDailyStaffing()">Submit daily staffing</button>
+            <button class="success" type="button" onclick="submitDailyStaffing()">Submit daily staffing to SNO</button>
           </div>
         </div>
 
+        ${shiftEditPanelHtml()}
+
         <div class="card">
-          <h3>Staff rows</h3>
+          <div class="section-title">
+            <div>
+              <h3>Staff rows</h3>
+              <p class="muted">Use Change Status to amend today’s live staffing before submitting to the SNO.</p>
+            </div>
+          </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Staff</th><th>Role</th><th>Baseline</th><th>Live</th><th>Source</th><th>Reason</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Staff</th>
+                  <th>Role</th>
+                  <th>Roster</th>
+                  <th>Baseline</th>
+                  <th>Current status</th>
+                  <th>Reason</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
               <tbody>
                 ${roster.map(r=>`
                   <tr>
-                    <td>${escapeHtml(r.full_name)}</td>
+                    <td>
+                      <div class="staff-name-main">${escapeHtml(displayStaffName(r.full_name))}</div>
+                      <div class="staff-name-sub">${escapeHtml(r.ward_code || ward?.ward_code || "")}</div>
+                    </td>
                     <td>${escapeHtml(labelRole(r.role))}</td>
+                    <td>${escapeHtml(staffRosterLabel(r))}</td>
                     <td>${shiftBadge(r.baseline_shift_code)}</td>
                     <td>${shiftBadge(r.live_shift_code)}</td>
-                    <td>${escapeHtml(r.source_type||"")}</td>
-                    <td>${escapeHtml(r.override_reason||"")}</td>
+                    <td>${escapeHtml(labelOverrideReason(r.override_reason || ""))}</td>
+                    <td><button type="button" class="secondary small" onclick="openShiftEditor('${escapeHtml(r.staff_id)}','${escapeHtml(date)}','daily')">Change Status</button></td>
                   </tr>
-                `).join("") || `<tr><td colspan="6" class="muted">No staff rows found.</td></tr>`}
+                `).join("") || `<tr><td colspan="7" class="muted">No staff rows found.</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -561,21 +675,52 @@
     async function renderMonthlyRoster(){
       const wardId = requireSelectedWard();
       const monthValue = appState.selectedMonth;
+      const ward = selectedWard();
       const { start, end, days } = monthRange(monthValue);
 
       const { data, error } = await sb.rpc("get_my_ward_roster_between", { p_ward_id: wardId, p_start_date: start, p_end_date: end });
       if(error) throw error;
 
-      const grouped = groupRosterByStaff(data || []);
+      appState.monthlyRosterRows = data || [];
+      const grouped = groupRosterByStaff(appState.monthlyRosterRows);
+      appState.monthlyGroupedRows = grouped;
 
       document.getElementById("content").innerHTML = `
-        <div class="card">
-          <div class="actions" style="justify-content:space-between">
+        <div class="card ward-hero">
+          <div class="actions" style="justify-content:space-between;align-items:flex-start">
             <div>
-              <h2>Monthly Roster</h2>
-              <p class="muted">Baseline roster versus live roster. Red dot means override/change.</p>
+              <div class="eyebrow">Monthly Roster</div>
+              <div class="ward-name-big">${escapeHtml(ward?.ward_name || "Selected Ward")}</div>
+              <div class="ward-meta">
+                <span>${escapeHtml(ward?.ward_code || "")}</span>
+                <span>•</span>
+                <span>${escapeHtml(monthValue)}</span>
+                <span>•</span>
+                <span>Click any shift cell to change status</span>
+              </div>
             </div>
-            <div class="actions">${wardSelectorHtml()}<div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div></div>
+            <div class="actions">
+              ${wardSelectorHtml()}
+              <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+              <div><label>Jump to date</label><input type="date" value="${appState.highlightedDate || ""}" onchange="jumpMonthlyDate(this.value)"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="grid grid-3">
+            <div>
+              <label>Search staff</label>
+              <input id="monthlyRosterSearch" placeholder="Type nurse / charge nurse name..." oninput="filterMonthlyRosterRows(this.value)">
+            </div>
+            <div>
+              <label>Selected ward</label>
+              <input value="${escapeHtml(ward?.ward_name || "")}" disabled>
+            </div>
+            <div>
+              <label>Tip</label>
+              <input value="Click a shift code to change it" disabled>
+            </div>
           </div>
         </div>
 
@@ -597,6 +742,8 @@
           </div>
         </div>
 
+        ${shiftEditPanelHtml()}
+
         <div class="card">
           <div class="table-wrap">
             <table class="roster-table">
@@ -605,13 +752,20 @@
                   <th>Staff</th>
                   <th>Role</th>
                   <th>Roster</th>
-                  ${days.map(d=>`<th>${weekdayShort(d)}<br>${d.getDate()}</th>`).join("")}
+                  ${days.map(d=>{
+                    const key = isoFromDate(d);
+                    const cls = appState.highlightedDate === key ? "date-highlight" : "";
+                    return `<th class="${cls}">${weekdayShort(d)}<br>${d.getDate()}</th>`;
+                  }).join("")}
                 </tr>
               </thead>
               <tbody>
                 ${grouped.map(staff=>`
-                  <tr>
-                    <td><strong>${escapeHtml(staff.full_name)}</strong></td>
+                  <tr class="monthly-roster-row" data-search="${escapeHtml((displayStaffName(staff.full_name) + " " + labelRole(staff.role) + " " + staffRosterLabel(staff)).toLowerCase())}">
+                    <td>
+                      <div class="staff-name-main">${escapeHtml(displayStaffName(staff.full_name))}</div>
+                      <div class="staff-name-sub">${escapeHtml(staffRosterLabel(staff))}</div>
+                    </td>
                     <td>${escapeHtml(labelRole(staff.role))}</td>
                     <td>${escapeHtml(staffRosterLabel(staff))}</td>
                     ${days.map(day=>{
@@ -619,7 +773,12 @@
                       const r=staff.days[key];
                       const code=r?.live_shift_code||"";
                       const isOverride=r?.source_type==="override";
-                      return `<td>${shiftBadge(code)}${isOverride?`<span class="override-dot" title="Changed from baseline"></span>`:""}</td>`;
+                      const cls = appState.highlightedDate === key ? "date-highlight" : "";
+                      return `<td class="${cls}">
+                        <button class="shift-click" type="button" onclick="openShiftEditor('${escapeHtml(staff.staff_id)}','${escapeHtml(key)}','monthly')" title="Click to change ${escapeHtml(displayStaffName(staff.full_name))} on ${escapeHtml(formatDate(key))}">
+                          ${shiftBadge(code)}${isOverride?`<span class="override-dot" title="Changed from baseline"></span>`:""}
+                        </button>
+                      </td>`;
                     }).join("")}
                   </tr>
                 `).join("") || `<tr><td colspan="${days.length+3}" class="muted">No roster rows found.</td></tr>`}
@@ -715,7 +874,7 @@
               <tbody>
                 ${appState.staffRows.map(s=>`
                   <tr>
-                    <td><strong>${escapeHtml(s.full_name)}</strong></td>
+                    <td><strong>${escapeHtml(displayStaffName(s.full_name))}</strong></td>
                     <td>${escapeHtml(s.corp_user_id || "—")}</td>
                     <td>${escapeHtml(labelRole(s.role))}</td>
                     <td>${escapeHtml(s.ward_code || selectedWard()?.ward_code || "")}</td>
@@ -724,7 +883,7 @@
                     <td>
                       <div class="actions">
                         <button type="button" class="secondary small" onclick="startEditStaff('${escapeHtml(s.id || s.staff_id)}')">Edit</button>
-                        ${canShowDeactivateButton(s) ? `<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id || s.staff_id)}','${escapeHtml(s.full_name)}')">Delete</button>` : `<span class="muted">SNO only</span>`}
+                        ${canShowDeactivateButton(s) ? `<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id || s.staff_id)}','${escapeHtml(displayStaffName(s.full_name))}')">Delete</button>` : `<span class="muted">SNO only</span>`}
                       </div>
                     </td>
                   </tr>
@@ -1025,9 +1184,219 @@
       document.getElementById("confirmPassword").value="";
     }
 
+    function shiftEditPanelHtml(){
+      return `
+        <div id="shiftEditPanel" class="card form-panel hidden">
+          <div class="section-title">
+            <div>
+              <h3 id="shiftEditTitle">Change staff status</h3>
+              <p class="muted" id="shiftEditSubtitle">Select the new status and save.</p>
+            </div>
+            <button type="button" class="secondary small" onclick="closeShiftEditor()">Close</button>
+          </div>
+
+          <input id="shiftEditStaffId" type="hidden">
+          <input id="shiftEditDate" type="hidden">
+          <input id="shiftEditContext" type="hidden">
+
+          <div class="grid grid-3">
+            <div>
+              <label>New status / shift</label>
+              <select id="shiftEditCode">${shiftOptionsHtml()}</select>
+            </div>
+            <div>
+              <label>Reason</label>
+              <input id="shiftEditReasonPreview" disabled>
+            </div>
+            <div>
+              <label>Date</label>
+              <input id="shiftEditDateDisplay" disabled>
+            </div>
+          </div>
+
+          <div style="margin-top:14px">
+            <label>Notes</label>
+            <textarea id="shiftEditNotes" rows="2" placeholder="Optional note for audit trail / SNO context"></textarea>
+          </div>
+
+          <div class="actions" style="margin-top:14px">
+            <button type="button" onclick="saveShiftEdit()">Save status change</button>
+            <button type="button" class="secondary" onclick="closeShiftEditor()">Cancel</button>
+          </div>
+        </div>`;
+    }
+
+    function openShiftEditor(staffId, shiftDate, context){
+      clearMessage();
+
+      const rows = context === "daily" ? appState.dailyRosterRows : appState.monthlyRosterRows;
+      let row = rows.find(r => String(r.staff_id) === String(staffId) && dateOnly(r.shift_date) === shiftDate);
+      let staff = null;
+
+      if(context === "monthly"){
+        staff = appState.monthlyGroupedRows.find(s => String(s.staff_id) === String(staffId));
+      }
+
+      if(!row && staff){
+        row = {
+          staff_id:staff.staff_id,
+          full_name:staff.full_name,
+          role:staff.role,
+          live_shift_code:"",
+          baseline_shift_code:"",
+          override_reason:""
+        };
+      }
+
+      if(!row){
+        row = rows.find(r => String(r.staff_id) === String(staffId));
+      }
+
+      if(!row){
+        showError("Could not find this staff/date row.");
+        return;
+      }
+
+      const panel = document.getElementById("shiftEditPanel");
+      const code = row.live_shift_code || row.baseline_shift_code || "D";
+
+      document.getElementById("shiftEditStaffId").value = staffId;
+      document.getElementById("shiftEditDate").value = shiftDate;
+      document.getElementById("shiftEditContext").value = context;
+      document.getElementById("shiftEditCode").innerHTML = shiftOptionsHtml(code);
+      document.getElementById("shiftEditReasonPreview").value = labelOverrideReason(reasonFromShiftCode(code));
+      document.getElementById("shiftEditDateDisplay").value = formatDate(shiftDate);
+      document.getElementById("shiftEditNotes").value = "";
+
+      document.getElementById("shiftEditTitle").textContent = `Change status — ${displayStaffName(row.full_name)}`;
+      document.getElementById("shiftEditSubtitle").textContent = `${labelRole(row.role)} • ${formatDate(shiftDate)} • current: ${code || "—"}`;
+
+      document.getElementById("shiftEditCode").onchange = function(){
+        document.getElementById("shiftEditReasonPreview").value = labelOverrideReason(reasonFromShiftCode(this.value));
+      };
+
+      panel.classList.remove("hidden");
+      panel.scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
+    function closeShiftEditor(){
+      const panel = document.getElementById("shiftEditPanel");
+      if(panel) panel.classList.add("hidden");
+    }
+
+    async function saveShiftEdit(){
+      clearMessage();
+
+      const staffId = document.getElementById("shiftEditStaffId").value;
+      const shiftDate = document.getElementById("shiftEditDate").value;
+      const context = document.getElementById("shiftEditContext").value;
+      const code = document.getElementById("shiftEditCode").value;
+      const notes = document.getElementById("shiftEditNotes").value.trim();
+
+      if(!staffId || !shiftDate || !code){
+        showError("Staff, date and status are required.");
+        return;
+      }
+
+      const { error } = await sb.rpc("upsert_ward_roster_override", {
+        p_ward_id:appState.selectedWardId,
+        p_staff_id:staffId,
+        p_shift_date:shiftDate,
+        p_shift_code:code,
+        p_override_reason:reasonFromShiftCode(code),
+        p_notes:notes || `Changed to ${code} from frontend`
+      });
+
+      if(error){
+        showError(error.message);
+        return;
+      }
+
+      closeShiftEditor();
+      showSuccess("Status changed successfully.");
+
+      if(context === "daily") await renderWardDaily();
+      else await renderMonthlyRoster();
+    }
+
+    function shiftOptionsHtml(selected=""){
+      const order = ["D","N","M","E","O","R","AL","SL","ML","ST","TI","TO","OT"];
+      const ref = appState.ref?.shift_types || [];
+      const byCode = new Map(ref.map(s => [String(s.shift_code || "").toUpperCase(), s]));
+
+      return order.map(code => {
+        const item = byCode.get(code);
+        const label = item?.shift_name ? `${code} — ${item.shift_name}` : `${code} — ${fallbackShiftName(code)}`;
+        return `<option value="${escapeHtml(code)}" ${String(selected).toUpperCase()===code ? "selected" : ""}>${escapeHtml(label)}</option>`;
+      }).join("");
+    }
+
+    function reasonFromShiftCode(code){
+      const c = String(code || "").toUpperCase();
+      if(c === "AL") return "annual_leave";
+      if(c === "SL") return "sick_leave";
+      if(c === "ML") return "maternity_leave";
+      if(c === "ST") return "study_leave";
+      if(c === "TI") return "til_in";
+      if(c === "TO") return "til_out";
+      if(c === "OT") return "overtime";
+      return "duty_change";
+    }
+
+    function fallbackShiftName(code){
+      const labels = {
+        D:"Day shift",
+        N:"Night shift",
+        M:"Morning shift",
+        E:"Evening shift",
+        O:"Off day",
+        R:"Rest day",
+        AL:"Annual leave",
+        SL:"Sick leave",
+        ML:"Maternity leave",
+        ST:"Study leave",
+        TI:"TIL in",
+        TO:"TIL out",
+        OT:"Overtime"
+      };
+      return labels[code] || code;
+    }
+
+    function labelOverrideReason(reason){
+      const labels = {
+        annual_leave:"Annual leave",
+        correction:"Correction",
+        duty_change:"Duty change",
+        manual_change:"Manual change",
+        maternity_leave:"Maternity leave",
+        other:"Other",
+        overtime:"Overtime",
+        sick_leave:"Sick leave",
+        study_leave:"Study leave",
+        til_in:"TIL in",
+        til_out:"TIL out"
+      };
+      return labels[reason] || reason || "—";
+    }
+
     function setSelectedDate(value){ appState.selectedDate=value; renderTab(appState.activeTab); }
     function setSelectedMonth(value){ appState.selectedMonth=value; renderTab(appState.activeTab); }
     function setSelectedWard(value){ appState.selectedWardId=value; renderTab(appState.activeTab); }
+
+    function jumpMonthlyDate(value){
+      if(!value) return;
+      appState.highlightedDate = value;
+      appState.selectedMonth = value.slice(0,7);
+      renderMonthlyRoster();
+    }
+
+    function filterMonthlyRosterRows(value){
+      const q = String(value || "").trim().toLowerCase();
+      document.querySelectorAll(".monthly-roster-row").forEach(row => {
+        const hay = row.getAttribute("data-search") || "";
+        row.style.display = hay.includes(q) ? "" : "none";
+      });
+    }
 
     function wardSelectorHtml(){
       if(!appState.profile?.is_sno && appState.wards.length<=1) return "";
@@ -1093,8 +1462,18 @@
     }
 
     function rosterAssignmentValueFromStaff(staff){
+      if(staff.roster_group_template_id){
+        const template = rosterGroupTemplates().find(t => String(t.id) === String(staff.roster_group_template_id));
+        if(template) return `group:${templateCode(template)}`;
+      }
+
       const groupCode = staff.roster_code || staff.roster_name || staff.roster_group;
-      if(staff.roster_group_template_id || looksLikeMandatoryRoster(groupCode)) return `group:${groupCode}`;
+      if(looksLikeMandatoryRoster(groupCode)){
+        const template = rosterGroupTemplates().find(t => sameRoster(templateCode(t), groupCode) || sameRoster(templateLabel(t), groupCode));
+        if(template) return `group:${templateCode(template)}`;
+        return `group:${groupCode}`;
+      }
+
       if(staff.roster_pattern_code) return `pattern:${staff.roster_pattern_code}`;
       return "";
     }
@@ -1104,11 +1483,11 @@
       if(items.length) return items;
 
       return [
-        { roster_code:"Roster 1", roster_name:"Roster 1" },
-        { roster_code:"Roster 2", roster_name:"Roster 2" },
-        { roster_code:"Roster 3", roster_name:"Roster 3" },
-        { roster_code:"Roster 4", roster_name:"Roster 4" },
-        { roster_code:"Roster 5", roster_name:"Roster 5" }
+        { roster_code:"ROSTER_1", roster_name:"Roster 1" },
+        { roster_code:"ROSTER_2", roster_name:"Roster 2" },
+        { roster_code:"ROSTER_3", roster_name:"Roster 3" },
+        { roster_code:"ROSTER_4", roster_name:"Roster 4" },
+        { roster_code:"ROSTER_5", roster_name:"Roster 5" }
       ];
     }
 
@@ -1119,7 +1498,7 @@
     }
 
     function templateCode(t){ return t.roster_code || t.code || t.roster_name || t.name || ""; }
-    function templateLabel(t){ return t.roster_name || t.name || t.roster_code || t.code || ""; }
+    function templateLabel(t){ return t.roster_name || t.name || formatRosterCode(t.roster_code || t.code) || ""; }
     function patternCode(p){ return String(p.pattern_code || p.code || "").toUpperCase(); }
     function patternLabel(p){
       const code = patternCode(p);
@@ -1128,17 +1507,32 @@
     }
 
     function staffRosterLabel(staff){
-      if(staff.roster_name) return staff.roster_name;
-      if(staff.roster_code) return staff.roster_code;
-      if(staff.roster_group) return staff.roster_group;
+      if(staff.roster_name) return formatRosterCode(staff.roster_name);
+      if(staff.roster_code) return formatRosterCode(staff.roster_code);
+      if(staff.roster_group) return formatRosterCode(staff.roster_group);
       if(staff.roster_pattern_code) return staff.roster_pattern_code;
       if(staff.pattern_code) return staff.pattern_code;
       return "—";
     }
 
+    function sameRoster(a,b){
+      return normalizeRoster(a) === normalizeRoster(b);
+    }
+
+    function normalizeRoster(value){
+      return String(value || "").toLowerCase().replace(/[\s_\-]/g,"");
+    }
+
     function looksLikeMandatoryRoster(value){
-      const v = String(value || "").toLowerCase().replace(/\s+/g,"");
+      const v = normalizeRoster(value);
       return ["roster1","roster2","roster3","roster4","roster5","r1","r2","r3","r4","r5"].includes(v);
+    }
+
+    function formatRosterCode(value){
+      const v = String(value || "");
+      const match = v.match(/^ROSTER[_\s-]*(\d+)$/i);
+      if(match) return `Roster ${match[1]}`;
+      return v;
     }
 
     function canShowDeactivateButton(staff){
@@ -1242,14 +1636,27 @@
             days:{}
           });
         }
-        map.get(row.staff_id).days[row.shift_date]=row;
+        map.get(row.staff_id).days[dateOnly(row.shift_date)]=row;
       }
 
       return Array.from(map.values()).sort((a,b)=>{
         const ga=staffRosterLabel(a), gb=staffRosterLabel(b);
         if(ga!==gb)return ga.localeCompare(gb);
-        return String(a.full_name || "").localeCompare(String(b.full_name || ""));
+        return displayStaffName(a.full_name || "").localeCompare(displayStaffName(b.full_name || ""));
       });
+    }
+
+    function displayStaffName(name){
+      let out = String(name || "").trim();
+
+      const codes = appState.wards.map(w => w.ward_code).filter(Boolean).sort((a,b)=>b.length-a.length);
+      for(const code of codes){
+        out = out.replace(new RegExp("^" + escapeRegExp(code) + "[\\s\\-_:]+","i"), "");
+      }
+
+      out = out.replace(/^Surgical\s+Ward\s+\d+\s*[\-_:]+\s*/i, "");
+      out = out.replace(/^Surgical\s+Assessment\s+Unit\s+\d+\s*[\-_:]+\s*/i, "");
+      return out.trim();
     }
 
     function monthRange(monthValue){
@@ -1299,6 +1706,10 @@
 
     function truthy(value){
       return value === true || value === "true" || value === 1 || value === "1";
+    }
+
+    function escapeRegExp(value){
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
 
     function escapeHtml(value){
