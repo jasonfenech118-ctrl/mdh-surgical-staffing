@@ -138,16 +138,39 @@
     .mini-input{width:76px;padding:7px 8px;border-radius:9px}
     .wide-input{min-width:170px}
 
-    .roster-table{min-width:1280px;table-layout:fixed}
-    .roster-table th,.roster-table td{padding:7px 4px;text-align:center;font-size:12px}
+    .roster-table-card{
+      margin-left:calc(50% - 50vw + 8px);
+      margin-right:calc(50% - 50vw + 8px);
+      padding:12px;
+    }
+    .roster-table-wrap{overflow-x:hidden}
+    .roster-table{width:100%;min-width:100%;table-layout:fixed}
+    .roster-table th,.roster-table td{padding:6px 2px;text-align:center;font-size:11px}
     .roster-table th:first-child,.roster-table td:first-child{
-      width:250px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);
+      width:220px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);
     }
     .roster-table th:first-child{background:#f9fbfd;z-index:3}
-    .staff-sub{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px}
-    .day-head{display:flex;flex-direction:column;gap:2px;align-items:center;line-height:1.1}
-    .holiday-label{font-size:9px;color:var(--amber);font-weight:900;max-width:48px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .staff-sub{font-size:10.5px;color:var(--muted);font-weight:700;margin-top:3px;line-height:1.15}
+    .roster-table td:first-child strong{display:block;white-space:normal;line-height:1.15}
+    .day-head{display:flex;flex-direction:column;gap:2px;align-items:center;line-height:1.05;min-height:42px;justify-content:flex-start}
+    .holiday-label{
+      font-size:9.5px;
+      color:var(--amber);
+      font-weight:900;
+      max-width:58px;
+      overflow:visible;
+      text-overflow:clip;
+      white-space:normal;
+      line-height:1.05;
+      text-align:center;
+      display:block;
+    }
     .holiday-col{background:var(--amber-soft)!important}
+    @media(max-width:1250px){
+      .roster-table-wrap{overflow-x:auto}
+      .roster-table{min-width:1250px}
+      .roster-table th:first-child,.roster-table td:first-child{width:210px}
+    }
     .today-col{outline:2px solid var(--green-border);outline-offset:-2px}
     .section-row td{background:#f6f9fc!important;color:#1f3f5f;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
     .extra-summary-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
@@ -595,8 +618,8 @@
           </div>
         </div>
 
-        <div class="card">
-          <div class="table-wrap">
+        <div class="card roster-table-card">
+          <div class="table-wrap roster-table-wrap">
             <table class="roster-table">
               <thead>
                 <tr>
@@ -608,7 +631,7 @@
                       <div class="day-head">
                         <span>${weekdayShort(d)}</span>
                         <span>${d.getDate()}</span>
-                        ${h ? `<span class="holiday-label" title="${escapeHtml(h.holiday_name)}">${escapeHtml(h.short_label)}</span>` : ""}
+                        ${h ? `<span class="holiday-label" title="${escapeHtml(h.holiday_name)}">${escapeHtml(h.short_label || h.holiday_name)}</span>` : ""}
                       </div>
                     </th>`;
                   }).join("")}
