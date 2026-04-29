@@ -272,6 +272,7 @@
       selectedDate:todayISO(),
       selectedMonth:monthISO(new Date()),
       selectedAuditWardId:"",
+      selectedKpiStaffId:"",
       staffRows:[],
       monthlyRosterRows:[],
       monthlyExtraRows:[]
@@ -400,7 +401,7 @@
       await sb.auth.signOut();
       appState = {
         session:null,ref:null,profile:null,wards:[],activeTab:null,selectedWardId:null,
-        selectedDate:todayISO(),selectedMonth:monthISO(new Date()),selectedAuditWardId:"",
+        selectedDate:todayISO(),selectedMonth:monthISO(new Date()),selectedAuditWardId:"",selectedKpiStaffId:"",
         staffRows:[],monthlyRosterRows:[],monthlyExtraRows:[]
       };
       showLogin();
@@ -1055,23 +1056,24 @@
       const { start, end } = monthRange(monthValue);
       const selectedW = selectedWard();
 
-      const [staffResult, rowsResult, summaryResult, holidayResult] = await Promise.all([
+      const [staffResult, rowsResult, summaryResult, dateOptionsResult] = await Promise.all([
         sb.rpc("get_ward_staff_members", { p_ward_id: wardId }),
         sb.rpc("get_change_of_duty_safe", { p_start_date:start, p_end_date:end, p_ward_id:wardId, p_include_cancelled:false }),
         sb.rpc("get_change_of_duty_summary", { p_start_date:start, p_end_date:end, p_ward_id:wardId }),
-        sb.rpc("get_malta_public_holidays", { p_start_date:start, p_end_date:end })
+        sb.rpc("get_change_of_duty_date_options", { p_start_date:todayISO(), p_end_date:"2028-12-31" })
       ]);
 
       if(staffResult.error) throw staffResult.error;
       if(rowsResult.error) throw rowsResult.error;
       if(summaryResult.error) throw summaryResult.error;
-      if(holidayResult.error) throw holidayResult.error;
+      if(dateOptionsResult.error) throw dateOptionsResult.error;
 
       const staffList = (staffResult.data || []).filter(s => truthy(s.is_active));
       const rows = rowsResult.data || [];
       const summary = summaryResult.data || {};
-      const holidays = holidayResult.data || [];
-      const sundays = sundaysForMonth(monthValue);
+      const allDateOptions = dateOptionsResult.data || [];
+      const holidays = allDateOptions.filter(x => x.option_type === "public_holiday");
+      const sundays = allDateOptions.filter(x => x.option_type === "sunday");
       const byType = {};
       for(const x of (summary.by_type || [])) byType[x.duty_type] = numberValue(x.total_count);
 
@@ -1139,7 +1141,7 @@
             <label>${escapeHtml(label)}</label>
             <select id="${escapeHtml(id)}">
               <option value="">Select public holiday...</option>
-              ${holidays.map(h => `<option value="${escapeHtml(h.holiday_date)}">${escapeHtml(formatDate(h.holiday_date))} — ${escapeHtml(h.holiday_name || h.short_label || "Public holiday")}</option>`).join("")}
+              ${holidays.map(h => { const d = h.option_date || h.holiday_date; return `<option value="${escapeHtml(d)}">${escapeHtml(h.label || `${formatDate(d)} — ${h.holiday_name || h.short_label || "Public holiday"}`)}</option>`; }).join("")}
             </select>
           </div>`;
       }
@@ -1150,7 +1152,7 @@
             <label>${escapeHtml(label)}</label>
             <select id="${escapeHtml(id)}">
               <option value="">Select Sunday...</option>
-              ${sundays.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(formatDate(d))} — Sunday</option>`).join("")}
+              ${sundays.map(x => { const d = x.option_date || x; return `<option value="${escapeHtml(d)}">${escapeHtml(x.label || `${formatDate(d)} — Sunday`)}</option>`; }).join("")}
             </select>
           </div>`;
       }
@@ -1383,33 +1385,46 @@
       const monthValue = appState.selectedMonth;
       const { start, end } = monthRange(monthValue);
       const wardId = appState.selectedAuditWardId || null;
+      const staffId = appState.selectedKpiStaffId || null;
 
-      const { data, error } = await sb.rpc("get_sno_operational_kpis", {
-        p_start_date:start,
-        p_end_date:end,
-        p_ward_id:wardId
-      });
+      const [kpiResult, staffOptionsResult] = await Promise.all([
+        sb.rpc("get_sno_operational_kpis", {
+          p_start_date:start,
+          p_end_date:end,
+          p_ward_id:wardId,
+          p_staff_id:staffId
+        }),
+        sb.rpc("get_sno_staff_filter_options", { p_ward_id:wardId })
+      ]);
 
-      if(error) throw error;
+      if(kpiResult.error) throw kpiResult.error;
+      if(staffOptionsResult.error) throw staffOptionsResult.error;
 
-      const k = data || {};
+      const k = kpiResult.data || {};
+      const staffOptions = staffOptionsResult.data || [];
       const overview = k.overview || {};
       const selectedWardLabel = wardId ? (appState.wards.find(w=>w.ward_id===wardId)?.ward_code || "Selected ward") : "All wards";
+      const selectedStaff = staffOptions.find(s => String(s.staff_id) === String(staffId));
+      const selectedStaffLabel = selectedStaff ? `${cleanStaffName(selectedStaff.full_name)} (${selectedStaff.ward_code || ""})` : "All staff";
+
       const sickByStaff = (k.sick_by_staff || []).map(r => ({ label:`${cleanStaffName(r.staff_name)} (${r.ward_code || ""})`, value:r.value || 0 }));
       const leaveByStaff = (k.leave_by_staff || []).map(r => ({ label:`${cleanStaffName(r.staff_name)} (${r.ward_code || ""})`, value:r.value || 0 }));
+      const tilByStaff = (k.til_by_staff || []).map(r => ({ label:`${cleanStaffName(r.staff_name)} (${r.ward_code || ""})`, value:r.value || 0 }));
 
       document.getElementById("content").innerHTML = `
         <div class="card">
           <div class="actions" style="justify-content:space-between">
             <div>
               <h2>SNO Operational KPIs</h2>
-              <p class="muted">Bird's-eye staffing view for sick leave, annual leave, maternity, study leave, TIL out, ward pressure, individual patterns, and trends.</p>
+              <p class="muted">Bird's-eye staffing dashboard focused on sick leave, annual leave, maternity, study leave, TIL out, ward pressure and individual staff trends.</p>
             </div>
             <div class="actions">
               ${auditWardSelectorHtml()}
+              ${kpiStaffSelectorHtml(staffOptions)}
               <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
             </div>
           </div>
+          <div class="info" style="margin-bottom:0">Current view: <strong>${escapeHtml(selectedWardLabel)}</strong> · <strong>${escapeHtml(selectedStaffLabel)}</strong></div>
         </div>
 
         <div class="stat-grid">
@@ -1429,7 +1444,7 @@
         <div class="kpi-section-title">
           <div>
             <h3>All-wards bird's-eye view — ${escapeHtml(selectedWardLabel)}</h3>
-            <p class="muted">Compare wards instantly: sick leave, annual leave, total leave, absence rate and sick rate.</p>
+            <p class="muted">Compare wards instantly: sick leave, annual leave, TIL out, total leave, absence rate and sick rate.</p>
           </div>
         </div>
 
@@ -1437,35 +1452,55 @@
           ${wardSummaryTableCard(k.ward_summary || [])}
           ${barArrayCard("Sick leave by ward", "Which wards are carrying the most sick leave in the selected period.", k.sick_by_ward || [])}
           ${barArrayCard("Annual leave by ward", "Approved annual leave load by ward.", k.annual_leave_by_ward || [])}
+          ${barArrayCard("TIL out by ward", "Time in lieu out burden by ward.", k.til_by_ward || [])}
           ${barArrayCard("Total leave/absence by ward", "Combined AL, SL, ML, ST and TIL out by ward.", k.total_leave_by_ward || [])}
         </div>
 
         <div class="kpi-section-title">
           <div>
-            <h3>Trends</h3>
-            <p class="muted">Daily and monthly trends help the SNO spot patterns instead of only seeing totals.</p>
+            <h3>Daily trends</h3>
+            <p class="muted">Day-by-day trend visuals for sick leave, leave and TIL. Use the staff dropdown above for an individual nurse/staff member.</p>
           </div>
         </div>
 
         <div class="grid grid-2">
           ${lineChartCard("Daily sick leave trend", "Sick leave entries per day.", k.daily_sick_trend || [])}
+          ${barArrayCard("Daily sick leave bars", "Sick leave entries per day.", trendRowsToBars(k.daily_sick_trend || []))}
           ${lineChartCard("Daily leave trend", "Annual leave, maternity, study leave and TIL out per day.", k.daily_leave_trend || [])}
+          ${barArrayCard("Daily leave bars", "Leave/TIL entries per day.", trendRowsToBars(k.daily_leave_trend || []))}
+          ${lineChartCard("Daily TIL out trend", "TIL out entries per day.", k.daily_til_trend || [])}
+          ${barArrayCard("Daily TIL out bars", "TIL out entries per day.", trendRowsToBars(k.daily_til_trend || []))}
+        </div>
+
+        <div class="kpi-section-title">
+          <div>
+            <h3>Monthly trends</h3>
+            <p class="muted">Month-by-month view to identify repeated patterns and seasonal pressure.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
           ${lineChartCard("Monthly sick leave trend", "Sick leave entries by month.", k.monthly_sick_trend || [])}
+          ${barArrayCard("Monthly sick leave bars", "Sick leave entries by month.", trendRowsToBars(k.monthly_sick_trend || [], "month"))}
           ${lineChartCard("Monthly leave trend", "Annual leave, maternity, study leave and TIL out by month.", k.monthly_leave_trend || [])}
+          ${barArrayCard("Monthly leave bars", "Leave/TIL entries by month.", trendRowsToBars(k.monthly_leave_trend || [], "month"))}
+          ${lineChartCard("Monthly TIL out trend", "TIL out entries by month.", k.monthly_til_trend || [])}
+          ${barArrayCard("Monthly TIL out bars", "TIL out entries by month.", trendRowsToBars(k.monthly_til_trend || [], "month"))}
         </div>
 
         <div class="kpi-section-title">
           <div>
             <h3>Individual staff patterns</h3>
-            <p class="muted">Shows who has the highest recorded sick leave and leave/TIL burden in the selected period.</p>
+            <p class="muted">Review staff-level sick leave, annual leave, TIL and total leave burden. Use the staff dropdown above to drill into one person.</p>
           </div>
         </div>
 
         <div class="grid grid-2">
           ${barArrayCard("Sick leave by individual", "Top staff by recorded sick leave entries.", sickByStaff)}
           ${barArrayCard("Annual leave by individual", "Top staff by annual leave entries.", leaveByStaff)}
-          ${absenceStaffTableCard(k.all_absence_by_staff || [])}
+          ${barArrayCard("TIL out by individual", "Top staff by TIL out entries.", tilByStaff)}
           ${donutCard("Absence / leave mix", "Breakdown of AL, SL, ML, ST and TIL out.", k.absence_by_type || [])}
+          ${absenceStaffTableCard(k.all_absence_by_staff || [])}
         </div>
 
         <div class="kpi-section-title">
@@ -1561,7 +1596,8 @@
     function setSelectedDate(value){ appState.selectedDate=value; renderTab(appState.activeTab); }
     function setSelectedMonth(value){ appState.selectedMonth=value; renderTab(appState.activeTab); }
     function setSelectedWard(value){ appState.selectedWardId=value; renderTab(appState.activeTab); }
-    function setSelectedAuditWard(value){ appState.selectedAuditWardId=value; renderTab(appState.activeTab); }
+    function setSelectedAuditWard(value){ appState.selectedAuditWardId=value; appState.selectedKpiStaffId=""; renderTab(appState.activeTab); }
+    function setSelectedKpiStaff(value){ appState.selectedKpiStaffId=value; renderTab(appState.activeTab); }
 
     function changeRosterMonth(delta){
       const [year,month] = appState.selectedMonth.split("-").map(Number);
@@ -1614,6 +1650,25 @@
             `).join("")}
           </select>
         </div>`;
+    }
+
+    function kpiStaffSelectorHtml(rows){
+      return `
+        <div>
+          <label>Staff / nurse</label>
+          <select onchange="setSelectedKpiStaff(this.value)">
+            <option value="" ${appState.selectedKpiStaffId===""?"selected":""}>All staff</option>
+            ${rows.map(s=>`
+              <option value="${escapeHtml(s.staff_id)}" ${s.staff_id===appState.selectedKpiStaffId?"selected":""}>
+                ${escapeHtml(cleanStaffName(s.full_name))} — ${escapeHtml(s.ward_code || "")} ${s.role ? `(${escapeHtml(labelRole(s.role))})` : ""}
+              </option>
+            `).join("")}
+          </select>
+        </div>`;
+    }
+
+    function trendRowsToBars(rows, dateKey="date"){
+      return (rows || []).map(r => ({ label:String(r[dateKey] || r.date || r.month || r.trend_date || ""), value:Number(r.value || r.total_count || 0) })).filter(x => x.label);
     }
 
     function staffSelectHtml(id, rows){
