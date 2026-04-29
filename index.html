@@ -184,6 +184,30 @@
     .bar-fill{height:100%;border-radius:999px;background:var(--primary)}
     .bar-value{text-align:right;font-weight:800;color:#1f3f5f}
 
+
+    .kpi-section-title{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:8px 0 10px}
+    .chart-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow-soft);min-height:220px}
+    .chart-title{font-weight:800;color:#223449;margin-bottom:6px}
+    .chart-subtitle{font-size:12px;color:var(--muted);margin-bottom:12px}
+    .donut-wrap{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center}
+    .donut{
+      width:140px;height:140px;border-radius:50%;
+      background:conic-gradient(var(--primary) 0deg 120deg,var(--green) 120deg 210deg,var(--amber) 210deg 280deg,var(--purple) 280deg 330deg,var(--red) 330deg 360deg);
+      position:relative;margin:auto;border:1px solid var(--border);
+    }
+    .donut:after{content:"";position:absolute;inset:28px;background:#fff;border-radius:50%;border:1px solid var(--border)}
+    .legend-list{display:grid;gap:7px}
+    .legend-item{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#3a4858}
+    .legend-dot{width:10px;height:10px;border-radius:999px;background:var(--primary);display:inline-block;margin-right:6px}
+    .line-chart{width:100%;height:180px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#fff,#fbfdff);padding:10px}
+    .mini-table{min-width:0}
+    .mini-table th,.mini-table td{padding:8px 9px;font-size:12px}
+    .cod-form-title{font-weight:900;color:#223449;margin-bottom:10px}
+    .cod-card{border-left:5px solid var(--primary)}
+    .cod-card.public-holiday{border-left-color:var(--amber)}
+    .cod-card.sunday{border-left-color:var(--purple)}
+    .wide-page-card{margin-left:calc(50% - 50vw + 16px);margin-right:calc(50% - 50vw + 16px);border-radius:0}
+
     @media(max-width:850px){
       .grid-2,.grid-3,.grid-4,.stat-grid,.roster-controls{grid-template-columns:1fr}
       header{align-items:flex-start;flex-direction:column}
@@ -317,6 +341,7 @@
           ["snoOverview","Today’s Overview"],
           ["monthlyRoster","Monthly Roster"],
           ["staffManagement","Staff Management"],
+          ["changeDuty","Change of Duty"],
           ["relievingPool","Relieving Pool"],
           ["auditVisuals","Audit KPIs"],
           ["auditHistory","Audit History"],
@@ -328,6 +353,7 @@
         ["wardDaily","Daily Staffing"],
         ["monthlyRoster","Monthly Roster"],
         ["staffManagement","My Ward Staff"],
+        ["changeDuty","Change of Duty"],
         ["myAccount","My Account"]
       ];
     }
@@ -349,6 +375,7 @@
         else if(tabKey==="wardDaily") await renderWardDaily();
         else if(tabKey==="monthlyRoster") await renderMonthlyRoster();
         else if(tabKey==="staffManagement") await renderStaffManagement();
+        else if(tabKey==="changeDuty") await renderChangeDuty();
         else if(tabKey==="relievingPool") await renderRelievingPool();
         else if(tabKey==="auditVisuals") await renderAuditVisuals();
         else if(tabKey==="auditHistory") await renderAuditHistory();
@@ -1022,6 +1049,157 @@
       await renderStaffManagement();
     }
 
+    async function renderChangeDuty(){
+      const wardId = requireSelectedWard();
+      const monthValue = appState.selectedMonth;
+      const { start, end } = monthRange(monthValue);
+      const selectedW = selectedWard();
+
+      const [staffResult, rowsResult, summaryResult] = await Promise.all([
+        sb.rpc("get_ward_staff_members", { p_ward_id: wardId }),
+        sb.rpc("get_change_of_duty_safe", { p_start_date:start, p_end_date:end, p_ward_id:wardId, p_include_cancelled:false }),
+        sb.rpc("get_change_of_duty_summary", { p_start_date:start, p_end_date:end, p_ward_id:wardId })
+      ]);
+
+      if(staffResult.error) throw staffResult.error;
+      if(rowsResult.error) throw rowsResult.error;
+      if(summaryResult.error) throw summaryResult.error;
+
+      const staffList = (staffResult.data || []).filter(s => truthy(s.is_active));
+      const rows = rowsResult.data || [];
+      const summary = summaryResult.data || {};
+      const byType = {};
+      for(const x of (summary.by_type || [])) byType[x.duty_type] = numberValue(x.total_count);
+
+      document.getElementById("content").innerHTML = `
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <div>
+              <h2>Change of Duty</h2>
+              <p class="muted">${escapeHtml(selectedW?.ward_name || "Selected ward")} · ${escapeHtml(monthLabel(monthValue))}</p>
+            </div>
+            <div class="actions">
+              ${wardSelectorHtml()}
+              <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          ${statCard(summary.total_active || 0,"Active records")}
+          ${statCard(byType.normal_day_swap || 0,"Normal day swaps")}
+          ${statCard(byType.public_holiday_swap || 0,"Public holiday swaps")}
+          ${statCard(byType.sunday_swap || 0,"Sunday swaps")}
+        </div>
+
+        <div class="grid grid-3">
+          ${changeDutyFormCard("normal_day_swap", "Normal Day Swap", "Day off", "Day worked instead", staffList)}
+          ${changeDutyFormCard("public_holiday_swap", "Public Holiday Swap", "Holiday taken off", "Holiday worked instead", staffList)}
+          ${changeDutyFormCard("sunday_swap", "Sunday Swap", "Sunday off", "Sunday worked", staffList)}
+        </div>
+
+        ${changeDutyTableSection("Normal Day Swaps", rows.filter(r=>r.duty_type==="normal_day_swap"))}
+        ${changeDutyTableSection("Public Holiday Swaps", rows.filter(r=>r.duty_type==="public_holiday_swap"))}
+        ${changeDutyTableSection("Sunday Swaps", rows.filter(r=>r.duty_type==="sunday_swap"))}
+
+        <div class="card">
+          <h3>Monthly summary by staff</h3>
+          ${barArrayCard("Change of duty by staff", "Number of active swaps recorded this month.", (summary.by_staff || []).map(x=>({label:cleanStaffName(x.staff_name), value:x.total_count})))}
+        </div>
+      `;
+    }
+
+    function changeDutyFormCard(type, title, originalLabel, workedLabel, staffList){
+      const cls = type === "public_holiday_swap" ? "public-holiday" : type === "sunday_swap" ? "sunday" : "";
+      const key = safeKey(type);
+      return `
+        <div class="card cod-card ${cls}">
+          <div class="cod-form-title">${escapeHtml(title)}</div>
+          <div class="grid">
+            <div><label>Staff member</label>${staffSelectHtml(`codStaff_${key}`, staffList)}</div>
+            <div><label>${escapeHtml(originalLabel)}</label><input id="codOriginal_${key}" type="date"></div>
+            <div><label>${escapeHtml(workedLabel)}</label><input id="codWorked_${key}" type="date"></div>
+            <div><label>Notes</label><input id="codNotes_${key}" placeholder="Optional"></div>
+            <button type="button" onclick="addChangeOfDutyFromForm('${type}')">Record</button>
+          </div>
+        </div>`;
+    }
+
+    async function addChangeOfDutyFromForm(type){
+      clearMessage();
+      const key = safeKey(type);
+      const staffId = document.getElementById(`codStaff_${key}`).value;
+      const originalDate = document.getElementById(`codOriginal_${key}`).value;
+      const workedDate = document.getElementById(`codWorked_${key}`).value;
+      const notes = document.getElementById(`codNotes_${key}`).value.trim() || null;
+
+      if(!staffId){ showError("Staff member is required."); return; }
+      if(!originalDate || !workedDate){ showError("Both dates are required."); return; }
+
+      const { error } = await sb.rpc("add_change_of_duty", {
+        p_ward_id:appState.selectedWardId,
+        p_staff_id:staffId,
+        p_duty_type:type,
+        p_original_date:originalDate,
+        p_worked_date:workedDate,
+        p_notes:notes
+      });
+
+      if(error){ showError(error.message); return; }
+      showSuccess("Change of Duty record saved.");
+      await renderChangeDuty();
+    }
+
+    function changeDutyTableSection(title, rows){
+      return `
+        <div class="card">
+          <div class="actions" style="justify-content:space-between">
+            <h3>${escapeHtml(title)}</h3>
+            <span class="muted">${rows.length} active record${rows.length===1 ? "" : "s"}</span>
+          </div>
+          <div class="table-wrap">
+            <table class="compact-table">
+              <thead>
+                <tr><th>Staff</th><th>Role</th><th>Original/off date</th><th>Worked instead</th><th>Notes</th><th>Recorded by</th><th>Recorded</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                ${rows.map(r=>`
+                  <tr>
+                    <td><strong>${escapeHtml(cleanStaffName(r.staff_name))}</strong></td>
+                    <td>${escapeHtml(labelRole(r.role))}</td>
+                    <td>${escapeHtml(formatDate(r.original_date))}</td>
+                    <td>${escapeHtml(formatDate(r.worked_date))}</td>
+                    <td>${escapeHtml(r.notes || "")}</td>
+                    <td>${escapeHtml(cleanStaffName(r.created_by_name || "—"))}</td>
+                    <td>${escapeHtml(formatDateTime(r.created_at) || "—")}</td>
+                    <td><button class="danger small" type="button" onclick="cancelChangeOfDutyRecord('${escapeHtml(r.change_id)}')">Delete</button></td>
+                  </tr>
+                `).join("") || `<tr><td colspan="8" class="muted">No records.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    async function cancelChangeOfDutyRecord(changeId){
+      clearMessage();
+      const confirmed = window.confirm("Delete this Change of Duty record from the active list?");
+      if(!confirmed) return;
+
+      const reason = window.prompt("Reason:", "Deleted from Change of Duty screen");
+      if(reason === null) return;
+
+      const { error } = await sb.rpc("cancel_change_of_duty", {
+        p_change_id:changeId,
+        p_cancellation_reason:reason || "Deleted from Change of Duty screen"
+      });
+
+      if(error){ showError(error.message); return; }
+      showSuccess("Change of Duty record deleted/cancelled.");
+      await renderChangeDuty();
+    }
+
+    
     async function renderRelievingPool(){
       if(!appState.profile.is_sno){
         document.getElementById("content").innerHTML = `<div class="card"><div class="info">Relieving Pool management is SNO-only. Ward users submit daily staffing; the SNO reviews shortage requests.</div></div>`;
@@ -1173,32 +1351,24 @@
       const { start, end } = monthRange(monthValue);
       const wardId = appState.selectedAuditWardId || null;
 
-      const { data, error } = await sb.rpc("get_sno_audit_history", {
+      const { data, error } = await sb.rpc("get_sno_operational_kpis", {
         p_start_date:start,
         p_end_date:end,
-        p_ward_id:wardId,
-        p_action_type:null,
-        p_table_name:null
+        p_ward_id:wardId
       });
 
       if(error) throw error;
 
-      const rows = data || [];
-      const byAction = countBy(rows, r => r.action_type || "unknown");
-      const byTable = countBy(rows, r => r.table_name || "unknown");
-      const byWard = countBy(rows, r => r.ward_code || "No ward");
-      const byUser = countBy(rows, r => r.changed_by_name || "Unknown");
-
-      const staffChanges = rows.filter(r => r.table_name === "staff" || r.table_name === "staff_ward_access").length;
-      const rosterChanges = rows.filter(r => r.table_name === "roster_overrides").length;
-      const submissionChanges = rows.filter(r => r.table_name === "daily_staffing_submissions").length;
+      const k = data || {};
+      const totals = k.audit_totals || {};
+      const selectedWardLabel = wardId ? (appState.wards.find(w=>w.ward_id===wardId)?.ward_code || "Selected ward") : "All wards";
 
       document.getElementById("content").innerHTML = `
         <div class="card">
           <div class="actions" style="justify-content:space-between">
             <div>
-              <h2>Audit KPIs</h2>
-              <p class="muted">SNO-only visual audit monitoring. This first version analyses audit records by ward, action, table, and user.</p>
+              <h2>Audit KPIs & Operational Dashboard</h2>
+              <p class="muted">SNO snapshot for audit activity, roster changes, absences, relieving pool pressure, change of duty, and staff complement.</p>
             </div>
             <div class="actions">
               ${auditWardSelectorHtml()}
@@ -1208,17 +1378,61 @@
         </div>
 
         <div class="stat-grid">
-          ${statCard(rows.length,"Total audit events")}
-          ${statCard(staffChanges,"Staff/permission changes")}
-          ${statCard(rosterChanges,"Roster changes")}
-          ${statCard(submissionChanges,"Daily submission changes")}
+          ${statCard(totals.total_events || 0,"Total audit events")}
+          ${statCard(totals.roster_changes || 0,"Roster changes")}
+          ${statCard(totals.daily_staffing_changes || 0,"Daily staffing changes")}
+          ${statCard(totals.relieving_pool_changes || 0,"Relieving pool changes")}
+        </div>
+
+        <div class="stat-grid">
+          ${statCard(totals.change_of_duty_changes || 0,"Change of duty changes")}
+          ${statCard(totals.staff_changes || 0,"Staff/permission changes")}
+          ${statCard(totals.unique_staff_changed_by || 0,"Users making changes")}
+          ${statCard(totals.unique_wards_affected || 0,"Wards affected")}
+        </div>
+
+        <div class="kpi-section-title">
+          <div>
+            <h3>Audit activity — ${escapeHtml(selectedWardLabel)}</h3>
+            <p class="muted">Who changed what, where, and how often.</p>
+          </div>
         </div>
 
         <div class="grid grid-2">
-          ${barCard("Events by action", byAction)}
-          ${barCard("Events by table", byTable)}
-          ${barCard("Events by ward", byWard)}
-          ${barCard("Events by user", byUser)}
+          ${lineChartCard("Daily audit trend", "Number of recorded audit events per day.", k.audit_daily_trend || [])}
+          ${donutCard("Audit actions", "Create, update, amend, cancel and other actions.", k.audit_by_action || [])}
+          ${barArrayCard("Events by table/module", "Which part of the system is being changed most.", k.audit_by_table || [])}
+          ${barArrayCard("Events by user", "Most active users making changes.", k.audit_by_user || [])}
+          ${barArrayCard("Events by ward", "Ward-by-ward audit activity.", k.audit_by_ward || [])}
+          ${barArrayCard("Staff complement by role", "Active staff mix in the selected ward scope.", k.staff_by_role || [])}
+        </div>
+
+        <div class="kpi-section-title">
+          <div>
+            <h3>Staffing, absence and roster intelligence</h3>
+            <p class="muted">Leave, sick, study, TIL, overtime and shift status information from daily submissions and roster records.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          ${shiftStatusCard(k.shift_status_counts || [])}
+          ${donutCard("Absence / leave by type", "Annual leave, sick, maternity, study and TIL out.", k.absence_by_type || [])}
+          ${lineChartCard("Daily staffing submission trend", "Number of daily staffing submissions per day.", k.daily_submission_trend || [])}
+          ${tableCard("Absence by staff", "Staff members with recorded leave/sick/TIL entries.", k.absence_by_staff || [], ["staff_name","shift_code","total_count"])}
+        </div>
+
+        <div class="kpi-section-title">
+          <div>
+            <h3>Relieving pool and Change of Duty</h3>
+            <p class="muted">Shortage requests, allocations, resolution pressure and duty-swap patterns.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          ${donutCard("Relieving pool status", "Open, reviewed, partially filled, filled and cancelled requests.", k.relieving_status || [])}
+          ${relievingWardCard(k.relieving_by_ward || [])}
+          ${donutCard("Change of duty by type", "Normal day, public holiday and Sunday swaps.", k.change_duty_by_type || [])}
+          ${barArrayCard("Change of duty by staff", "Staff with the highest number of swaps.", k.change_duty_by_staff || [])}
         </div>
       `;
     }
@@ -1455,6 +1669,151 @@
 
     function statCard(value,label){ return `<div class="stat"><div class="stat-value">${numberValue(value)}</div><div class="stat-label">${escapeHtml(label)}</div></div>`; }
 
+    function normalizeSeries(rows, labelKey="label", valueKey="value"){
+      return (rows || []).map(r => {
+        const label = r[labelKey] ?? r.label ?? r.action_type ?? r.table_name ?? r.ward_code ?? r.changed_by_name ?? r.staff_name ?? r.shift_code ?? r.duty_type ?? "Unknown";
+        const value = Number(r[valueKey] ?? r.value ?? r.total_count ?? r.requests ?? 0);
+        return { label:String(label || "Unknown"), value:Number.isFinite(value) ? value : 0, raw:r };
+      }).filter(x => x.value !== 0);
+    }
+
+    function barArrayCard(title, subtitle, rows){
+      const entries = normalizeSeries(rows).sort((a,b)=>b.value-a.value).slice(0,10);
+      const max = entries.length ? Math.max(...entries.map(e=>e.value)) : 1;
+
+      return `
+        <div class="chart-card">
+          <div class="chart-title">${escapeHtml(title)}</div>
+          <div class="chart-subtitle">${escapeHtml(subtitle || "")}</div>
+          <div class="bar-list">
+            ${entries.map(e => `
+              <div class="bar-row">
+                <div class="bar-label" title="${escapeHtml(e.label)}">${escapeHtml(e.label)}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.round((e.value/max)*100))}%"></div></div>
+                <div class="bar-value">${e.value}</div>
+              </div>
+            `).join("") || `<p class="muted">No data for this period.</p>`}
+          </div>
+        </div>`;
+    }
+
+    function donutCard(title, subtitle, rows){
+      const entries = normalizeSeries(rows).sort((a,b)=>b.value-a.value).slice(0,6);
+      const total = entries.reduce((sum,e)=>sum+e.value,0);
+      const palette = ["var(--primary)","var(--green)","var(--amber)","var(--purple)","var(--red)","var(--grey)"];
+      let cursor = 0;
+      const segments = entries.map((e,i)=>{
+        const start = total ? cursor/total*360 : 0;
+        cursor += e.value;
+        const stop = total ? cursor/total*360 : 0;
+        return `${palette[i%palette.length]} ${start}deg ${stop}deg`;
+      }).join(",");
+
+      return `
+        <div class="chart-card">
+          <div class="chart-title">${escapeHtml(title)}</div>
+          <div class="chart-subtitle">${escapeHtml(subtitle || "")}</div>
+          <div class="donut-wrap">
+            <div class="donut" style="${segments ? `background:conic-gradient(${segments})` : ""}"></div>
+            <div class="legend-list">
+              ${entries.map((e,i)=>`
+                <div class="legend-item">
+                  <span><span class="legend-dot" style="background:${palette[i%palette.length]}"></span>${escapeHtml(e.label)}</span>
+                  <strong>${e.value}</strong>
+                </div>
+              `).join("") || `<p class="muted">No data.</p>`}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function lineChartCard(title, subtitle, rows){
+      const series = (rows || []).map(r => ({
+        label:String(r.date || r.audit_date || r.trend_date || ""),
+        value:Number(r.value ?? r.total_count ?? 0)
+      })).filter(x => x.label);
+
+      const width = 640, height = 150, pad = 18;
+      const max = Math.max(1, ...series.map(x=>x.value));
+      const count = Math.max(1, series.length - 1);
+      const points = series.map((x,i)=>{
+        const px = pad + (i/count) * (width - pad*2);
+        const py = height - pad - (x.value/max) * (height - pad*2);
+        return `${px.toFixed(1)},${py.toFixed(1)}`;
+      }).join(" ");
+
+      return `
+        <div class="chart-card">
+          <div class="chart-title">${escapeHtml(title)}</div>
+          <div class="chart-subtitle">${escapeHtml(subtitle || "")}</div>
+          <svg class="line-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+            <line x1="${pad}" y1="${height-pad}" x2="${width-pad}" y2="${height-pad}" stroke="#dce5ee" stroke-width="2"/>
+            <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${height-pad}" stroke="#dce5ee" stroke-width="2"/>
+            ${series.length ? `<polyline fill="none" stroke="var(--primary)" stroke-width="4" points="${points}"/>` : ""}
+            ${series.map((x,i)=>{
+              const px = pad + (i/count) * (width - pad*2);
+              const py = height - pad - (x.value/max) * (height - pad*2);
+              return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4" fill="var(--primary)"><title>${escapeHtml(x.label)}: ${x.value}</title></circle>`;
+            }).join("")}
+          </svg>
+          <div class="actions" style="justify-content:space-between;margin-top:8px">
+            <span class="muted">${escapeHtml(series[0]?.label || "")}</span>
+            <strong>${series.reduce((s,x)=>s+x.value,0)} total</strong>
+            <span class="muted">${escapeHtml(series.at(-1)?.label || "")}</span>
+          </div>
+        </div>`;
+    }
+
+    function tableCard(title, subtitle, rows, cols){
+      return `
+        <div class="chart-card">
+          <div class="chart-title">${escapeHtml(title)}</div>
+          <div class="chart-subtitle">${escapeHtml(subtitle || "")}</div>
+          <div class="table-wrap">
+            <table class="mini-table">
+              <thead><tr>${cols.map(c=>`<th>${escapeHtml(c.replaceAll("_"," "))}</th>`).join("")}</tr></thead>
+              <tbody>
+                ${(rows || []).slice(0,12).map(r=>`
+                  <tr>${cols.map(c=>`<td>${escapeHtml(c==="staff_name" ? cleanStaffName(r[c]) : (r[c] ?? "—"))}</td>`).join("")}</tr>
+                `).join("") || `<tr><td colspan="${cols.length}" class="muted">No data.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function shiftStatusCard(rows){
+      const mapped = (rows || []).map(r => ({
+        label:`${r.shift_code || "?"} — ${r.shift_name || r.shift_category || ""}`,
+        value:r.total_count || 0
+      }));
+      return barArrayCard("Shift/status mix", "Counts by recorded shift/status from daily staffing submissions.", mapped);
+    }
+
+    function relievingWardCard(rows){
+      return `
+        <div class="chart-card">
+          <div class="chart-title">Relieving pool by ward</div>
+          <div class="chart-subtitle">Requests, staffing need and staffing allocated.</div>
+          <div class="table-wrap">
+            <table class="mini-table">
+              <thead><tr><th>Ward</th><th>Requests</th><th>Nurses need/sent</th><th>Support need/sent</th></tr></thead>
+              <tbody>
+                ${(rows || []).map(r=>`
+                  <tr>
+                    <td><strong>${escapeHtml(r.ward_code)}</strong></td>
+                    <td>${numberValue(r.requests)}</td>
+                    <td>${numberValue(r.nurses_needed)} / ${numberValue(r.nurses_allocated)}</td>
+                    <td>${numberValue(r.support_needed)} / ${numberValue(r.support_allocated)}</td>
+                  </tr>
+                `).join("") || `<tr><td colspan="4" class="muted">No relieving pool data.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    
     function barCard(title, counts){
       const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
       const max = entries.length ? Math.max(...entries.map(e=>e[1])) : 1;
