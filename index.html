@@ -262,6 +262,21 @@
     const SUPABASE_URL = SUPABASE_URL_RAW.replace(/\/rest\/v1\/?$/i, "").replace(/\/$/i, "");
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // Emergency diagnostics: prevent a blank white dashboard if a runtime error occurs.
+    function emergencyShowError(message){
+      const msg = String(message || "Unknown app error");
+      console.error(msg);
+      const login = document.getElementById("loginScreen");
+      const app = document.getElementById("appScreen");
+      const target = document.getElementById("message") || document.getElementById("loginMessage");
+      if(app) app.classList.remove("hidden");
+      if(login) login.classList.add("hidden");
+      if(target) target.innerHTML = `<div class="error">App error: ${escapeHtml(msg)}</div>`;
+    }
+
+    window.addEventListener("error", event => emergencyShowError(event.message || event.error));
+    window.addEventListener("unhandledrejection", event => emergencyShowError(event.reason?.message || event.reason));
+
     let appState = {
       session:null,
       ref:null,
@@ -303,7 +318,15 @@
       document.getElementById("appScreen").classList.remove("hidden");
 
       const p = appState.profile;
-      document.getElementById("topUser").innerHTML = `<strong>${escapeHtml(p.full_name)}</strong><br>${labelRole(p.role)}`;
+      if(!p){
+        showError("Login succeeded, but no staff profile was returned for this account. Check the staff/user profile link in Supabase.");
+        document.getElementById("topUser").textContent = "Signed in — no profile returned";
+        document.getElementById("mainTitle").textContent = "Dashboard";
+        document.getElementById("mainSubtitle").textContent = "Profile missing";
+        return;
+      }
+
+      document.getElementById("topUser").innerHTML = `<strong>${escapeHtml(p.full_name || p.email || "Signed in")}</strong><br>${labelRole(p.role)}`;
       document.getElementById("mainTitle").textContent = p.is_sno ? "Senior Nursing Officer Dashboard" : "Ward Dashboard";
       document.getElementById("mainSubtitle").textContent = p.is_sno ? "All surgical wards overview" : wardAccessLabel();
 
@@ -318,12 +341,31 @@
 
     async function loadReferenceData(){
       const { data, error } = await sb.rpc("get_app_reference_data");
-      if(error){ showError(error.message); throw error; }
+      if(error){
+        showError("Could not load app reference data: " + error.message);
+        throw error;
+      }
 
-      appState.ref = data || {};
-      appState.profile = data.profile;
+      let refData = data;
+      if(typeof refData === "string"){
+        try{ refData = JSON.parse(refData); }catch(_err){}
+      }
+      if(Array.isArray(refData)){
+        const first = refData[0] || {};
+        refData = first.get_app_reference_data || first.result || first.data || first;
+      }
+      if(!refData || typeof refData !== "object"){
+        throw new Error("get_app_reference_data did not return a usable object.");
+      }
 
-      const rawWards = data.accessible_wards || data.wards || [];
+      appState.ref = refData || {};
+      appState.profile = appState.ref.profile || appState.ref.user_profile || appState.ref.current_profile || null;
+
+      if(!appState.profile){
+        throw new Error("No user profile returned by get_app_reference_data. The app cannot decide whether to show the SNO dashboard or ward dashboard.");
+      }
+
+      const rawWards = appState.ref.accessible_wards || appState.ref.wards || [];
       appState.wards = rawWards.map(w => ({
         ward_id:w.ward_id || w.id,
         ward_code:w.ward_code || w.code || "",
@@ -342,7 +384,6 @@
           ["snoOverview","Today’s Overview"],
           ["monthlyRoster","Monthly Roster"],
           ["staffManagement","Staff Management"],
-          ["changeDuty","Change of Duty"],
           ["relievingPool","Relieving Pool"],
           ["auditVisuals","Audit KPIs"],
           ["auditHistory","Audit History"],
@@ -354,7 +395,6 @@
         ["wardDaily","Daily Staffing"],
         ["monthlyRoster","Monthly Roster"],
         ["staffManagement","My Ward Staff"],
-        ["changeDuty","Change of Duty"],
         ["myAccount","My Account"]
       ];
     }
@@ -376,7 +416,7 @@
         else if(tabKey==="wardDaily") await renderWardDaily();
         else if(tabKey==="monthlyRoster") await renderMonthlyRoster();
         else if(tabKey==="staffManagement") await renderStaffManagement();
-        else if(tabKey==="changeDuty") await renderChangeDuty();
+        else if(tabKey==="changeDuty") { appState.activeTab = appState.profile?.is_sno ? "snoOverview" : "wardDaily"; await renderTab(appState.activeTab); return; }
         else if(tabKey==="relievingPool") await renderRelievingPool();
         else if(tabKey==="auditVisuals") await renderAuditVisuals();
         else if(tabKey==="auditHistory") await renderAuditHistory();
@@ -498,7 +538,7 @@
               <h3>Establishment</h3>
               <p class="muted">Required: ${numberValue(s.required_nurses)} nurses + ${numberValue(s.required_carers)} carers/HCAs. Nurse shortage: ${numberValue(s.nurse_shortage)}. Carer/HCA shortage: ${numberValue(s.carer_hca_shortage)}.</p>
             </div>
-            <button class="success" type="button" onclick="submitDailyStaffing()">Submit daily staffing</button>
+            <button class="success" type="button" onclick="submitDailyStaffing()">Submit to SNO and Nurse HR</button>
           </div>
         </div>
 
@@ -532,7 +572,7 @@
         p_notes: "Submitted from frontend"
       });
       if(error){ showError(error.message); return; }
-      showSuccess("Daily staffing submitted successfully.");
+      showSuccess("Daily staffing submitted to SNO and Nurse HR workflow.");
       await renderWardDaily();
     }
 
