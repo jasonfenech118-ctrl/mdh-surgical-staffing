@@ -219,27 +219,6 @@
 
     /* --- U-turn readability and compact layout overrides --- */
     .shift-cell{min-width:24px;height:22px;border-radius:7px;font-size:10px;line-height:1;padding:0 4px}
-
-    .shift-select{
-      width:42px;min-width:42px;max-width:42px;height:24px;
-      padding:0 2px;border-radius:8px;border:1px solid var(--border);
-      font-size:10px;font-weight:900;text-align:center;text-align-last:center;
-      font-family:inherit;cursor:pointer;box-shadow:none;background:#fff;color:var(--text);
-    }
-    .daily-shift-select{width:62px;min-width:62px;max-width:62px;height:26px;font-size:11px}
-    .shift-select:focus{box-shadow:0 0 0 3px rgba(79,143,207,.14)}
-    .shift-select.shift-D,.shift-select.shift-M,.shift-select.shift-E{background:var(--primary-soft);color:var(--primary-dark);border-color:var(--primary-border)}
-    .shift-select.shift-N{background:#e7edff;color:#3857a6;border-color:#cfd9fb}
-    .shift-select.shift-O{background:#f7f8fa;color:#576574;border-color:#dfe5eb}
-    .shift-select.shift-R{background:#e9edf2;color:#374151;border-color:#cfd7df}
-    .shift-select.shift-AL{background:#fff2cc;color:#8a5a00;border-color:#f0cc73}
-    .shift-select.shift-SL{background:#ffe1e6;color:#9f1239;border-color:#f5a3b5}
-    .shift-select.shift-ML{background:#f2ddff;color:#6b21a8;border-color:#d8b4fe}
-    .shift-select.shift-ST{background:#e8ddff;color:#5b21b6;border-color:#c4b5fd}
-    .shift-select.shift-TI{background:#dff8e7;color:#166534;border-color:#9bd7af}
-    .shift-select.shift-TO{background:#d8f6f2;color:#0f766e;border-color:#99ded8}
-    .shift-select.shift-OT{background:#d8f3dc;color:#047857;border-color:#8bd39c}
-    .shift-select.shift-LL{background:#f7e2d1;color:#7a351a;border-color:#d9a27d}
     button.shift-cell{min-width:24px;height:22px;padding:0 4px}
     .shift-L,.shift-AL{background:#fff3cf;color:#9a5b00;border-color:#f3cf75}
     .shift-LL{background:#f7e2d1;color:#7a351a;border-color:#d9a27d}
@@ -254,9 +233,9 @@
     .shift-ST{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
     .roster-table-card{margin-left:calc(50% - 50vw + 6px);margin-right:calc(50% - 50vw + 6px);padding:8px;border-radius:12px}
     .roster-table-wrap{overflow-x:auto}
-    .roster-table{width:100%;min-width:980px;table-layout:fixed}
+    .roster-table{width:100%;min-width:1060px;table-layout:fixed}
     .roster-table th,.roster-table td{padding:3px 1px;text-align:center;font-size:10px;line-height:1.05}
-    .roster-table th:first-child,.roster-table td:first-child{width:165px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);padding:6px 8px}
+    .roster-table th:first-child,.roster-table td:first-child{width:185px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);padding:6px 8px}
     .roster-table th:first-child{background:#f9fbfd;z-index:3}
     .staff-name-line{display:block;font-weight:900;color:#1f2937;line-height:1.1;white-space:normal}
     .staff-role-line{display:block;font-size:10px;color:#536273;font-weight:800;margin-top:2px;line-height:1.05}
@@ -270,33 +249,60 @@
     .rp-actions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
     .rp-actions-grid button{width:100%}
     .muted-small{font-size:11px;color:var(--muted);line-height:1.25}
-    @media(max-width:1250px){.roster-table{min-width:980px}.roster-table th:first-child,.roster-table td:first-child{width:180px}.rp-toolbar{grid-template-columns:1fr 1fr}.rp-table{min-width:1050px}}
+    @media(max-width:1250px){.roster-table{min-width:1060px}.roster-table th:first-child,.roster-table td:first-child{width:180px}.rp-toolbar{grid-template-columns:1fr 1fr}.rp-table{min-width:1050px}}
 
-
-    /* --- V4: roster cell picker, code-only display --- */
-    .roster-table td{position:relative;overflow:visible}
-    .shift-select{display:none!important}
-    .shift-picker{position:relative;display:inline-flex;justify-content:center;align-items:center;min-width:26px}
-    .shift-picker-button{
-      min-width:25px;width:25px;height:21px;padding:0;border-radius:7px;border:1px solid transparent;
-      display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;
-      line-height:1;box-shadow:none;cursor:pointer;background:#fff;color:var(--text)
-    }
-    .shift-picker-button:hover{filter:brightness(.97);transform:none}
-    .shift-picker.open .shift-picker-button{outline:2px solid rgba(79,143,207,.28);outline-offset:1px}
-    .shift-picker-menu{
-      display:none;position:absolute;top:24px;left:50%;transform:translateX(-50%);z-index:9999;
-      min-width:132px;max-height:260px;overflow-y:auto;background:#fff;border:1px solid var(--border);
-      border-radius:12px;box-shadow:0 14px 35px rgba(31,49,70,.18);padding:6px;text-align:left
-    }
-    .shift-picker.open .shift-picker-menu{display:grid;gap:4px}
-    .shift-picker-option{
-      width:100%;border:0;background:#fff;color:var(--text);box-shadow:none;border-radius:9px;padding:6px 7px;
-      display:grid;grid-template-columns:32px 1fr;gap:6px;align-items:center;text-align:left;font-size:12px;font-weight:750
-    }
-    .shift-picker-option:hover{background:var(--primary-soft);color:var(--primary-dark);box-shadow:none}
-    .shift-picker-option .shift-cell{min-width:26px;width:26px;height:21px;font-size:10px;padding:0}
-    .roster-table .shift-cell{min-width:25px;width:25px;height:21px;font-size:10px;padding:0}
+  
+    /* --- Final roster readability + friendly picker --- */
+    .roster-table-wrap{overflow-x:auto;border:1px solid #ccd7e3;border-radius:14px;background:#fff;box-shadow:0 4px 16px rgba(31,63,95,.10)}
+    .roster-table{width:100%;min-width:1180px;table-layout:fixed;border-collapse:separate;border-spacing:0;background:#fff}
+    .roster-table th,.roster-table td{border-right:1px solid #d7e1ec;border-bottom:1px solid #d7e1ec;text-align:center;vertical-align:middle;font-size:11px;line-height:1;padding:5px 2px;height:30px;background:#fff}
+    .roster-table th{background:#203a57;color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.035em}
+    .roster-table th:first-child,.roster-table td:first-child{width:190px;text-align:left;position:sticky;left:0;z-index:2;border-right:2px solid #b8c7d8;padding:7px 8px}
+    .roster-table th:first-child{background:#203a57;color:#fff;z-index:3}
+    .roster-table td:first-child{background:#f8fbff}
+    .roster-table tbody tr:nth-child(even) td:not(:first-child){background:#fbfdff}
+    .roster-table tbody tr:hover td{background:#eef7ff!important}
+    .roster-table tbody tr:hover td:first-child{background:#e9f4ff!important}
+    .day-head{min-height:42px;display:flex;flex-direction:column;justify-content:center;gap:3px;align-items:center;color:#fff;font-size:11px;line-height:1.05}
+    .day-head span:nth-child(2){font-size:15px;font-weight:900}
+    .holiday-col{background:#fff4d9!important}
+    .roster-table th.holiday-col{background:#214d3f!important;color:#ffd36a!important}
+    .today-col{box-shadow:inset 0 0 0 2px #40b37d;outline:none!important}
+    .holiday-label{font-size:9px;color:#ffd36a;font-weight:900;max-width:54px;white-space:normal;line-height:1.05;text-align:center}
+    .staff-name-line{display:block;font-weight:900;color:#162336;font-size:12px;line-height:1.08;white-space:normal}
+    .staff-role-line{display:block;font-size:10px;color:#586575;font-weight:800;margin-top:3px;line-height:1.05}
+    .staff-shift-line{display:block;font-size:10px;color:#0f5f92;font-weight:900;margin-top:3px;line-height:1.05}
+    .legend-compact{display:flex;gap:10px 12px;align-items:center;flex-wrap:wrap;font-size:12px}
+    .shift-cell{display:inline-flex;justify-content:center;align-items:center;min-width:24px;height:22px;border-radius:7px;font-weight:900;font-size:10px;border:1px solid transparent;line-height:1;padding:0 4px}
+    button.shift-cell{box-shadow:none;cursor:pointer;background-clip:padding-box}
+    button.shift-cell:hover{transform:scale(1.08);filter:brightness(.98)}
+    .shift-D,.shift-M,.shift-E{background:#e6f4ff;color:#0f5f92;border-color:#b8dcf4}
+    .shift-N{background:#dfe6ff;color:#243b83;border-color:#bfcaf5}
+    .shift-O{background:#f1f3f6;color:#586575;border-color:#d8dee8}
+    .shift-R{background:#e2e8f0;color:#334155;border-color:#cbd5e1}
+    .shift-L,.shift-AL{background:#fff3cf;color:#9a5b00;border-color:#f3cf75}
+    .shift-SL{background:#ffe1e7;color:#a61b3d;border-color:#f5b5c4}
+    .shift-ML{background:#f3e8ff;color:#6b21a8;border-color:#d8b4fe}
+    .shift-ST{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+    .shift-TI{background:#e2f8d9;color:#236b31;border-color:#b7e8a9}
+    .shift-TO{background:#dcfbf5;color:#0f766e;border-color:#a7f3df}
+    .shift-OT{background:#d8f7e7;color:#146c43;border-color:#9ce0bd}
+    .shift-LL{background:#f7e2d1;color:#7a351a;border-color:#d9a27d}
+    .shift-modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.36);display:flex;align-items:center;justify-content:center;z-index:9999;padding:18px;backdrop-filter:blur(3px)}
+    .shift-modal{width:min(560px,96vw);background:#fff;border:1px solid #d6e1ed;border-radius:22px;box-shadow:0 24px 70px rgba(15,23,42,.28);padding:20px}
+    .shift-modal-header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}
+    .shift-modal-title{font-size:23px;font-weight:900;color:#1f3146;letter-spacing:-.04em;margin:0}
+    .shift-modal-subtitle{font-size:13px;color:#64748b;font-weight:700;margin-top:5px;line-height:1.35}
+    .shift-choice-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 12px}
+    .shift-choice-btn{border:1px solid #dce6f0;background:#fff;color:#203044;box-shadow:none;border-radius:16px;min-height:72px;padding:9px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+    .shift-choice-btn:hover{background:#f7fbff;border-color:#a8c9e8;box-shadow:0 5px 16px rgba(31,63,95,.10)}
+    .shift-choice-btn.active{outline:3px solid rgba(79,143,207,.32);border-color:#4f8fcf;background:#eef7ff}
+    .shift-choice-code{font-size:19px;font-weight:950;min-width:42px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid transparent}
+    .shift-choice-label{font-size:12px;font-weight:900;line-height:1.05;color:#334155;text-align:center}
+    .shift-modal-note{width:100%;min-height:42px;resize:vertical;margin-top:4px}
+    .shift-modal-actions{display:grid;grid-template-columns:1fr 1.2fr;gap:12px;margin-top:15px}
+    .shift-help{font-size:12px;color:#64748b;line-height:1.35;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:10px;margin-top:10px}
+    @media(max-width:720px){.shift-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shift-modal-actions{grid-template-columns:1fr}.roster-table{min-width:1160px}}
 
   </style>
 </head>
@@ -671,7 +677,7 @@
                     <td>${escapeHtml(cleanStaffName(r.full_name))}</td>
                     <td>${escapeHtml(labelRole(r.role))}</td>
                     <td>${shiftBadge(r.baseline_shift_code)}</td>
-                    <td>${shiftSelect(r.staff_id, r.shift_date, r.live_shift_code, "daily-shift-select")}</td>
+                    <td>${shiftButton(r.staff_id, r.shift_date, r.live_shift_code, r.source_type==="override")}</td>
                     <td>${escapeHtml(r.override_reason||"")}</td>
                   </tr>
                 `).join("") || `<tr><td colspan="5" class="muted">No staff rows found.</td></tr>`}
@@ -723,7 +729,7 @@
             <div>
               <h2>Monthly Roster</h2>
               <h1>${escapeHtml(selectedW?.ward_name || "Selected Ward")}</h1>
-              <p class="muted">${escapeHtml(selectedW?.ward_code || "")} · ${escapeHtml(monthLabel(monthValue))} · Use each shift dropdown to update status</p>
+              <p class="muted">${escapeHtml(selectedW?.ward_code || "")} · ${escapeHtml(monthLabel(monthValue))} · Click any shift cell to change status</p>
             </div>
             <div class="roster-nav">
               ${wardSelectorHtml()}
@@ -789,7 +795,7 @@
                       const isOverride=r?.source_type==="override";
                       const h = holidayMap[key];
                       return `<td class="${h ? "holiday-col" : ""} ${key===todayISO() ? "today-col" : ""}">
-                        ${shiftSelect(staff.staff_id, key, displayCode, "", actualCode)}
+                        ${shiftButton(staff.staff_id, key, displayCode, isOverride, actualCode)}
                       </td>`;
                     }).join("")}
                   </tr>
@@ -936,29 +942,151 @@
       await renderMonthlyRoster();
     }
 
-    async function quickUpdateRosterShift(staffId, shiftDate, newCode, currentCode){
+    const SHIFT_PICKER_CHOICES = [
+      { code:"D", label:"Day" },
+      { code:"N", label:"Night" },
+      { code:"O", label:"Off" },
+      { code:"R", label:"Rest" },
+      { code:"L", label:"Leave" },
+      { code:"SL", label:"Sick Leave" },
+      { code:"ML", label:"Maternity" },
+      { code:"ST", label:"Study" },
+      { code:"TI", label:"TIL In" },
+      { code:"TO", label:"TIL Out" },
+      { code:"OT", label:"Overtime" },
+      { code:"M", label:"Morning" }
+    ];
+
+    let shiftPickerState = null;
+
+    function normaliseRosterCode(code){
+      const raw = String(code || "").trim().toUpperCase();
+      if(!raw || raw === "—" || raw === "-") return "";
+      const aliases = {
+        A:"L", AL:"L", ANNUAL:"L", ANNUAL_LEAVE:"L", LEAVE:"L",
+        S:"SL", SICK:"SL", SICK_LEAVE:"SL",
+        MATERNITY:"ML", MATERNITY_LEAVE:"ML",
+        STUDY:"ST", STUDY_LEAVE:"ST",
+        TILIN:"TI", TIL_IN:"TI",
+        TILOUT:"TO", TIL_OUT:"TO",
+        OVERTIME:"OT", LONG_LEAVE:"LL"
+      };
+      return aliases[raw] || raw;
+    }
+
+    function storeRosterCode(code){
+      const clean = normaliseRosterCode(code);
+      if(clean === "L") return "AL";
+      return clean;
+    }
+
+    function findMonthlyStaff(staffId){
+      return (appState.monthlyRosterRows || []).find(s => String(s.staff_id) === String(staffId));
+    }
+
+    function ensureShiftPickerModal(){
+      let modal = document.getElementById("shiftPickerBackdrop");
+      if(modal) return modal;
+
+      modal = document.createElement("div");
+      modal.id = "shiftPickerBackdrop";
+      modal.className = "shift-modal-backdrop hidden";
+      modal.innerHTML = `
+        <div class="shift-modal" role="dialog" aria-modal="true" aria-labelledby="shiftPickerTitle">
+          <div class="shift-modal-header">
+            <div>
+              <h2 class="shift-modal-title" id="shiftPickerTitle">Update shift</h2>
+              <div class="shift-modal-subtitle" id="shiftPickerSubtitle"></div>
+            </div>
+            <button type="button" class="secondary small" onclick="closeShiftPickerModal()">Close</button>
+          </div>
+          <div class="shift-choice-grid" id="shiftChoiceGrid"></div>
+          <label>Notes (optional)</label>
+          <textarea class="shift-modal-note" id="shiftPickerNotes" placeholder="Optional note for audit trail"></textarea>
+          <div class="shift-help">Long Leave is automatic. Select Leave, TIL In, TIL Out or Overtime as normal. When a continuous block reaches 3 days, the roster displays LL until the pattern is broken.</div>
+          <div class="shift-modal-actions">
+            <button type="button" class="secondary" onclick="closeShiftPickerModal()">Cancel</button>
+            <button type="button" class="success" onclick="saveShiftPickerModal()">Save change</button>
+          </div>
+        </div>`;
+      modal.addEventListener("click", event => { if(event.target === modal) closeShiftPickerModal(); });
+      document.body.appendChild(modal);
+      return modal;
+    }
+
+    function openShiftPicker(staffId, shiftDate, currentCode){
       clearMessage();
-      const cleanCode = normaliseRosterCode(newCode);
-      const current = normaliseRosterCode(currentCode);
+      const staff = findMonthlyStaff(staffId);
+      const cleanCurrent = normaliseRosterCode(currentCode || "");
+      shiftPickerState = {
+        staffId,
+        shiftDate,
+        currentCode: cleanCurrent,
+        selectedCode: cleanCurrent && cleanCurrent !== "LL" ? cleanCurrent : "D"
+      };
 
-      if(!cleanCode){ showError("Choose a shift/status value."); return; }
-      if(cleanCode === current) return;
+      const modal = ensureShiftPickerModal();
+      const staffName = cleanStaffName(staff?.full_name || "Staff member");
+      const role = labelRole(staff?.role || "");
+      document.getElementById("shiftPickerTitle").textContent = "Update Shift";
+      document.getElementById("shiftPickerSubtitle").innerHTML = `${escapeHtml(staffName)}${role ? ` — ${escapeHtml(role)}` : ""}<br>${escapeHtml(formatDate(shiftDate))}`;
+      document.getElementById("shiftPickerNotes").value = "";
+      renderShiftPickerChoices();
+      modal.classList.remove("hidden");
+    }
 
-      const storedCode = normaliseRosterCode(cleanCode);
-      const allowed = new Set(["D","N","O","R","AL","L","SL","ML","ST","TI","TO","OT","LL","M","E"]);
+    function renderShiftPickerChoices(){
+      const selected = shiftPickerState?.selectedCode || "";
+      document.getElementById("shiftChoiceGrid").innerHTML = SHIFT_PICKER_CHOICES.map(choice => `
+        <button type="button" class="shift-choice-btn ${choice.code === selected ? "active" : ""}" onclick="selectShiftPickerCode('${escapeHtml(choice.code)}')">
+          <span class="shift-choice-code shift-${escapeHtml(choice.code)}">${escapeHtml(displayShiftCode(choice.code))}</span>
+          <span class="shift-choice-label">${escapeHtml(choice.label)}</span>
+        </button>
+      `).join("");
+    }
 
-      if(!allowed.has(storedCode)){
+    function selectShiftPickerCode(code){
+      if(!shiftPickerState) return;
+      shiftPickerState.selectedCode = normaliseRosterCode(code);
+      renderShiftPickerChoices();
+    }
+
+    function closeShiftPickerModal(){
+      const modal = document.getElementById("shiftPickerBackdrop");
+      if(modal) modal.classList.add("hidden");
+      shiftPickerState = null;
+    }
+
+    async function saveShiftPickerModal(){
+      if(!shiftPickerState){ closeShiftPickerModal(); return; }
+      const state = shiftPickerState;
+      const chosen = normaliseRosterCode(state.selectedCode);
+      const current = normaliseRosterCode(state.currentCode);
+      const notes = document.getElementById("shiftPickerNotes")?.value?.trim() || null;
+
+      if(!chosen){ showError("Choose a shift/status value."); return; }
+      if(chosen === "LL"){
+        showError("Long Leave is automatic. Select Leave/TIL/Overtime and the system will display LL after 3 consecutive days.");
+        return;
+      }
+
+      const allowed = new Set(SHIFT_PICKER_CHOICES.map(x => x.code));
+      if(!allowed.has(chosen)){
         showError("Invalid shift/status value.");
         return;
       }
 
+      closeShiftPickerModal();
+      if(chosen === current) return;
+
+      const storedCode = storeRosterCode(chosen);
       const { error } = await sb.rpc("upsert_ward_roster_override", {
-        p_ward_id:appState.selectedWardId,
-        p_staff_id:staffId,
-        p_shift_date:shiftDate,
-        p_shift_code:storedCode,
-        p_override_reason:reasonForShift(storedCode),
-        p_notes:null
+        p_ward_id: appState.selectedWardId,
+        p_staff_id: state.staffId,
+        p_shift_date: state.shiftDate,
+        p_shift_code: storedCode,
+        p_override_reason: reasonForShift(storedCode),
+        p_notes: notes
       });
 
       if(error){ showError(error.message); return; }
@@ -969,10 +1097,11 @@
     }
 
     async function editRosterShift(staffId, shiftDate, currentCode){
-      await quickUpdateRosterShift(staffId, shiftDate, currentCode, currentCode);
+      openShiftPicker(staffId, shiftDate, currentCode || "");
     }
 
     async function renderStaffManagement(){
+
       const wardId = requireSelectedWard();
       const { data, error } = await sb.rpc("get_ward_staff_members", { p_ward_id: wardId });
       if(error) throw error;
@@ -2163,48 +2292,10 @@
     }
 
 
-    const SHIFT_CHOICES = [
-      ["D", "D"],
-      ["N", "N"],
-      ["O", "O"],
-      ["R", "R"],
-      ["L", "L"],
-      ["SL", "SL"],
-      ["ML", "ML"],
-      ["ST", "ST"],
-      ["TI", "TI"],
-      ["TO", "TO"],
-      ["OT", "OT"],
-      ["LL", "LL"],
-      ["M", "M"]
-    ];
-
-    function normaliseRosterCode(code){
-      const raw = String(code || "").trim().toUpperCase();
-      if(!raw || raw === "—" || raw === "-") return "";
-      const aliases = {
-        A: "L",
-        AL: "L",
-        ANNUAL: "L",
-        ANNUAL_LEAVE: "L",
-        LEAVE: "L",
-        L: "L",
-        SICK: "SL",
-        SICK_LEAVE: "SL",
-        MATERNITY: "ML",
-        MATERNITY_LEAVE: "ML",
-        STUDY: "ST",
-        STUDY_LEAVE: "ST",
-        TILIN: "TI",
-        TIL_IN: "TI",
-        TILOUT: "TO",
-        TIL_OUT: "TO",
-        OVERTIME: "OT",
-        LONG_LEAVE: "LL"
-      };
-      return aliases[raw] || raw;
+    function displayShiftCode(code){
+      const clean = normaliseRosterCode(code);
+      return clean || "—";
     }
-
 
     function isLongLeaveCandidateCode(code){
       const clean = normaliseRosterCode(code);
@@ -2230,7 +2321,6 @@
       if(!isLongLeaveCandidateCode(cleanActual)) return cleanActual;
 
       let blockLength = 1;
-
       let cursor = addDaysIso(isoDate, -1);
       while(cursor && isLongLeaveCandidateCode(rosterCodeForLongLeaveCheck(daysMap, cursor))){
         blockLength += 1;
@@ -2246,83 +2336,31 @@
       return blockLength >= 3 ? "LL" : cleanActual;
     }
 
-    function displayShiftCode(code){
-      if(code === "AL") return "L";
-      return code || "—";
-    }
-
-    function shiftOptionLabel(code){
+    function shiftLabel(code){
       const labels = {
-        D:"Day", N:"Night", O:"Off", R:"Rest", L:"Leave", AL:"Leave", SL:"Sick", ML:"Maternity", ST:"Study",
-        TI:"TIL In", TO:"TIL Out", OT:"Overtime", LL:"Long Leave", M:"Morning"
+        D:"Day", N:"Night", O:"Off", R:"Rest", L:"Leave", AL:"Leave", SL:"Sick Leave", ML:"Maternity", ST:"Study",
+        TI:"TIL In", TO:"TIL Out", OT:"Overtime", LL:"Long Leave", M:"Morning", E:"Evening"
       };
-      return labels[code] || code;
-    }
-
-    function shiftOptionsHtml(selectedCode){
-      const selected = normaliseRosterCode(selectedCode);
-      return SHIFT_CHOICES.map(([value, shortLabel]) =>
-        `<option value="${escapeHtml(value)}" ${value===selected ? "selected" : ""}>${escapeHtml(shortLabel)}</option>`
-      ).join("");
-    }
-
-    function shiftPickerMenuHtml(staffId, shiftDate, storedCode, pickerId){
-      return SHIFT_CHOICES.map(([value, shortLabel]) => `
-        <button type="button" class="shift-picker-option"
-          onclick="selectShiftFromPicker('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}','${escapeHtml(value)}','${escapeHtml(storedCode)}','${escapeHtml(pickerId)}')">
-          <span class="shift-cell shift-${escapeHtml(value)}">${escapeHtml(displayShiftCode(value))}</span>
-          <span>${escapeHtml(shortLabel)} — ${escapeHtml(shiftOptionLabel(value))}</span>
-        </button>
-      `).join("");
-    }
-
-    function closeShiftPickers(){
-      document.querySelectorAll(".shift-picker.open").forEach(el => el.classList.remove("open"));
-    }
-
-    function toggleShiftPicker(pickerId){
-      const el = document.getElementById(pickerId);
-      if(!el) return;
-      const wasOpen = el.classList.contains("open");
-      closeShiftPickers();
-      if(!wasOpen) el.classList.add("open");
-    }
-
-    async function selectShiftFromPicker(staffId, shiftDate, newCode, currentCode, pickerId){
-      closeShiftPickers();
-      await quickUpdateRosterShift(staffId, shiftDate, newCode, currentCode);
-    }
-
-    document.addEventListener("click", closeShiftPickers);
-
-    function shiftSelect(staffId, shiftDate, displayCode, extraClass="", actualCode=null){
-      const storedCode = normaliseRosterCode(actualCode || displayCode || "");
-      const visualCode = normaliseRosterCode(displayCode || storedCode || "O");
-      const pickerId = `shift_${safeKey(staffId)}_${safeKey(shiftDate)}`;
-      return `
-        <span class="shift-picker" id="${escapeHtml(pickerId)}" onclick="event.stopPropagation()">
-          <button type="button"
-            class="shift-picker-button shift-${escapeHtml(visualCode)} ${escapeHtml(extraClass)}"
-            title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftOptionLabel(visualCode))}"
-            onclick="toggleShiftPicker('${escapeHtml(pickerId)}')">
-            ${escapeHtml(displayShiftCode(visualCode))}
-          </button>
-          <span class="shift-picker-menu">
-            ${shiftPickerMenuHtml(staffId, shiftDate, storedCode, pickerId)}
-          </span>
-        </span>
-      `;
+      const clean = normaliseRosterCode(code);
+      return labels[clean] || clean || "";
     }
 
     function shiftBadge(code){
       const cleanCode = normaliseRosterCode(code || "");
-      const visualCode = cleanCode || "O";
-      const text = cleanCode ? displayShiftCode(cleanCode) : "—";
-      return `<span class="shift-cell shift-${escapeHtml(visualCode)}" title="${escapeHtml(text)} — ${escapeHtml(shiftOptionLabel(visualCode))}">${escapeHtml(text)}</span>`;
+      if(!cleanCode) return `<span class="shift-cell shift-O">—</span>`;
+      return `<span class="shift-cell shift-${escapeHtml(cleanCode)}" title="${escapeHtml(displayShiftCode(cleanCode))} — ${escapeHtml(shiftLabel(cleanCode))}">${escapeHtml(displayShiftCode(cleanCode))}</span>`;
     }
 
     function shiftButton(staffId, shiftDate, code, isOverride, actualCode=null){
-      return shiftSelect(staffId, shiftDate, code, "", actualCode);
+      const cleanCode = normaliseRosterCode(code || actualCode || "");
+      const visualCode = cleanCode || "O";
+      const storedCode = normaliseRosterCode(actualCode || code || "");
+      return `
+        <button type="button" class="shift-cell shift-${escapeHtml(visualCode)}" onclick="editRosterShift('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}','${escapeHtml(storedCode)}')" title="Click to update: ${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftLabel(visualCode))}">
+          ${escapeHtml(displayShiftCode(visualCode))}
+        </button>
+        ${isOverride ? `<span class="override-dot" title="Changed from baseline"></span>` : ""}
+      `;
     }
 
     function legend(code,label){ return `<span>${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`; }
@@ -2432,10 +2470,10 @@
     }
 
     function reasonForShift(code){
+      const clean = normaliseRosterCode(code);
       const map = {
-        AL:"leave",
-        L:"leave",
-        LL:"long_leave",
+        AL:"annual_leave",
+        L:"annual_leave",
         SL:"sick_leave",
         ML:"maternity_leave",
         ST:"study_leave",
@@ -2449,7 +2487,7 @@
         M:"manual_morning_change",
         E:"manual_evening_change"
       };
-      return map[code] || "manual_roster_change";
+      return map[clean] || "manual_roster_change";
     }
 
     function numberValue(value){ const n = Number(value); return Number.isFinite(n) ? n : 0; }
