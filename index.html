@@ -2247,6 +2247,13 @@
       `;
     }
 
+    function shiftBadge(code){
+      const cleanCode = normaliseRosterCode(code || "");
+      const visualCode = cleanCode || "O";
+      const text = cleanCode ? displayShiftCode(cleanCode) : "—";
+      return `<span class="shift-cell shift-${escapeHtml(visualCode)}" title="${escapeHtml(text)} — ${escapeHtml(shiftOptionLabel(visualCode))}">${escapeHtml(text)}</span>`;
+    }
+
     function shiftButton(staffId, shiftDate, code, isOverride, actualCode=null){
       return shiftSelect(staffId, shiftDate, code, "", actualCode);
     }
