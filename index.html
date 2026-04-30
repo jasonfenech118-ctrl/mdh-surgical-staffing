@@ -917,7 +917,11 @@
       const { data, error } = await sb.rpc("get_ward_staff_members", { p_ward_id: wardId });
       if(error) throw error;
 
-      appState.staffRows = data || [];
+      appState.staffRows = (data || []).slice().sort((a,b) => {
+        const roleDiff = roleSortOrder(a.role) - roleSortOrder(b.role);
+        if(roleDiff !== 0) return roleDiff;
+        return cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name));
+      });
 
       document.getElementById("content").innerHTML = `
         <div class="card">
@@ -937,7 +941,7 @@
             <div><label>Corp user ID</label><input id="newStaffCorp" placeholder="e.g. BorgA123"></div>
             <div><label>Email</label><input id="newStaffEmail" type="email" placeholder="name@gov.mt"></div>
             <div><label>Role</label>${roleSelectHtml("newStaffRole")}</div>
-            <div><label>Roster</label>${rosterAssignmentSelectHtml("newStaffRosterAssignment")}</div>
+            <div><label>Shift</label>${rosterAssignmentSelectHtml("newStaffRosterAssignment")}</div>
             <div><label>Roster start date</label><input id="newStaffStartDate" type="date"></div>
           </div>
           <div style="margin-top:14px"><button type="button" onclick="addStaffMember()">Add staff member</button></div>
@@ -954,7 +958,7 @@
             <div><label>Corp user ID</label><input id="editStaffCorp"></div>
             <div><label>Email</label><input id="editStaffEmail" type="email"></div>
             <div><label>Role</label>${roleSelectHtml("editStaffRole")}</div>
-            <div><label>Roster</label>${rosterAssignmentSelectHtml("editStaffRosterAssignment")}</div>
+            <div><label>Shift</label>${rosterAssignmentSelectHtml("editStaffRosterAssignment")}</div>
             <div><label>Roster start date</label><input id="editStaffStartDate" type="date"></div>
           </div>
           <div class="actions" style="margin-top:14px">
@@ -967,14 +971,13 @@
           <h3>Current staff</h3>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Name</th><th>Corp ID</th><th>Role</th><th>Ward</th><th>Roster</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Name</th><th>Corp ID</th><th>Role</th><th>Shift</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 ${appState.staffRows.map(s=>`
                   <tr>
                     <td><strong>${escapeHtml(cleanStaffName(s.full_name))}</strong></td>
                     <td>${escapeHtml(s.corp_user_id || "—")}</td>
                     <td>${escapeHtml(labelRole(s.role))}</td>
-                    <td>${escapeHtml(s.ward_code || selectedWard()?.ward_code || "")}</td>
                     <td>${escapeHtml(staffRosterLabel(s))}</td>
                     <td>${truthy(s.is_active) ? badge("Active","green") : badge("Inactive","grey")}</td>
                     <td>
@@ -984,7 +987,7 @@
                       </div>
                     </td>
                   </tr>
-                `).join("") || `<tr><td colspan="7" class="muted">No staff found.</td></tr>`}
+                `).join("") || `<tr><td colspan="6" class="muted">No staff found.</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -1720,8 +1723,13 @@
     }
 
     function roleSelectHtml(id, selected="nurse"){
-      const options = [["nurse","Staff Nurse"],["carer","Carer"],["healthcare_assistant","Healthcare Assistant"],["other","Other"]];
-      if(appState.profile?.is_sno) options.splice(1,0,["charge_nurse","Charge Nurse"]);
+      const options = [
+        ["charge_nurse","Charge Nurse"],
+        ["senior_staff_nurse","Senior Staff Nurse"],
+        ["nurse","Staff Nurse"],
+        ["nursing_aide","Nursing Aide"],
+        ["carer","Carer"]
+      ];
       return `<select id="${escapeHtml(id)}">${options.map(([value,label]) => `<option value="${value}" ${value===selected?"selected":""}>${escapeHtml(label)}</option>`).join("")}</select>`;
     }
 
@@ -2168,8 +2176,29 @@
     }
 
     function labelRole(role){
-      const labels={sno:"Senior Nursing Officer",charge_nurse:"Charge Nurse",nurse:"Staff Nurse",carer:"Carer",healthcare_assistant:"Healthcare Assistant",other:"Other"};
-      return labels[role]||role||"";
+      const labels = {
+        sno: "Senior Nursing Officer",
+        charge_nurse: "Charge Nurse",
+        senior_staff_nurse: "Senior Staff Nurse",
+        nurse: "Staff Nurse",
+        nursing_aide: "Nursing Aide",
+        healthcare_assistant: "Nursing Aide",
+        carer: "Carer"
+      };
+      return labels[role] || role || "";
+    }
+
+    function roleSortOrder(role){
+      const order = {
+        sno: 0,
+        charge_nurse: 1,
+        senior_staff_nurse: 2,
+        nurse: 3,
+        nursing_aide: 4,
+        healthcare_assistant: 4,
+        carer: 5
+      };
+      return order[role] ?? 99;
     }
 
     function entryTypeLabel(type){
