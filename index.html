@@ -219,6 +219,27 @@
 
     /* --- U-turn readability and compact layout overrides --- */
     .shift-cell{min-width:24px;height:22px;border-radius:7px;font-size:10px;line-height:1;padding:0 4px}
+
+    .shift-select{
+      width:42px;min-width:42px;max-width:42px;height:24px;
+      padding:0 2px;border-radius:8px;border:1px solid var(--border);
+      font-size:10px;font-weight:900;text-align:center;text-align-last:center;
+      font-family:inherit;cursor:pointer;box-shadow:none;background:#fff;color:var(--text);
+    }
+    .daily-shift-select{width:62px;min-width:62px;max-width:62px;height:26px;font-size:11px}
+    .shift-select:focus{box-shadow:0 0 0 3px rgba(79,143,207,.14)}
+    .shift-select.shift-D,.shift-select.shift-M,.shift-select.shift-E{background:var(--primary-soft);color:var(--primary-dark);border-color:var(--primary-border)}
+    .shift-select.shift-N{background:#e7edff;color:#3857a6;border-color:#cfd9fb}
+    .shift-select.shift-O{background:#f7f8fa;color:#576574;border-color:#dfe5eb}
+    .shift-select.shift-R{background:#e9edf2;color:#374151;border-color:#cfd7df}
+    .shift-select.shift-AL{background:#fff2cc;color:#8a5a00;border-color:#f0cc73}
+    .shift-select.shift-SL{background:#ffe1e6;color:#9f1239;border-color:#f5a3b5}
+    .shift-select.shift-ML{background:#f2ddff;color:#6b21a8;border-color:#d8b4fe}
+    .shift-select.shift-ST{background:#e8ddff;color:#5b21b6;border-color:#c4b5fd}
+    .shift-select.shift-TI{background:#dff8e7;color:#166534;border-color:#9bd7af}
+    .shift-select.shift-TO{background:#d8f6f2;color:#0f766e;border-color:#99ded8}
+    .shift-select.shift-OT{background:#d8f3dc;color:#047857;border-color:#8bd39c}
+    .shift-select.shift-LL{background:#f7e2d1;color:#7a351a;border-color:#d9a27d}
     button.shift-cell{min-width:24px;height:22px;padding:0 4px}
     .shift-L,.shift-AL{background:#fff3cf;color:#9a5b00;border-color:#f3cf75}
     .shift-LL{background:#f7e2d1;color:#7a351a;border-color:#d9a27d}
@@ -233,9 +254,9 @@
     .shift-ST{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
     .roster-table-card{margin-left:calc(50% - 50vw + 6px);margin-right:calc(50% - 50vw + 6px);padding:8px;border-radius:12px}
     .roster-table-wrap{overflow-x:auto}
-    .roster-table{width:100%;min-width:1060px;table-layout:fixed}
+    .roster-table{width:100%;min-width:980px;table-layout:fixed}
     .roster-table th,.roster-table td{padding:3px 1px;text-align:center;font-size:10px;line-height:1.05}
-    .roster-table th:first-child,.roster-table td:first-child{width:185px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);padding:6px 8px}
+    .roster-table th:first-child,.roster-table td:first-child{width:165px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);padding:6px 8px}
     .roster-table th:first-child{background:#f9fbfd;z-index:3}
     .staff-name-line{display:block;font-weight:900;color:#1f2937;line-height:1.1;white-space:normal}
     .staff-role-line{display:block;font-size:10px;color:#536273;font-weight:800;margin-top:2px;line-height:1.05}
@@ -249,7 +270,7 @@
     .rp-actions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
     .rp-actions-grid button{width:100%}
     .muted-small{font-size:11px;color:var(--muted);line-height:1.25}
-    @media(max-width:1250px){.roster-table{min-width:1060px}.roster-table th:first-child,.roster-table td:first-child{width:180px}.rp-toolbar{grid-template-columns:1fr 1fr}.rp-table{min-width:1050px}}
+    @media(max-width:1250px){.roster-table{min-width:980px}.roster-table th:first-child,.roster-table td:first-child{width:180px}.rp-toolbar{grid-template-columns:1fr 1fr}.rp-table{min-width:1050px}}
 
   </style>
 </head>
@@ -624,7 +645,7 @@
                     <td>${escapeHtml(cleanStaffName(r.full_name))}</td>
                     <td>${escapeHtml(labelRole(r.role))}</td>
                     <td>${shiftBadge(r.baseline_shift_code)}</td>
-                    <td>${shiftButton(r.staff_id, r.shift_date, r.live_shift_code, r.source_type==="override")}</td>
+                    <td>${shiftSelect(r.staff_id, r.shift_date, r.live_shift_code, "daily-shift-select")}</td>
                     <td>${escapeHtml(r.override_reason||"")}</td>
                   </tr>
                 `).join("") || `<tr><td colspan="5" class="muted">No staff rows found.</td></tr>`}
@@ -676,7 +697,7 @@
             <div>
               <h2>Monthly Roster</h2>
               <h1>${escapeHtml(selectedW?.ward_name || "Selected Ward")}</h1>
-              <p class="muted">${escapeHtml(selectedW?.ward_code || "")} · ${escapeHtml(monthLabel(monthValue))} · Click any shift cell to change status</p>
+              <p class="muted">${escapeHtml(selectedW?.ward_code || "")} · ${escapeHtml(monthLabel(monthValue))} · Use each shift dropdown to update status</p>
             </div>
             <div class="roster-nav">
               ${wardSelectorHtml()}
@@ -742,7 +763,7 @@
                       const isOverride=r?.source_type==="override";
                       const h = holidayMap[key];
                       return `<td class="${h ? "holiday-col" : ""} ${key===todayISO() ? "today-col" : ""}">
-                        ${shiftButton(staff.staff_id, key, displayCode, isOverride, actualCode)}
+                        ${shiftSelect(staff.staff_id, key, displayCode, "", actualCode)}
                       </td>`;
                     }).join("")}
                   </tr>
@@ -889,37 +910,29 @@
       await renderMonthlyRoster();
     }
 
-    async function editRosterShift(staffId, shiftDate, currentCode){
+    async function quickUpdateRosterShift(staffId, shiftDate, newCode, currentCode){
       clearMessage();
+      const cleanCode = String(newCode || "").trim().toUpperCase();
+      const current = String(currentCode || "").trim().toUpperCase();
 
-      const code = window.prompt(
-        "Enter new shift/status code:\n\nD = Day\nN = Night\nO = Off\nR = Rest\nAL = Leave\nSL = Sick Leave\nML = Maternity Leave\nST = Study Leave\nTI = TIL In\nTO = TIL Out\nOT = Overtime\n\nCurrent: " + (currentCode || "—"),
-        currentCode || ""
-      );
+      if(!cleanCode){ showError("Choose a shift/status value."); return; }
+      if(cleanCode === current) return;
 
-      if(code === null) return;
-
-      const cleanCode = code.trim().toUpperCase();
+      const storedCode = cleanCode === "L" ? "AL" : cleanCode;
       const allowed = new Set(["D","N","O","R","AL","L","SL","ML","ST","TI","TO","OT","LL","M","E"]);
 
-      if(!allowed.has(cleanCode)){
-        showError("Invalid shift/status code.");
+      if(!allowed.has(storedCode)){
+        showError("Invalid shift/status value.");
         return;
       }
-
-      const reason = window.prompt("Reason for change:", reasonForShift(cleanCode));
-      if(reason === null) return;
-
-      const notes = window.prompt("Notes:", "");
-      if(notes === null) return;
 
       const { error } = await sb.rpc("upsert_ward_roster_override", {
         p_ward_id:appState.selectedWardId,
         p_staff_id:staffId,
         p_shift_date:shiftDate,
-        p_shift_code:cleanCode,
-        p_override_reason:reason || reasonForShift(cleanCode),
-        p_notes:notes || null
+        p_shift_code:storedCode,
+        p_override_reason:reasonForShift(storedCode),
+        p_notes:null
       });
 
       if(error){ showError(error.message); return; }
@@ -927,6 +940,10 @@
       showSuccess("Roster status updated.");
       if(appState.activeTab === "wardDaily") await renderWardDaily();
       else await renderMonthlyRoster();
+    }
+
+    async function editRosterShift(staffId, shiftDate, currentCode){
+      await quickUpdateRosterShift(staffId, shiftDate, currentCode, currentCode);
     }
 
     async function renderStaffManagement(){
@@ -2120,9 +2137,40 @@
     }
 
 
+    const SHIFT_CHOICES = [
+      ["D", "D"],
+      ["N", "N"],
+      ["O", "O"],
+      ["R", "R"],
+      ["AL", "L"],
+      ["SL", "SL"],
+      ["ML", "ML"],
+      ["ST", "ST"],
+      ["TI", "TI"],
+      ["TO", "TO"],
+      ["OT", "OT"],
+      ["LL", "LL"],
+      ["M", "M"]
+    ];
+
     function displayShiftCode(code){
       if(code === "AL") return "L";
       return code || "—";
+    }
+
+    function shiftOptionLabel(code){
+      const labels = {
+        D:"Day", N:"Night", O:"Off", R:"Rest", AL:"Leave", SL:"Sick", ML:"Maternity", ST:"Study",
+        TI:"TIL In", TO:"TIL Out", OT:"Overtime", LL:"Long Leave", M:"Morning"
+      };
+      return labels[code] || code;
+    }
+
+    function shiftOptionsHtml(selectedCode){
+      const selected = selectedCode === "L" ? "AL" : String(selectedCode || "").toUpperCase();
+      return SHIFT_CHOICES.map(([value, shortLabel]) =>
+        `<option value="${escapeHtml(value)}" ${value===selected ? "selected" : ""}>${escapeHtml(shortLabel)} - ${escapeHtml(shiftOptionLabel(value))}</option>`
+      ).join("");
     }
 
     function longLeaveDisplayCode(daysMap, isoDate, actualCode){
@@ -2148,15 +2196,21 @@
       return `<span class="shift-cell shift-${escapeHtml(rawCode)}">${escapeHtml(displayShiftCode(rawCode))}</span>`;
     }
 
-    function shiftButton(staffId, shiftDate, code, isOverride, actualCode=null){
-      const cleanCode = code || "—";
-      const storedCode = actualCode || code || "";
+    function shiftSelect(staffId, shiftDate, displayCode, extraClass="", actualCode=null){
+      const storedCode = actualCode || displayCode || "";
+      const cleanDisplay = displayCode || storedCode || "O";
+      const selected = storedCode || cleanDisplay;
       return `
-        <button type="button" class="shift-cell shift-${escapeHtml(cleanCode)}" onclick="editRosterShift('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}','${escapeHtml(storedCode)}')" title="Click to change">
-          ${escapeHtml(displayShiftCode(cleanCode))}
-        </button>
-        ${isOverride ? `<span class="override-dot" title="Changed from baseline"></span>` : ""}
+        <select class="shift-select shift-${escapeHtml(cleanDisplay)} ${escapeHtml(extraClass)}"
+          title="Select roster status"
+          onchange="quickUpdateRosterShift('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}',this.value,'${escapeHtml(storedCode)}')">
+          ${shiftOptionsHtml(selected)}
+        </select>
       `;
+    }
+
+    function shiftButton(staffId, shiftDate, code, isOverride, actualCode=null){
+      return shiftSelect(staffId, shiftDate, code, "", actualCode);
     }
 
     function legend(code,label){ return `<span>${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`; }
