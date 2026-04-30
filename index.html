@@ -272,6 +272,32 @@
     .muted-small{font-size:11px;color:var(--muted);line-height:1.25}
     @media(max-width:1250px){.roster-table{min-width:980px}.roster-table th:first-child,.roster-table td:first-child{width:180px}.rp-toolbar{grid-template-columns:1fr 1fr}.rp-table{min-width:1050px}}
 
+
+    /* --- V4: roster cell picker, code-only display --- */
+    .roster-table td{position:relative;overflow:visible}
+    .shift-select{display:none!important}
+    .shift-picker{position:relative;display:inline-flex;justify-content:center;align-items:center;min-width:26px}
+    .shift-picker-button{
+      min-width:25px;width:25px;height:21px;padding:0;border-radius:7px;border:1px solid transparent;
+      display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;
+      line-height:1;box-shadow:none;cursor:pointer;background:#fff;color:var(--text)
+    }
+    .shift-picker-button:hover{filter:brightness(.97);transform:none}
+    .shift-picker.open .shift-picker-button{outline:2px solid rgba(79,143,207,.28);outline-offset:1px}
+    .shift-picker-menu{
+      display:none;position:absolute;top:24px;left:50%;transform:translateX(-50%);z-index:9999;
+      min-width:132px;max-height:260px;overflow-y:auto;background:#fff;border:1px solid var(--border);
+      border-radius:12px;box-shadow:0 14px 35px rgba(31,49,70,.18);padding:6px;text-align:left
+    }
+    .shift-picker.open .shift-picker-menu{display:grid;gap:4px}
+    .shift-picker-option{
+      width:100%;border:0;background:#fff;color:var(--text);box-shadow:none;border-radius:9px;padding:6px 7px;
+      display:grid;grid-template-columns:32px 1fr;gap:6px;align-items:center;text-align:left;font-size:12px;font-weight:750
+    }
+    .shift-picker-option:hover{background:var(--primary-soft);color:var(--primary-dark);box-shadow:none}
+    .shift-picker-option .shift-cell{min-width:26px;width:26px;height:21px;font-size:10px;padding:0}
+    .roster-table .shift-cell{min-width:25px;width:25px;height:21px;font-size:10px;padding:0}
+
   </style>
 </head>
 <body>
@@ -912,13 +938,13 @@
 
     async function quickUpdateRosterShift(staffId, shiftDate, newCode, currentCode){
       clearMessage();
-      const cleanCode = String(newCode || "").trim().toUpperCase();
-      const current = String(currentCode || "").trim().toUpperCase();
+      const cleanCode = normaliseRosterCode(newCode);
+      const current = normaliseRosterCode(currentCode);
 
       if(!cleanCode){ showError("Choose a shift/status value."); return; }
       if(cleanCode === current) return;
 
-      const storedCode = cleanCode === "L" ? "AL" : cleanCode;
+      const storedCode = normaliseRosterCode(cleanCode);
       const allowed = new Set(["D","N","O","R","AL","L","SL","ML","ST","TI","TO","OT","LL","M","E"]);
 
       if(!allowed.has(storedCode)){
@@ -2167,45 +2193,57 @@
     }
 
     function shiftOptionsHtml(selectedCode){
-      const selected = selectedCode === "L" ? "AL" : String(selectedCode || "").toUpperCase();
+      const selected = normaliseRosterCode(selectedCode);
       return SHIFT_CHOICES.map(([value, shortLabel]) =>
-        `<option value="${escapeHtml(value)}" ${value===selected ? "selected" : ""}>${escapeHtml(shortLabel)} - ${escapeHtml(shiftOptionLabel(value))}</option>`
+        `<option value="${escapeHtml(value)}" ${value===selected ? "selected" : ""}>${escapeHtml(shortLabel)}</option>`
       ).join("");
     }
 
-    function longLeaveDisplayCode(daysMap, isoDate, actualCode){
-      const leaveTriggerCodes = new Set(["OT","TI","TO"]);
-      if(!leaveTriggerCodes.has(actualCode)) return actualCode || "";
-
-      const dates = Object.keys(daysMap || {}).sort();
-      const idx = dates.indexOf(isoDate);
-      if(idx < 0) return actualCode;
-
-      let start = idx;
-      while(start > 0 && leaveTriggerCodes.has(daysMap[dates[start - 1]]?.live_shift_code || "")) start--;
-
-      let end = idx;
-      while(end < dates.length - 1 && leaveTriggerCodes.has(daysMap[dates[end + 1]]?.live_shift_code || "")) end++;
-
-      return (end - start + 1) >= 3 ? "LL" : actualCode;
+    function shiftPickerMenuHtml(staffId, shiftDate, storedCode, pickerId){
+      return SHIFT_CHOICES.map(([value, shortLabel]) => `
+        <button type="button" class="shift-picker-option"
+          onclick="selectShiftFromPicker('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}','${escapeHtml(value)}','${escapeHtml(storedCode)}','${escapeHtml(pickerId)}')">
+          <span class="shift-cell shift-${escapeHtml(value)}">${escapeHtml(displayShiftCode(value))}</span>
+          <span>${escapeHtml(shortLabel)} — ${escapeHtml(shiftOptionLabel(value))}</span>
+        </button>
+      `).join("");
     }
 
-    function shiftBadge(code){
-      if(!code) return `<span class="shift-cell shift-O">—</span>`;
-      const rawCode = String(code || "");
-      return `<span class="shift-cell shift-${escapeHtml(rawCode)}">${escapeHtml(displayShiftCode(rawCode))}</span>`;
+    function closeShiftPickers(){
+      document.querySelectorAll(".shift-picker.open").forEach(el => el.classList.remove("open"));
     }
+
+    function toggleShiftPicker(pickerId){
+      const el = document.getElementById(pickerId);
+      if(!el) return;
+      const wasOpen = el.classList.contains("open");
+      closeShiftPickers();
+      if(!wasOpen) el.classList.add("open");
+    }
+
+    async function selectShiftFromPicker(staffId, shiftDate, newCode, currentCode, pickerId){
+      closeShiftPickers();
+      await quickUpdateRosterShift(staffId, shiftDate, newCode, currentCode);
+    }
+
+    document.addEventListener("click", closeShiftPickers);
 
     function shiftSelect(staffId, shiftDate, displayCode, extraClass="", actualCode=null){
-      const storedCode = actualCode || displayCode || "";
-      const cleanDisplay = displayCode || storedCode || "O";
-      const selected = storedCode || cleanDisplay;
+      const storedCode = normaliseRosterCode(actualCode || displayCode || "");
+      const visualCode = normaliseRosterCode(displayCode || storedCode || "O");
+      const pickerId = `shift_${safeKey(staffId)}_${safeKey(shiftDate)}`;
       return `
-        <select class="shift-select shift-${escapeHtml(cleanDisplay)} ${escapeHtml(extraClass)}"
-          title="Select roster status"
-          onchange="quickUpdateRosterShift('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}',this.value,'${escapeHtml(storedCode)}')">
-          ${shiftOptionsHtml(selected)}
-        </select>
+        <span class="shift-picker" id="${escapeHtml(pickerId)}" onclick="event.stopPropagation()">
+          <button type="button"
+            class="shift-picker-button shift-${escapeHtml(visualCode)} ${escapeHtml(extraClass)}"
+            title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftOptionLabel(visualCode))}"
+            onclick="toggleShiftPicker('${escapeHtml(pickerId)}')">
+            ${escapeHtml(displayShiftCode(visualCode))}
+          </button>
+          <span class="shift-picker-menu">
+            ${shiftPickerMenuHtml(staffId, shiftDate, storedCode, pickerId)}
+          </span>
+        </span>
       `;
     }
 
