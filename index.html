@@ -2168,7 +2168,7 @@
       ["N", "N"],
       ["O", "O"],
       ["R", "R"],
-      ["AL", "L"],
+      ["L", "L"],
       ["SL", "SL"],
       ["ML", "ML"],
       ["ST", "ST"],
@@ -2179,6 +2179,32 @@
       ["M", "M"]
     ];
 
+    function normaliseRosterCode(code){
+      const raw = String(code || "").trim().toUpperCase();
+      if(!raw || raw === "—" || raw === "-") return "";
+      const aliases = {
+        A: "L",
+        AL: "L",
+        ANNUAL: "L",
+        ANNUAL_LEAVE: "L",
+        LEAVE: "L",
+        L: "L",
+        SICK: "SL",
+        SICK_LEAVE: "SL",
+        MATERNITY: "ML",
+        MATERNITY_LEAVE: "ML",
+        STUDY: "ST",
+        STUDY_LEAVE: "ST",
+        TILIN: "TI",
+        TIL_IN: "TI",
+        TILOUT: "TO",
+        TIL_OUT: "TO",
+        OVERTIME: "OT",
+        LONG_LEAVE: "LL"
+      };
+      return aliases[raw] || raw;
+    }
+
     function displayShiftCode(code){
       if(code === "AL") return "L";
       return code || "—";
@@ -2186,7 +2212,7 @@
 
     function shiftOptionLabel(code){
       const labels = {
-        D:"Day", N:"Night", O:"Off", R:"Rest", AL:"Leave", SL:"Sick", ML:"Maternity", ST:"Study",
+        D:"Day", N:"Night", O:"Off", R:"Rest", L:"Leave", AL:"Leave", SL:"Sick", ML:"Maternity", ST:"Study",
         TI:"TIL In", TO:"TIL Out", OT:"Overtime", LL:"Long Leave", M:"Morning"
       };
       return labels[code] || code;
