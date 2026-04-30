@@ -215,6 +215,42 @@
       .bar-row{grid-template-columns:1fr}
       .bar-value{text-align:left}
     }
+  
+
+    /* --- U-turn readability and compact layout overrides --- */
+    .shift-cell{min-width:24px;height:22px;border-radius:7px;font-size:10px;line-height:1;padding:0 4px}
+    button.shift-cell{min-width:24px;height:22px;padding:0 4px}
+    .shift-L,.shift-AL{background:#fff3cf;color:#9a5b00;border-color:#f3cf75}
+    .shift-LL{background:#f7e2d1;color:#7a351a;border-color:#d9a27d}
+    .shift-N{background:#dfe6ff;color:#243b83;border-color:#bfcaf5}
+    .shift-O{background:#f1f3f6;color:#586575;border-color:#d8dee8}
+    .shift-R{background:#e2e8f0;color:#334155;border-color:#cbd5e1}
+    .shift-TI{background:#e2f8d9;color:#236b31;border-color:#b7e8a9}
+    .shift-TO{background:#dcfbf5;color:#0f766e;border-color:#a7f3df}
+    .shift-OT{background:#d8f7e7;color:#146c43;border-color:#9ce0bd}
+    .shift-SL{background:#ffe1e7;color:#a61b3d;border-color:#f5b5c4}
+    .shift-ML{background:#f3e8ff;color:#6b21a8;border-color:#d8b4fe}
+    .shift-ST{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+    .roster-table-card{margin-left:calc(50% - 50vw + 6px);margin-right:calc(50% - 50vw + 6px);padding:8px;border-radius:12px}
+    .roster-table-wrap{overflow-x:auto}
+    .roster-table{width:100%;min-width:1060px;table-layout:fixed}
+    .roster-table th,.roster-table td{padding:3px 1px;text-align:center;font-size:10px;line-height:1.05}
+    .roster-table th:first-child,.roster-table td:first-child{width:185px;text-align:left;position:sticky;left:0;background:#fff;z-index:2;border-right:1px solid var(--border);padding:6px 8px}
+    .roster-table th:first-child{background:#f9fbfd;z-index:3}
+    .staff-name-line{display:block;font-weight:900;color:#1f2937;line-height:1.1;white-space:normal}
+    .staff-role-line{display:block;font-size:10px;color:#536273;font-weight:800;margin-top:2px;line-height:1.05}
+    .staff-shift-line{display:block;font-size:10px;color:#0f5f92;font-weight:900;margin-top:2px;line-height:1.05}
+    .day-head{min-height:34px;gap:1px;font-size:9.5px}
+    .holiday-label{font-size:8.5px;max-width:44px}
+    .legend-compact{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px}
+    .rp-toolbar{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:end}
+    .rp-table{min-width:1080px}
+    .rp-table th,.rp-table td{padding:8px 8px;font-size:11.5px}
+    .rp-actions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+    .rp-actions-grid button{width:100%}
+    .muted-small{font-size:11px;color:var(--muted);line-height:1.25}
+    @media(max-width:1250px){.roster-table{min-width:1060px}.roster-table th:first-child,.roster-table td:first-child{width:180px}.rp-toolbar{grid-template-columns:1fr 1fr}.rp-table{min-width:1050px}}
+
   </style>
 </head>
 <body>
@@ -284,6 +320,8 @@
       wards:[],
       activeTab:null,
       selectedWardId:null,
+      selectedOverviewWardId:"",
+      selectedRelievingWardId:"",
       selectedDate:todayISO(),
       selectedMonth:monthISO(new Date()),
       selectedAuditWardId:"",
@@ -441,7 +479,7 @@
       await sb.auth.signOut();
       appState = {
         session:null,ref:null,profile:null,wards:[],activeTab:null,selectedWardId:null,
-        selectedDate:todayISO(),selectedMonth:monthISO(new Date()),selectedAuditWardId:"",selectedKpiStaffId:"",
+        selectedDate:todayISO(),selectedMonth:monthISO(new Date()),selectedOverviewWardId:"",selectedRelievingWardId:"",selectedAuditWardId:"",selectedKpiStaffId:"",
         staffRows:[],monthlyRosterRows:[],monthlyExtraRows:[]
       };
       showLogin();
@@ -449,20 +487,53 @@
 
     async function renderSnoOverview(){
       const date = appState.selectedDate;
+      const selectedWardFilter = appState.selectedOverviewWardId || "";
       const { data, error } = await sb.rpc("get_sno_daily_overview", { p_staffing_date: date });
       if(error) throw error;
 
-      const rows = data || [];
+      const rawRows = data || [];
+      const rowsByWardId = new Map();
+      const rowsByWardCode = new Map();
+      rawRows.forEach(r => {
+        if(r.ward_id) rowsByWardId.set(String(r.ward_id), r);
+        if(r.ward_code) rowsByWardCode.set(String(r.ward_code), r);
+      });
+
+      let rows = appState.wards.map(w => {
+        const found = rowsByWardId.get(String(w.ward_id)) || rowsByWardCode.get(String(w.ward_code));
+        return found || {
+          ward_id:w.ward_id,
+          ward_code:w.ward_code,
+          ward_name:w.ward_name,
+          ward_status:"not_submitted",
+          required_nurses:0,
+          required_carers:0,
+          present_nurses:0,
+          present_carers:0,
+          present_healthcare_assistants:0,
+          sick_total:0,
+          leave_total:0,
+          til_out_total:0,
+          total_shortage:0
+        };
+      });
+
+      if(!rows.length) rows = rawRows;
+      if(selectedWardFilter) rows = rows.filter(r => String(r.ward_id || "") === String(selectedWardFilter));
+
       const total = rows.length;
       const full = rows.filter(r=>r.ward_status==="fully_staffed").length;
       const short = rows.filter(r=>r.ward_status==="short_staffed").length;
-      const not = rows.filter(r=>r.ward_status==="not_submitted").length;
+      const not = rows.filter(r=>r.ward_status==="not_submitted" || !r.ward_status).length;
 
       document.getElementById("content").innerHTML = `
         <div class="card">
-          <div class="actions" style="justify-content:space-between">
+          <div class="actions" style="justify-content:space-between;align-items:flex-end">
             <div><h2>Today’s Overview</h2><p class="muted">All wards must submit daily staffing by 07:00.</p></div>
-            <div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div>
+            <div class="actions" style="align-items:flex-end">
+              ${overviewWardSelectorHtml()}
+              <div><label>Date</label><input type="date" value="${date}" onchange="setSelectedDate(this.value)"></div>
+            </div>
           </div>
         </div>
 
@@ -476,19 +547,19 @@
         <div class="grid grid-3">
           ${rows.map(r=>`
             <div class="card">
-              <div class="actions" style="justify-content:space-between"><h3>${escapeHtml(r.ward_code)}</h3>${wardStatusBadge(r.ward_status)}</div>
-              <p class="muted">${escapeHtml(r.ward_name)}</p>
+              <div class="actions" style="justify-content:space-between"><h3>${escapeHtml(r.ward_code || "—")}</h3>${wardStatusBadge(r.ward_status || "not_submitted")}</div>
+              <p class="muted">${escapeHtml(r.ward_name || "")}</p>
               <table style="min-width:0">
                 <tr><td>Required nurses</td><td><strong>${numberValue(r.required_nurses)}</strong></td></tr>
-                <tr><td>Required carers/HCAs</td><td><strong>${numberValue(r.required_carers)}</strong></td></tr>
+                <tr><td>Required carers/aides</td><td><strong>${numberValue(r.required_carers)}</strong></td></tr>
                 <tr><td>Present nurses</td><td><strong>${numberValue(r.present_nurses)}</strong></td></tr>
-                <tr><td>Present carers/HCAs</td><td><strong>${numberValue(r.present_carers) + numberValue(r.present_healthcare_assistants)}</strong></td></tr>
+                <tr><td>Present carers/aides</td><td><strong>${numberValue(r.present_carers) + numberValue(r.present_healthcare_assistants)}</strong></td></tr>
                 <tr><td>Sick</td><td><strong>${numberValue(r.sick_total)}</strong></td></tr>
                 <tr><td>Leave</td><td><strong>${numberValue(r.leave_total)}</strong></td></tr>
                 <tr><td>Shortage</td><td><strong>${numberValue(r.total_shortage)}</strong></td></tr>
               </table>
             </div>
-          `).join("")}
+          `).join("") || `<div class="card"><p class="muted">No wards returned for this account.</p></div>`}
         </div>`;
     }
 
@@ -582,26 +653,19 @@
       const { start, end, days } = monthRange(monthValue);
       const selectedW = selectedWard();
 
-      const [rosterResult, holidayResult, extraResult, staffResult] = await Promise.all([
+      const [rosterResult, holidayResult] = await Promise.all([
         sb.rpc("get_my_ward_roster_between", { p_ward_id: wardId, p_start_date: start, p_end_date: end }),
-        sb.rpc("get_malta_public_holidays", { p_start_date: start, p_end_date: end }),
-        sb.rpc("get_roster_extra_entries_safe", { p_start_date: start, p_end_date: end, p_ward_id: wardId, p_include_cancelled: false }),
-        sb.rpc("get_ward_staff_members", { p_ward_id: wardId })
+        sb.rpc("get_malta_public_holidays", { p_start_date: start, p_end_date: end })
       ]);
 
       if(rosterResult.error) throw rosterResult.error;
       if(holidayResult.error) throw holidayResult.error;
-      if(extraResult.error) throw extraResult.error;
-      if(staffResult.error) throw staffResult.error;
 
       const grouped = groupRosterByStaff(rosterResult.data || []);
       const holidays = holidayResult.data || [];
-      const extraRows = extraResult.data || [];
-      const staffList = (staffResult.data || []).filter(s => truthy(s.is_active));
 
       appState.monthlyRosterRows = grouped;
-      appState.monthlyExtraRows = extraRows;
-      appState.staffRows = staffList;
+      appState.monthlyExtraRows = [];
 
       const holidayMap = {};
       for(const h of holidays) holidayMap[h.holiday_date] = h;
@@ -627,62 +691,19 @@
         </div>
 
         <div class="card">
-          <div class="actions">
+          <div class="legend-compact">
             ${legend("D","Day")}
             ${legend("N","Night")}
             ${legend("O","Off")}
             ${legend("R","Rest")}
-            ${legend("AL","Annual leave")}
-            ${legend("SL","Sick")}
+            ${legend("AL","Leave")}
+            ${legend("SL","Sick Leave")}
             ${legend("ML","Maternity")}
             ${legend("ST","Study")}
-            ${legend("TI","TIL in")}
-            ${legend("TO","TIL out")}
+            ${legend("TI","TIL In")}
+            ${legend("TO","TIL Out")}
             ${legend("OT","Overtime")}
-          </div>
-        </div>
-
-        <div class="roster-controls">
-          <div class="roster-control-box">
-            <h3>Add OT Nurse</h3>
-            <div class="grid">
-              <div><label>Nurse name</label><input id="otStaffName" placeholder="Enter nurse name"></div>
-              <div class="grid grid-3">
-                <div><label>Date</label><input id="otDate" type="date" value="${todayISO()}"></div>
-                <div><label>Start</label><input id="otStart" type="time" value="07:00"></div>
-                <div><label>Working until</label><input id="otEnd" type="time" value="19:00"></div>
-              </div>
-              <div><label>Notes</label><input id="otNotes" placeholder="Optional"></div>
-              <button type="button" onclick="addRosterExtraEntryFromForm('overtime')">+ Add OT Nurse</button>
-            </div>
-          </div>
-
-          <div class="roster-control-box">
-            <h3>Add TIL / TOL</h3>
-            <div class="grid">
-              <div><label>Staff member</label>${staffSelectHtml("tilStaffId", staffList)}</div>
-              <div class="grid grid-3">
-                <div><label>Type</label><select id="tilType"><option value="til_out">TIL Out</option><option value="til_in">TIL In</option></select></div>
-                <div><label>Date</label><input id="tilDate" type="date" value="${todayISO()}"></div>
-                <div><label>Start</label><input id="tilStart" type="time" value="07:00"></div>
-              </div>
-              <div class="grid grid-2">
-                <div><label>Until</label><input id="tilEnd" type="time"></div>
-                <div><label>Notes</label><input id="tilNotes" placeholder="Optional"></div>
-              </div>
-              <button type="button" onclick="addTilEntryFromForm()">+ Add TIL</button>
-            </div>
-          </div>
-
-          <div class="roster-control-box">
-            <h3>Month Summary</h3>
-            <table style="min-width:0">
-              <tr><td>Public holidays</td><td><strong>${holidays.length}</strong></td></tr>
-              <tr><td>OT entries</td><td><strong>${extraRows.filter(e=>e.entry_type==="overtime").length}</strong></td></tr>
-              <tr><td>TIL In</td><td><strong>${extraRows.filter(e=>e.entry_type==="til_in").length}</strong></td></tr>
-              <tr><td>TIL Out</td><td><strong>${extraRows.filter(e=>e.entry_type==="til_out").length}</strong></td></tr>
-            </table>
-            <p class="muted" style="margin-bottom:0">Public holidays and roster changes are highlighted in the calendar.</p>
+            ${legend("LL","Long Leave")}
           </div>
         </div>
 
@@ -709,31 +730,27 @@
                 ${grouped.map(staff=>`
                   <tr>
                     <td>
-                      <strong>${escapeHtml(cleanStaffName(staff.full_name))}</strong>
-                      <div class="staff-sub">${escapeHtml(labelRole(staff.role))} · ${escapeHtml(staffRosterLabel(staff))}</div>
+                      <span class="staff-name-line">${escapeHtml(cleanStaffName(staff.full_name))}</span>
+                      <span class="staff-role-line">${escapeHtml(labelRole(staff.role))}</span>
+                      <span class="staff-shift-line">${escapeHtml(staffRosterLabel(staff))}</span>
                     </td>
                     ${days.map(day=>{
                       const key=isoFromDate(day);
                       const r=staff.days[key];
-                      const code=r?.live_shift_code||"";
+                      const actualCode=r?.live_shift_code||"";
+                      const displayCode=longLeaveDisplayCode(staff.days, key, actualCode);
                       const isOverride=r?.source_type==="override";
                       const h = holidayMap[key];
                       return `<td class="${h ? "holiday-col" : ""} ${key===todayISO() ? "today-col" : ""}">
-                        ${shiftButton(staff.staff_id, key, code, isOverride)}
+                        ${shiftButton(staff.staff_id, key, displayCode, isOverride, actualCode)}
                       </td>`;
                     }).join("")}
                   </tr>
-                `).join("") || `<tr><td colspan="${days.length+1}" class="muted">No core roster rows found.</td></tr>`}
-
-                ${renderExtraCalendarSection("Overtime Staff", extraRows.filter(e=>e.entry_type==="overtime"), days, holidayMap, "OT")}
-                ${renderExtraCalendarSection("TIL Staff", extraRows.filter(e=>e.entry_type==="til_in" || e.entry_type==="til_out"), days, holidayMap, null)}
+                `).join("") || `<tr><td colspan="${days.length+1}" class="muted">No core roster rows found for this ward/month.</td></tr>`}
               </tbody>
             </table>
           </div>
         </div>
-
-        ${renderExtraSummary("Overtime Nurses", extraRows.filter(e=>e.entry_type==="overtime"))}
-        ${renderExtraSummary("Time in Lieu / TIL", extraRows.filter(e=>e.entry_type==="til_in" || e.entry_type==="til_out"))}
       `;
     }
 
@@ -876,14 +893,14 @@
       clearMessage();
 
       const code = window.prompt(
-        "Enter new shift/status code:\n\nD = Day\nN = Night\nO = Off\nR = Rest\nAL = Annual Leave\nSL = Sick Leave\nML = Maternity Leave\nST = Study Leave\nTI = TIL In\nTO = TIL Out\nOT = Overtime\n\nCurrent: " + (currentCode || "—"),
+        "Enter new shift/status code:\n\nD = Day\nN = Night\nO = Off\nR = Rest\nAL = Leave\nSL = Sick Leave\nML = Maternity Leave\nST = Study Leave\nTI = TIL In\nTO = TIL Out\nOT = Overtime\n\nCurrent: " + (currentCode || "—"),
         currentCode || ""
       );
 
       if(code === null) return;
 
       const cleanCode = code.trim().toUpperCase();
-      const allowed = new Set(["D","N","O","R","AL","SL","ML","ST","TI","TO","OT","M","E"]);
+      const allowed = new Set(["D","N","O","R","AL","L","SL","ML","ST","TI","TO","OT","LL","M","E"]);
 
       if(!allowed.has(cleanCode)){
         showError("Invalid shift/status code.");
@@ -1285,30 +1302,40 @@
       }
 
       const monthValue = appState.selectedMonth;
+      const selectedDate = appState.selectedDate;
       const { start, end } = monthRange(monthValue);
+      const selectedWardFilter = appState.selectedRelievingWardId || "";
 
       const { data, error } = await sb.rpc("get_relieving_pool_requests_safe", {
         p_start_date:start,
         p_end_date:end,
-        p_ward_id:null
+        p_ward_id:selectedWardFilter || null
       });
 
       if(error) throw error;
-      const rows = data || [];
+      const allRows = data || [];
+      const rows = allRows.filter(r => !selectedDate || String(r.request_date).slice(0,10) === selectedDate);
 
       document.getElementById("content").innerHTML = `
         <div class="card">
-          <div class="actions" style="justify-content:space-between">
+          <div class="rp-toolbar">
             <div>
               <h2>Relieving Pool Requests</h2>
-              <p class="muted">SNO action screen: allocate staff, timestamp allocation, verify by phone call, and reset mistaken entries.</p>
+              <p class="muted">Compact SNO action screen: request timestamp, allocation/sent timestamp, phone verification, final save and correction reset.</p>
             </div>
             <div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div>
+            <div><label>Date</label><input type="date" value="${selectedDate}" onchange="setSelectedDate(this.value)"></div>
+            ${relievingWardSelectorHtml()}
+          </div>
+          <div class="actions" style="justify-content:flex-end;margin-top:10px">
+            <button class="secondary small" type="button" onclick="changeSelectedDateDays(-1)">← Previous day</button>
+            <button class="secondary small" type="button" onclick="setSelectedDate(todayISO())">Today</button>
+            <button class="secondary small" type="button" onclick="changeSelectedDateDays(1)">Next day →</button>
           </div>
         </div>
 
         <div class="stat-grid">
-          ${statCard(rows.length,"Requests")}
+          ${statCard(rows.length,"Requests on date")}
           ${statCard(rows.filter(r=>r.request_status==="open").length,"Open")}
           ${statCard(rows.filter(r=>r.request_status==="partially_filled").length,"Partially filled")}
           ${statCard(rows.filter(r=>r.request_status==="filled").length,"Filled")}
@@ -1316,10 +1343,10 @@
 
         <div class="card">
           <div class="table-wrap">
-            <table style="min-width:1450px">
+            <table class="rp-table">
               <thead>
                 <tr>
-                  <th>Date</th><th>Ward</th><th>Needed</th><th>Allocated / sent</th><th>Status</th><th>Timestamps</th><th>Allocate now</th><th>Actions</th>
+                  <th>Date</th><th>Ward</th><th>Needed</th><th>Allocated / Sent</th><th>Status</th><th>Timestamps</th><th>Allocation</th><th>Workflow Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1328,48 +1355,51 @@
                   return `
                     <tr>
                       <td>${escapeHtml(formatDate(r.request_date))}</td>
-                      <td><strong>${escapeHtml(r.ward_code)}</strong><br><span class="muted">${escapeHtml(r.ward_name||"")}</span></td>
+                      <td><strong>${escapeHtml(r.ward_code)}</strong><br><span class="muted-small">${escapeHtml(r.ward_name||"")}</span></td>
                       <td>
                         Nurses: <strong>${numberValue(r.nurses_needed)}</strong><br>
                         Carers: <strong>${numberValue(r.carers_needed)}</strong><br>
-                        HCAs: <strong>${numberValue(r.healthcare_assistants_needed)}</strong>
+                        Aides: <strong>${numberValue(r.healthcare_assistants_needed ?? r.nursing_aides_needed ?? 0)}</strong>
                       </td>
                       <td>
                         Nurses: <strong>${numberValue(r.nurses_allocated)}</strong><br>
                         Carers: <strong>${numberValue(r.carers_allocated)}</strong><br>
-                        HCAs: <strong>${numberValue(r.healthcare_assistants_allocated)}</strong>
+                        Aides: <strong>${numberValue(r.healthcare_assistants_allocated ?? r.nursing_aides_allocated ?? 0)}</strong>
                       </td>
-                      <td>${statusBadge(r.request_status)}<br><span class="muted">${escapeHtml(r.reason||"")}</span></td>
-                      <td>
-                        Requested: ${escapeHtml(formatDateTime(r.requested_at) || "—")}<br>
-                        Reviewed: ${escapeHtml(formatDateTime(r.reviewed_at) || "—")}<br>
-                        Sent: ${escapeHtml(formatDateTime(r.allocated_at) || "—")}<br>
-                        Verified: ${escapeHtml(formatDateTime(r.verified_at) || "—")}
+                      <td>${statusBadge(r.request_status)}<br><span class="muted-small">${escapeHtml(r.reason||"")}</span></td>
+                      <td class="muted-small">
+                        Request sent: ${escapeHtml(formatDateTime(r.requested_at) || "—")}<br>
+                        SNO reviewed: ${escapeHtml(formatDateTime(r.reviewed_at) || "—")}<br>
+                        Staff sent: ${escapeHtml(formatDateTime(r.allocated_at) || "—")}<br>
+                        Phone verified: ${escapeHtml(formatDateTime(r.verified_at) || "—")}
                       </td>
                       <td>
                         <div class="actions">
                           <div><label>Nurses</label><input class="mini-input" id="nurses_${key}" type="number" min="0" value="${numberValue(r.nurses_allocated)}"></div>
                           <div><label>Carers</label><input class="mini-input" id="carers_${key}" type="number" min="0" value="${numberValue(r.carers_allocated)}"></div>
-                          <div><label>HCAs</label><input class="mini-input" id="hcas_${key}" type="number" min="0" value="${numberValue(r.healthcare_assistants_allocated)}"></div>
+                          <div><label>Aides</label><input class="mini-input" id="hcas_${key}" type="number" min="0" value="${numberValue(r.healthcare_assistants_allocated ?? r.nursing_aides_allocated ?? 0)}"></div>
                         </div>
-                        <div style="margin-top:8px"><label>Allocation notes</label><input class="wide-input" id="notes_${key}" value="${escapeHtml(r.allocation_notes||"")}"></div>
-                        <div style="margin-top:8px"><button class="success small" type="button" onclick="allocateRelievingPoolRequest('${escapeHtml(r.request_id)}','${key}')">Save allocation / sent</button></div>
+                        <div style="margin-top:7px"><label>Allocation notes</label><input class="wide-input" id="notes_${key}" value="${escapeHtml(r.allocation_notes||"")}"></div>
                       </td>
                       <td>
-                        <div class="actions">
-                          <button class="secondary small" type="button" onclick="verifyRelievingPoolRequest('${escapeHtml(r.request_id)}')">Verify phone call</button>
+                        <div class="rp-actions-grid">
+                          <button class="secondary small" type="button" onclick="showSuccess('Request sent timestamp is recorded when the ward submits the request.')">Request sent</button>
+                          <button class="secondary small" type="button" onclick="allocateRelievingPoolRequest('${escapeHtml(r.request_id)}','${key}')">SNO allocated</button>
+                          <button class="secondary small" type="button" onclick="verifyRelievingPoolRequest('${escapeHtml(r.request_id)}')">Phone verified</button>
+                          <button class="success small" type="button" onclick="allocateRelievingPoolRequest('${escapeHtml(r.request_id)}','${key}')">Save allocation / sent</button>
                           <button class="danger small" type="button" onclick="resetRelievingPoolAllocation('${escapeHtml(r.request_id)}')">Reset</button>
                         </div>
-                        <p class="muted">Allocated by: ${escapeHtml(r.allocated_by_name||"—")}<br>Verified by: ${escapeHtml(r.verified_by_name||"—")}</p>
+                        <p class="muted-small">Allocated by: ${escapeHtml(r.allocated_by_name||"—")}<br>Verified by: ${escapeHtml(r.verified_by_name||"—")}</p>
                       </td>
                     </tr>`;
-                }).join("") || `<tr><td colspan="8" class="muted">No requests found.</td></tr>`}
+                }).join("") || `<tr><td colspan="8" class="muted">No requests found for the selected date/ward.</td></tr>`}
               </tbody>
             </table>
           </div>
         </div>`;
     }
 
+    
     async function allocateRelievingPoolRequest(requestId, key){
       clearMessage();
 
@@ -1440,7 +1470,22 @@
         sb.rpc("get_sno_staff_filter_options", { p_ward_id:wardId })
       ]);
 
-      if(kpiResult.error) throw kpiResult.error;
+      if(kpiResult.error){
+        document.getElementById("content").innerHTML = `
+          <div class="card">
+            <div class="actions" style="justify-content:space-between">
+              <div><h2>Audit KPIs</h2><p class="muted">The KPI backend query needs one database adjustment before this tab can be used safely.</p></div>
+              <div class="actions">${auditWardSelectorHtml()}<div><label>Month</label><input type="month" value="${monthValue}" onchange="setSelectedMonth(this.value)"></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>KPI tab temporarily protected</h3>
+            <p class="muted">The dashboard is working, but the KPI stored procedure returned this database message:</p>
+            <div class="info">${escapeHtml(kpiResult.error.message || String(kpiResult.error))}</div>
+            <p class="muted">This is now contained so it does not break the rest of the app. We will repair the KPI SQL separately after the roster and relieving pool screens are stable.</p>
+          </div>`;
+        return;
+      }
       if(staffOptionsResult.error) throw staffOptionsResult.error;
 
       const k = kpiResult.data || {};
@@ -1459,7 +1504,7 @@
           <div class="actions" style="justify-content:space-between">
             <div>
               <h2>SNO Operational KPIs</h2>
-              <p class="muted">Bird's-eye staffing dashboard focused on sick leave, annual leave, maternity, study leave, TIL out, ward pressure and individual staff trends.</p>
+              <p class="muted">Bird's-eye staffing dashboard focused on sick leave, leave, maternity, study leave, TIL out, ward pressure and individual staff trends.</p>
             </div>
             <div class="actions">
               ${auditWardSelectorHtml()}
@@ -1472,97 +1517,24 @@
 
         <div class="stat-grid">
           ${statCard(overview.sick_leave_rows || 0,"Sick leave entries")}
-          ${statCard(overview.annual_leave_rows || 0,"Annual leave entries")}
+          ${statCard(overview.annual_leave_rows || 0,"Leave entries")}
           ${statCard(overview.total_leave_rows || 0,"Total leave/absence")}
           ${statCard(`${overview.sick_rate_percent || 0}%`,"Sick rate")}
-        </div>
-
-        <div class="stat-grid">
-          ${statCard(overview.maternity_leave_rows || 0,"Maternity leave")}
-          ${statCard(overview.study_leave_rows || 0,"Study leave")}
-          ${statCard(overview.til_out_rows || 0,"TIL out")}
-          ${statCard(`${overview.absence_rate_percent || 0}%`,"Absence rate")}
-        </div>
-
-        <div class="kpi-section-title">
-          <div>
-            <h3>All-wards bird's-eye view — ${escapeHtml(selectedWardLabel)}</h3>
-            <p class="muted">Compare wards instantly: sick leave, annual leave, TIL out, total leave, absence rate and sick rate.</p>
-          </div>
         </div>
 
         <div class="grid grid-2">
           ${wardSummaryTableCard(k.ward_summary || [])}
           ${barArrayCard("Sick leave by ward", "Which wards are carrying the most sick leave in the selected period.", k.sick_by_ward || [])}
-          ${barArrayCard("Annual leave by ward", "Approved annual leave load by ward.", k.annual_leave_by_ward || [])}
+          ${barArrayCard("Leave by ward", "Approved leave load by ward.", k.annual_leave_by_ward || [])}
           ${barArrayCard("TIL out by ward", "Time in lieu out burden by ward.", k.til_by_ward || [])}
-          ${barArrayCard("Total leave/absence by ward", "Combined AL, SL, ML, ST and TIL out by ward.", k.total_leave_by_ward || [])}
-        </div>
-
-        <div class="kpi-section-title">
-          <div>
-            <h3>Daily trends</h3>
-            <p class="muted">Day-by-day trend visuals for sick leave, leave and TIL. Use the staff dropdown above for an individual nurse/staff member.</p>
-          </div>
-        </div>
-
-        <div class="grid grid-2">
-          ${lineChartCard("Daily sick leave trend", "Sick leave entries per day.", k.daily_sick_trend || [])}
-          ${barArrayCard("Daily sick leave bars", "Sick leave entries per day.", trendRowsToBars(k.daily_sick_trend || []))}
-          ${lineChartCard("Daily leave trend", "Annual leave, maternity, study leave and TIL out per day.", k.daily_leave_trend || [])}
-          ${barArrayCard("Daily leave bars", "Leave/TIL entries per day.", trendRowsToBars(k.daily_leave_trend || []))}
-          ${lineChartCard("Daily TIL out trend", "TIL out entries per day.", k.daily_til_trend || [])}
-          ${barArrayCard("Daily TIL out bars", "TIL out entries per day.", trendRowsToBars(k.daily_til_trend || []))}
-        </div>
-
-        <div class="kpi-section-title">
-          <div>
-            <h3>Monthly trends</h3>
-            <p class="muted">Month-by-month view to identify repeated patterns and seasonal pressure.</p>
-          </div>
-        </div>
-
-        <div class="grid grid-2">
-          ${lineChartCard("Monthly sick leave trend", "Sick leave entries by month.", k.monthly_sick_trend || [])}
-          ${barArrayCard("Monthly sick leave bars", "Sick leave entries by month.", trendRowsToBars(k.monthly_sick_trend || [], "month"))}
-          ${lineChartCard("Monthly leave trend", "Annual leave, maternity, study leave and TIL out by month.", k.monthly_leave_trend || [])}
-          ${barArrayCard("Monthly leave bars", "Leave/TIL entries by month.", trendRowsToBars(k.monthly_leave_trend || [], "month"))}
-          ${lineChartCard("Monthly TIL out trend", "TIL out entries by month.", k.monthly_til_trend || [])}
-          ${barArrayCard("Monthly TIL out bars", "TIL out entries by month.", trendRowsToBars(k.monthly_til_trend || [], "month"))}
-        </div>
-
-        <div class="kpi-section-title">
-          <div>
-            <h3>Individual staff patterns</h3>
-            <p class="muted">Review staff-level sick leave, annual leave, TIL and total leave burden. Use the staff dropdown above to drill into one person.</p>
-          </div>
-        </div>
-
-        <div class="grid grid-2">
           ${barArrayCard("Sick leave by individual", "Top staff by recorded sick leave entries.", sickByStaff)}
-          ${barArrayCard("Annual leave by individual", "Top staff by annual leave entries.", leaveByStaff)}
+          ${barArrayCard("Leave by individual", "Top staff by leave entries.", leaveByStaff)}
           ${barArrayCard("TIL out by individual", "Top staff by TIL out entries.", tilByStaff)}
-          ${donutCard("Absence / leave mix", "Breakdown of AL, SL, ML, ST and TIL out.", k.absence_by_type || [])}
-          ${absenceStaffTableCard(k.all_absence_by_staff || [])}
-        </div>
-
-        <div class="kpi-section-title">
-          <div>
-            <h3>Pressure and operational controls</h3>
-            <p class="muted">Relieving pool pressure, change of duty activity, ward heatmap, and staff complement.</p>
-          </div>
-        </div>
-
-        <div class="grid grid-2">
-          ${heatmapCard(k.ward_daily_heatmap || [])}
-          ${relievingWardCard(k.relieving_pool_pressure || [])}
-          ${donutCard("Change of Duty by type", "Normal day, public holiday and Sunday swaps.", k.change_duty_summary || [])}
-          ${tableCard("Staff complement by ward/role", "Active staff complement grouped by ward and role.", k.staff_complement_by_ward || [], ["ward_code","role","value"])}
-        </div>
-      `;
+          ${donutCard("Absence / leave mix", "Breakdown of leave and absence types.", k.absence_by_type || [])}
+        </div>`;
     }
 
-
+    
     async function renderAuditHistory(){
       const monthValue = appState.selectedMonth;
       const { start, end } = monthRange(monthValue);
@@ -1641,6 +1613,15 @@
     function setSelectedWard(value){ appState.selectedWardId=value; renderTab(appState.activeTab); }
     function setSelectedAuditWard(value){ appState.selectedAuditWardId=value; appState.selectedKpiStaffId=""; renderTab(appState.activeTab); }
     function setSelectedKpiStaff(value){ appState.selectedKpiStaffId=value; renderTab(appState.activeTab); }
+    function setSelectedOverviewWard(value){ appState.selectedOverviewWardId=value; renderTab(appState.activeTab); }
+    function setSelectedRelievingWard(value){ appState.selectedRelievingWardId=value; renderTab(appState.activeTab); }
+    function changeSelectedDateDays(delta){
+      const d = new Date(appState.selectedDate || todayISO());
+      d.setDate(d.getDate() + delta);
+      appState.selectedDate = isoFromDate(d);
+      appState.selectedMonth = monthISO(d);
+      renderTab(appState.activeTab);
+    }
 
     function changeRosterMonth(delta){
       const [year,month] = appState.selectedMonth.split("-").map(Number);
@@ -1673,6 +1654,37 @@
           <select onchange="setSelectedWard(this.value)">
             ${appState.wards.map(w=>`
               <option value="${escapeHtml(w.ward_id)}" ${w.ward_id===appState.selectedWardId?"selected":""}>
+                ${escapeHtml(w.ward_code)}${w.ward_name ? ` — ${escapeHtml(w.ward_name)}` : ""}
+              </option>
+            `).join("")}
+          </select>
+        </div>`;
+    }
+
+
+    function overviewWardSelectorHtml(){
+      return `
+        <div>
+          <label>Ward</label>
+          <select onchange="setSelectedOverviewWard(this.value)">
+            <option value="" ${appState.selectedOverviewWardId===""?"selected":""}>All wards</option>
+            ${appState.wards.map(w=>`
+              <option value="${escapeHtml(w.ward_id)}" ${w.ward_id===appState.selectedOverviewWardId?"selected":""}>
+                ${escapeHtml(w.ward_code)}${w.ward_name ? ` — ${escapeHtml(w.ward_name)}` : ""}
+              </option>
+            `).join("")}
+          </select>
+        </div>`;
+    }
+
+    function relievingWardSelectorHtml(){
+      return `
+        <div>
+          <label>Ward</label>
+          <select onchange="setSelectedRelievingWard(this.value)">
+            <option value="" ${appState.selectedRelievingWardId===""?"selected":""}>All Wards</option>
+            ${appState.wards.map(w=>`
+              <option value="${escapeHtml(w.ward_id)}" ${w.ward_id===appState.selectedRelievingWardId?"selected":""}>
                 ${escapeHtml(w.ward_code)}${w.ward_name ? ` — ${escapeHtml(w.ward_name)}` : ""}
               </option>
             `).join("")}
@@ -1746,7 +1758,7 @@
         return `<option value="pattern:${escapeHtml(code)}" ${selected===`pattern:${code}`?"selected":""}>${escapeHtml(label)}</option>`;
       }).join("");
 
-      return `<select id="${escapeHtml(id)}"><option value="">Select roster...</option><optgroup label="Mandatory Roster 1–Roster 5">${groupOptions}</optgroup><optgroup label="Special day-only patterns">${patternOptions}</optgroup></select>`;
+      return `<select id="${escapeHtml(id)}"><option value="">Select roster...</option><optgroup label="Mandatory Roster 1–Roster 5">${groupOptions}</optgroup><optgroup label="Special shift patterns">${patternOptions}</optgroup></select>`;
     }
 
     function parseRosterAssignment(value){
@@ -1776,8 +1788,23 @@
     }
 
     function rosterPatterns(){
-      const allowed = new Set(["DDOO","DDODO","DDDOO"]);
-      return (appState.ref?.roster_patterns || []).filter(p => allowed.has(patternCode(p)));
+      const builtIns = [
+        { pattern_code:"DDO", pattern_name:"Day Day Off — repeat" },
+        { pattern_code:"DDOO", pattern_name:"Day Day Off Off — repeat" },
+        { pattern_code:"DODO", pattern_name:"Day Off Day Off — repeat" },
+        { pattern_code:"NNOO", pattern_name:"Night Night Off Off — repeat" },
+        { pattern_code:"NONO", pattern_name:"Night Off Night Off — repeat" },
+        { pattern_code:"NNNOO", pattern_name:"Night Night Night Off Off — repeat" }
+      ];
+
+      const fromRef = appState.ref?.roster_patterns || [];
+      const map = new Map();
+      for(const p of builtIns) map.set(patternCode(p), p);
+      for(const p of fromRef){
+        const code = patternCode(p);
+        if(["DDO","DDOO","DODO","NNOO","NONO","NNNOO"].includes(code)) map.set(code, p);
+      }
+      return Array.from(map.values());
     }
 
     function templateCode(t){ return t.roster_name || t.roster_code || t.code || t.name || ""; }
@@ -2092,16 +2119,41 @@
       return badge(status||"Unknown","grey");
     }
 
-    function shiftBadge(code){
-      if(!code) return `<span class="shift-cell shift-O">—</span>`;
-      return `<span class="shift-cell shift-${escapeHtml(code)}">${escapeHtml(code)}</span>`;
+
+    function displayShiftCode(code){
+      if(code === "AL") return "L";
+      return code || "—";
     }
 
-    function shiftButton(staffId, shiftDate, code, isOverride){
+    function longLeaveDisplayCode(daysMap, isoDate, actualCode){
+      const leaveTriggerCodes = new Set(["OT","TI","TO"]);
+      if(!leaveTriggerCodes.has(actualCode)) return actualCode || "";
+
+      const dates = Object.keys(daysMap || {}).sort();
+      const idx = dates.indexOf(isoDate);
+      if(idx < 0) return actualCode;
+
+      let start = idx;
+      while(start > 0 && leaveTriggerCodes.has(daysMap[dates[start - 1]]?.live_shift_code || "")) start--;
+
+      let end = idx;
+      while(end < dates.length - 1 && leaveTriggerCodes.has(daysMap[dates[end + 1]]?.live_shift_code || "")) end++;
+
+      return (end - start + 1) >= 3 ? "LL" : actualCode;
+    }
+
+    function shiftBadge(code){
+      if(!code) return `<span class="shift-cell shift-O">—</span>`;
+      const rawCode = String(code || "");
+      return `<span class="shift-cell shift-${escapeHtml(rawCode)}">${escapeHtml(displayShiftCode(rawCode))}</span>`;
+    }
+
+    function shiftButton(staffId, shiftDate, code, isOverride, actualCode=null){
       const cleanCode = code || "—";
+      const storedCode = actualCode || code || "";
       return `
-        <button type="button" class="shift-cell shift-${escapeHtml(cleanCode)}" onclick="editRosterShift('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}','${escapeHtml(code || "")}')" title="Click to change">
-          ${escapeHtml(cleanCode)}
+        <button type="button" class="shift-cell shift-${escapeHtml(cleanCode)}" onclick="editRosterShift('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}','${escapeHtml(storedCode)}')" title="Click to change">
+          ${escapeHtml(displayShiftCode(cleanCode))}
         </button>
         ${isOverride ? `<span class="override-dot" title="Changed from baseline"></span>` : ""}
       `;
@@ -2133,9 +2185,9 @@
       }
 
       return Array.from(map.values()).sort((a,b)=>{
-        const ga=staffRosterLabel(a), gb=staffRosterLabel(b);
-        if(ga!==gb)return ga.localeCompare(gb);
-        return String(a.full_name || "").localeCompare(String(b.full_name || ""));
+        const roleDiff = roleSortOrder(a.role) - roleSortOrder(b.role);
+        if(roleDiff !== 0) return roleDiff;
+        return cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name));
       });
     }
 
@@ -2215,7 +2267,9 @@
 
     function reasonForShift(code){
       const map = {
-        AL:"annual_leave",
+        AL:"leave",
+        L:"leave",
+        LL:"long_leave",
         SL:"sick_leave",
         ML:"maternity_leave",
         ST:"study_leave",
