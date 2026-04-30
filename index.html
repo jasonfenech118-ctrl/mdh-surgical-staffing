@@ -2205,6 +2205,47 @@
       return aliases[raw] || raw;
     }
 
+
+    function isLongLeaveCandidateCode(code){
+      const clean = normaliseRosterCode(code);
+      return ["L", "TI", "TO", "OT", "LL"].includes(clean);
+    }
+
+    function addDaysIso(isoDate, delta){
+      const parts = String(isoDate || "").split("-").map(Number);
+      if(parts.length !== 3 || parts.some(n => !Number.isFinite(n))) return "";
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      d.setDate(d.getDate() + delta);
+      return isoFromDate(d);
+    }
+
+    function rosterCodeForLongLeaveCheck(daysMap, isoDate){
+      const row = daysMap?.[isoDate];
+      return normaliseRosterCode(row?.live_shift_code || "");
+    }
+
+    function longLeaveDisplayCode(daysMap, isoDate, actualCode){
+      const cleanActual = normaliseRosterCode(actualCode);
+      if(cleanActual === "LL") return "LL";
+      if(!isLongLeaveCandidateCode(cleanActual)) return cleanActual;
+
+      let blockLength = 1;
+
+      let cursor = addDaysIso(isoDate, -1);
+      while(cursor && isLongLeaveCandidateCode(rosterCodeForLongLeaveCheck(daysMap, cursor))){
+        blockLength += 1;
+        cursor = addDaysIso(cursor, -1);
+      }
+
+      cursor = addDaysIso(isoDate, 1);
+      while(cursor && isLongLeaveCandidateCode(rosterCodeForLongLeaveCheck(daysMap, cursor))){
+        blockLength += 1;
+        cursor = addDaysIso(cursor, 1);
+      }
+
+      return blockLength >= 3 ? "LL" : cleanActual;
+    }
+
     function displayShiftCode(code){
       if(code === "AL") return "L";
       return code || "—";
