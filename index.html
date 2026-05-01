@@ -424,7 +424,10 @@
     .rp-v8-card-head{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:10px 13px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#fbfdff,#fff)}
     .rp-v8-card-title{font-size:16px;font-weight:950;color:#1f3146;letter-spacing:-.03em;line-height:1.15}
     .rp-v8-card-sub{font-size:11px;color:var(--muted);font-weight:750;margin-top:3px;line-height:1.25}
-    .rp-v8-grid{display:grid;grid-template-columns:.85fr 1.05fr 1fr 1.35fr;gap:9px;padding:10px 12px 12px}
+    .rp-v8-grid{display:grid;grid-template-columns:.9fr 1.05fr 1fr;gap:9px;padding:10px 12px 12px}
+    .rp-v8-audit-full{grid-column:1 / -1;background:#fbfdff}
+    .rp-v8-audit-full .rp-v8-box-title{margin-bottom:6px}
+    .rp-v8-audit-full .rp-v8-timeline{padding-top:0}
     .rp-v8-box{border:1px solid var(--border);border-radius:14px;background:#fbfdff;padding:9px;min-width:0}
     .rp-v8-box-title{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#536273;font-weight:950;margin-bottom:7px;display:flex;justify-content:space-between;gap:8px}
     .rp-v8-mini-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
@@ -1865,8 +1868,8 @@
               <button class="danger small rp-v8-reset" type="button" onclick="resetRelievingPoolAllocation('${escapeHtml(requestId)}')">Reset / Reopen</button>
             </div>
 
-            <div class="rp-v8-box">
-              <div class="rp-v8-box-title">Audit trail</div>
+            <div class="rp-v8-box rp-v8-audit-full">
+              <div class="rp-v8-box-title">Audit trail — step by step</div>
               ${renderRelievingPoolAuditTrail(r)}
             </div>
           </div>
