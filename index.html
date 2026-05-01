@@ -475,6 +475,43 @@
     @media(max-width:1250px){.rp-v8-actionbar{grid-template-columns:1fr}.rp-v8-ward-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr 1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v10-ward-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-v12-summary-head{grid-template-columns:1fr!important}.rp-v12-summary-controls{max-width:720px}}
     @media(max-width:760px){.rp-v8-title-row,.rp-v8-card-head{grid-template-columns:1fr}.rp-v8-filter-grid{grid-template-columns:1fr}.rp-v8-nav{grid-template-columns:1fr 1fr 1fr}.rp-v8-ward-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-fallback-grid{grid-template-columns:1fr}.rp-v10-summary-head{grid-template-columns:1fr}.rp-v10-ward-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v12-control-row{grid-template-columns:1fr}.rp-v12-nav-row{grid-template-columns:1fr 1fr 1fr}}
 
+  
+
+    /* Relieving Pool v13 polish */
+    .rp-v8-top{padding:14px 16px!important}
+    .rp-v8-title-row{margin-bottom:6px!important}
+    .rp-v8-title-row h2{margin:0!important}
+    .rp-v10-summary{margin-top:10px!important;padding:12px!important}
+    .rp-v10-summary-head.rp-v12-summary-head{grid-template-columns:minmax(620px,1fr) minmax(135px,160px)!important;align-items:stretch!important;gap:12px!important;margin-bottom:9px!important}
+    .rp-v13-control-sentence{border:1px solid var(--border);background:#fbfdff;border-radius:16px;padding:10px;display:grid;grid-template-columns:auto minmax(150px,180px) auto minmax(210px,1fr) auto auto auto;gap:8px;align-items:center;min-width:0}
+    .rp-v13-control-sentence span{font-size:12px;font-weight:900;color:#536273;white-space:nowrap}
+    .rp-v13-control-sentence input,.rp-v13-control-sentence select{height:34px;padding:6px 8px;font-size:12px;border-radius:10px}
+    .rp-v13-control-sentence button{height:34px;padding:6px 10px!important;font-size:11px!important;border-radius:10px!important;white-space:nowrap}
+    .rp-v10-ward-summary-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:7px!important}
+    .rp-v10-summary-chip{min-height:58px!important;padding:7px 8px!important}
+    .rp-v10-no-pressure{display:none!important}
+    .rp-v8-stats{gap:8px!important;margin-bottom:9px!important}.rp-v8-stats .stat{padding:8px 10px!important}.rp-v8-stats .stat-value{font-size:20px!important}.rp-v8-stats .stat-label{font-size:10px!important}
+    .rp-v8-grid{grid-template-columns:.92fr 1fr .98fr!important;gap:9px!important;padding:10px 12px 12px!important}
+    .rp-v8-box{padding:10px!important}.rp-v8-box-title{font-size:10.5px!important;margin-bottom:7px!important}
+    .rp-v8-note,.rp-v8-verify-select{display:none!important}
+    .rp-v13-close-actions{display:grid;gap:7px;margin-top:8px}
+    .rp-v13-workflow-one{display:grid;gap:7px}
+    .rp-v13-workflow-one button{width:100%;min-height:34px!important}
+    .rp-v8-audit-full{grid-column:1 / -1!important;background:#fff!important;padding:11px 12px!important}
+    .rp-v13-audit{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:stretch}
+    .rp-v13-audit-step{border:1px solid var(--border);background:#fbfdff;border-radius:14px;padding:10px;min-height:76px;position:relative}
+    .rp-v13-audit-step.done{border-color:var(--green-border);background:var(--green-soft)}
+    .rp-v13-audit-step.active{border-color:var(--primary-border);background:var(--primary-soft)}
+    .rp-v13-audit-step.warn{border-color:#fbbf24;background:#fffbeb}.rp-v13-audit-step.danger{border-color:var(--red-border);background:var(--red-soft)}
+    .rp-v13-audit-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:950;color:#536273;margin-bottom:6px;display:block}
+    .rp-v13-audit-time{font-size:13px;font-weight:950;color:#1f3146;display:block;line-height:1.15}
+    .rp-v13-audit-small{font-size:10.5px;font-weight:800;color:#64748b;display:block;margin-top:4px;line-height:1.2;word-break:break-word}
+    .rp-v8-call-row{margin-top:9px!important}.rp-v8-call-pill{font-size:10px!important;padding:5px 7px!important}
+    .rp-v11-email-sent{margin-top:6px;background:var(--green-soft);border:1px solid var(--green-border);color:var(--green);border-radius:10px;padding:6px 8px;font-size:10.5px;font-weight:900;line-height:1.2}
+    .rp-v11-email-pending{margin-top:6px;background:#fff;border:1px dashed var(--amber-border);color:#7a541b;border-radius:10px;padding:6px 8px;font-size:10.5px;font-weight:850;line-height:1.2}
+    @media(max-width:1250px){.rp-v10-summary-head.rp-v12-summary-head{grid-template-columns:1fr!important}.rp-v13-control-sentence{grid-template-columns:1fr 1fr 1fr;}.rp-v10-ward-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.rp-v13-audit{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr!important}}
+    @media(max-width:700px){.rp-v13-control-sentence{grid-template-columns:1fr!important}.rp-v10-ward-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.rp-v13-audit{grid-template-columns:1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
   </style>
 </head>
 <body>
@@ -1657,24 +1694,19 @@
       const allRows = data || [];
       const rows = selectedWardFilter ? allRows.filter(r => String(rowField(r,["ward_id"],"")) === String(selectedWardFilter)) : allRows;
       const activeRows = allRows.filter(r => !rpIsDone(r));
-      const unseenRows = allRows.filter(r => !rowField(r,["sno_seen_at", "reviewed_at", "seen_at"]) && !rpIsDone(r));
+      const unseenRows = allRows.filter(r => !rowField(r,["allocation_sent_at", "allocated_at", "sno_seen_at", "reviewed_at", "seen_at"]) && !rpIsDone(r));
       const verificationRows = allRows.filter(r => rowNumber(r,["verification_call_count", "verification_calls"]) > 0 && !rpIsDone(r));
 
       document.getElementById("content").innerHTML = `
         <div class="card rp-v8-top">
-          <div class="rp-v8-title-row">
-            <div>
-              <h2>Relieving Pool Requests</h2>
-              <p class="muted">Daily SNO action board. Date, ward filter, and all-ward pressure summary are now together in one compact area.</p>
-            </div>
-          </div>
+          <div class="rp-v8-title-row"><h2>Relieving Pool Requests</h2></div>
           ${renderRelievingPoolAllocationSummary(allRows)}
         </div>
 
         <div class="rp-v8-stats">
           ${statCard(allRows.length,"Requests")}
           ${statCard(activeRows.length,"Action required")}
-          ${statCard(unseenRows.length,"Not seen")}
+          ${statCard(unseenRows.length,"Staff not sent")}
           ${statCard(verificationRows.length,"Verification calls")}
           ${statCard(allRows.filter(r=>rpIsDone(r)).length,"Done / closed")}
         </div>
@@ -1746,12 +1778,12 @@
         const needTotal = needN + needC + needA;
         const sentTotal = sentN + sentC + sentA;
         const outstanding = Math.max(0, needTotal - sentTotal);
-        const unseen = active.filter(r => !rowField(r,["sno_seen_at", "reviewed_at", "seen_at"])).length;
+        const unseen = active.filter(r => !rowField(r,["allocation_sent_at", "allocated_at", "sno_seen_at", "reviewed_at", "seen_at"])).length;
         const calls = active.reduce((sum,r)=>sum + rowNumber(r,["verification_call_count", "verification_calls"]),0);
-        return { ward:w, wid, active, needN, needC, needA, sentN, sentC, sentA, needTotal, sentTotal, outstanding, unseen, calls };
+        const covered = active.length && active.every(r => rpIsCovered(r));
+        return { ward:w, wid, active, needN, needC, needA, sentN, sentC, sentA, needTotal, sentTotal, outstanding, unseen, calls, covered };
       });
 
-      const needRows = totals.filter(x => x.active.length || x.needTotal || x.sentTotal);
       const totalNeed = totals.reduce((sum,x)=>sum + x.needTotal,0);
       const totalSent = totals.reduce((sum,x)=>sum + x.sentTotal,0);
       const totalOutstanding = totals.reduce((sum,x)=>sum + x.outstanding,0);
@@ -1759,20 +1791,14 @@
       return `
         <div class="rp-v10-summary">
           <div class="rp-v10-summary-head rp-v12-summary-head">
-            <div>
-              <div class="rp-v10-title">All wards allocation summary</div>
-              <div class="rp-v10-subtitle">Use this single area for date, ward selection, and allocation pressure. Ward chips below still show every ward so the SNO does not miss one.</div>
-            </div>
-            <div class="rp-v12-summary-controls">
-              <div class="rp-v12-control-row">
-                <div><label>Date</label><input type="date" value="${appState.selectedDate}" onchange="setSelectedDate(this.value)"></div>
-                <div>${relievingWardSelectorHtml()}</div>
-              </div>
-              <div class="rp-v12-nav-row">
-                <button class="secondary small" type="button" onclick="changeSelectedDateDays(-1)">← Previous</button>
-                <button class="secondary small" type="button" onclick="setSelectedDate(todayISO())">Today</button>
-                <button class="secondary small" type="button" onclick="changeSelectedDateDays(1)">Next →</button>
-              </div>
+            <div class="rp-v13-control-sentence">
+              <span>Show</span>
+              <input type="date" value="${appState.selectedDate}" onchange="setSelectedDate(this.value)">
+              <span>for</span>
+              ${relievingWardSelectorHtml()}
+              <button class="secondary small" type="button" onclick="changeSelectedDateDays(-1)">← Previous</button>
+              <button class="secondary small" type="button" onclick="setSelectedDate(todayISO())">Today</button>
+              <button class="secondary small" type="button" onclick="changeSelectedDateDays(1)">Next →</button>
             </div>
             <div class="rp-v10-total ${totalOutstanding ? "warn" : "ok"}">
               <span>Outstanding</span>
@@ -1783,8 +1809,8 @@
           <div class="rp-v10-ward-summary-grid">
             ${totals.map(x => {
               const code = x.ward.ward_code || "Ward";
-              const cls = x.outstanding ? (x.unseen ? "urgent" : x.calls ? "warning" : "active") : (x.active.length ? "done" : "idle");
-              const status = x.outstanding ? `${x.outstanding} short` : (x.active.length ? "covered" : "no request");
+              const cls = x.outstanding ? (x.unseen ? "urgent" : x.calls ? "warning" : "active") : (x.active.length || x.covered ? "done" : "idle");
+              const status = x.outstanding ? `${x.outstanding} short` : (x.active.length || x.covered ? "covered" : "no request");
               return `<button type="button" class="rp-v10-summary-chip ${cls}" onclick="setSelectedRelievingWard('${escapeHtml(x.wid)}')">
                 <div class="rp-v10-chip-top"><strong>${escapeHtml(code)}</strong><span>${escapeHtml(status)}</span></div>
                 <div class="rp-v10-chip-line">Need <b>${x.needTotal}</b> · Sent <b>${x.sentTotal}</b></div>
@@ -1792,7 +1818,6 @@
               </button>`;
             }).join("")}
           </div>
-          ${needRows.length ? "" : `<div class="rp-v10-no-pressure">No relieving pool allocation pressure recorded for this date.</div>`}
         </div>`;
     }
 
@@ -1838,20 +1863,29 @@
     function renderRelievingPoolAuditTrail(r){
       const events = verificationEventsFromRow(r);
       const requestSentAt = rowField(r, ["requested_at", "request_sent_at", "created_at"]);
-      const seenAt = rowField(r, ["sno_seen_at", "reviewed_at", "seen_at"]);
       const fallbackSentAt = rowField(r, ["fallback_email_sent_at", "fallback_sent_at"]);
+      const fallbackEmail = rowField(r, ["fallback_recipient_email", "fallback_email", "nurse_in_charge_email"], "");
       const allocatedAt = rowField(r, ["allocation_sent_at", "allocated_at"]);
-      const coveredAt = rowField(r, ["ward_covered_at", "covered_at"]);
+      const allocatedBy = rowField(r, ["allocated_by_name", "allocated_by", "sent_by_name"], "");
       const callCount = events.length || rowNumber(r, ["verification_call_count", "verification_calls"]);
-      const chips = [
-        ["Request", requestSentAt, "done"],
-        ["Email", fallbackSentAt, fallbackSentAt ? "done" : ""],
-        ["Seen", seenAt, seenAt ? "done" : "active"],
-        ["Allocation", allocatedAt, allocatedAt ? "done" : ""],
-        [`Calls ${callCount}`, rowField(r,["latest_verification_at", "verified_at"]), callCount >= 3 ? "danger" : callCount ? "warn" : ""],
-        ["Covered", coveredAt, coveredAt ? "done" : ""]
+      const latestCallAt = rowField(r,["latest_verification_at", "verified_at"]);
+      const closedAt = rowField(r, ["case_closed_at", "closed_at", "ward_covered_at", "covered_at"]);
+      const closedBy = rowField(r, ["closed_by_name", "ward_covered_by_name", "verified_by_name"], "");
+
+      const steps = [
+        {label:"Requested", time:requestSentAt, cls:requestSentAt ? "done" : "", small:"Ward request created"},
+        {label:"Email sent", time:fallbackSentAt, cls:fallbackSentAt ? "done" : "", small:fallbackEmail ? `To: ${fallbackEmail}` : "—"},
+        {label:"Staff sent", time:allocatedAt, cls:allocatedAt ? "done" : "active", small:allocatedBy || "—"},
+        {label:"Verification calls", time:latestCallAt, cls:callCount >= 3 ? "danger" : callCount ? "warn" : "", small:callCount ? `${callCount} call${callCount===1?"":"s"}` : "—"},
+        {label:"Closed", time:closedAt, cls:closedAt ? "done" : "", small:closedBy || "—"}
       ];
-      return `<div class="rp-v8-timeline">${chips.map(([label, value, cls])=>`<span class="rp-v8-step ${cls}"><b>${escapeHtml(label)}</b>: ${escapeHtml(shortDateTime(value) || "—")}</span>`).join("")}</div>${renderVerificationCallPills(r)}`;
+
+      return `<div class="rp-v13-audit">${steps.map(s=>`
+        <div class="rp-v13-audit-step ${s.cls}">
+          <span class="rp-v13-audit-label">${escapeHtml(s.label)}</span>
+          <span class="rp-v13-audit-time">${escapeHtml(shortDateTime(s.time) || "—")}</span>
+          <span class="rp-v13-audit-small">${escapeHtml(s.small || "—")}</span>
+        </div>`).join("")}</div>${renderVerificationCallPills(r)}`;
     }
 
     function labelVerificationOutcome(value){
@@ -1880,8 +1914,7 @@
       const allocatedTotal = nursesAllocated + carersAllocated + aidesAllocated;
       const shortage = Math.max(0, neededTotal - allocatedTotal);
       const allocatedAt = rowField(r, ["allocation_sent_at", "allocated_at"]);
-      const seenAt = rowField(r, ["sno_seen_at", "reviewed_at", "seen_at"]);
-      const coveredAt = rowField(r, ["ward_covered_at", "covered_at"]);
+      const closedAt = rowField(r, ["case_closed_at", "closed_at", "ward_covered_at", "covered_at"]);
       const verificationCount = rowNumber(r, ["verification_call_count", "verification_calls"]);
       const source = rowField(r, ["request_source", "source_type", "source"], "Daily Staffing");
       const fallbackEmail = rowField(r, ["fallback_recipient_email", "fallback_email", "nurse_in_charge_email"], "");
@@ -1890,7 +1923,7 @@
       const fallbackButtonText = fallbackSentAt ? "Email sent / send again" : "Send email";
       const fallbackStatusHtml = fallbackSentAt
         ? `<div class="rp-v11-email-sent">Email sent: ${escapeHtml(shortDateTime(fallbackSentAt))}${fallbackEmail ? ` · ${escapeHtml(fallbackEmail)}` : ""}</div>`
-        : `<div class="rp-v11-email-pending">No fallback email has been sent for this request.</div>`;
+        : `<div class="rp-v11-email-pending">No fallback email sent.</div>`;
       const verifyClass = verificationTone(verificationCount);
       const verifyButton = verificationCount ? `Log call #${verificationCount + 1}` : "Log verification call";
 
@@ -1929,24 +1962,18 @@
                 <div><label>Carers</label><input id="carers_${key}" type="number" min="0" value="${carersAllocated}"></div>
                 <div><label>Aides</label><input id="hcas_${key}" type="number" min="0" value="${aidesAllocated}"></div>
               </div>
-              <textarea class="rp-v8-note" id="notes_${key}" placeholder="Notes for allocation / verification">${escapeHtml(rowField(r,["allocation_notes", "notes"], ""))}</textarea>
-              <button class="${allocatedAt ? "success" : "primary"} small wide" type="button" onclick="allocateRelievingPoolRequest('${escapeHtml(requestId)}','${key}')">${allocatedAt ? "Staff sent recorded" : "Save staff sent"}</button>
+              <div class="rp-v13-close-actions">
+                <button class="${closedAt ? "success" : "primary"} small wide" type="button" onclick="closeRelievingPoolEvent('${escapeHtml(requestId)}','${key}')">${closedAt ? "Event closed" : "Close event"}</button>
+                <button class="danger small wide" type="button" onclick="resetRelievingPoolAllocation('${escapeHtml(requestId)}')">Reset</button>
+              </div>
             </div>
 
             <div class="rp-v8-box">
               <div class="rp-v8-box-title">Workflow actions</div>
-              <div class="rp-v8-actions">
-                <button class="${seenAt ? "success" : "secondary"} small" type="button" onclick="markRelievingPoolSeen('${escapeHtml(requestId)}')">${seenAt ? "Seen" : "Mark seen"}</button>
+              <div class="rp-v13-workflow-one">
+                <button class="${allocatedAt ? "success" : "secondary"} small" type="button" onclick="allocateRelievingPoolRequest('${escapeHtml(requestId)}','${key}')">${allocatedAt ? "Staff sent recorded" : "Staff sent"}</button>
                 <button class="${verifyClass} small" type="button" onclick="logRelievingPoolVerificationCall('${escapeHtml(requestId)}','${key}')">${escapeHtml(verifyButton)}</button>
-                <button class="${coveredAt ? "success" : "secondary"} small" type="button" onclick="markRelievingPoolWardCovered('${escapeHtml(requestId)}','${key}')">${coveredAt ? "Covered / finished" : "Mark ward covered"}</button>
               </div>
-              <div class="rp-v8-verify-select"><label>Verification outcome</label><select id="verifyOutcome_${key}">
-                <option value="not_arrived">Staff not arrived yet</option>
-                <option value="partially_arrived">Partially arrived</option>
-                <option value="fully_arrived">Fully arrived</option>
-                <option value="no_answer">No answer from ward</option>
-              </select></div>
-              <button class="danger small rp-v8-reset" type="button" onclick="resetRelievingPoolAllocation('${escapeHtml(requestId)}')">Reset / Reopen</button>
             </div>
 
             <div class="rp-v8-box rp-v8-audit-full">
@@ -2001,7 +2028,7 @@
       const nurses = Number(document.getElementById(`nurses_${key}`).value || 0);
       const carers = Number(document.getElementById(`carers_${key}`).value || 0);
       const hcas = Number(document.getElementById(`hcas_${key}`).value || 0);
-      const notes = document.getElementById(`notes_${key}`).value || null;
+      const notes = "Staff sent by SNO.";
       const { error } = await sb.rpc("allocate_relieving_pool_request", {
         p_request_id:requestId,
         p_nurses_allocated:nurses,
@@ -2010,14 +2037,14 @@
         p_allocation_notes:notes
       });
       if(error){ showError(error.message); return; }
-      showSuccess("Allocation sent timestamp recorded.");
+      showSuccess("Staff sent timestamp recorded.");
       await renderRelievingPool();
     }
 
     async function logRelievingPoolVerificationCall(requestId, key){
       clearMessage();
-      const notes = document.getElementById(`notes_${key}`)?.value?.trim() || "Verification call logged by SNO.";
-      const outcome = document.getElementById(`verifyOutcome_${key}`)?.value || "verification_call";
+      const notes = "Verification call logged by SNO.";
+      const outcome = "verification_call";
       const { error } = await sb.rpc("log_relieving_pool_verification_call", {
         p_request_id: requestId,
         p_outcome: outcome,
@@ -2030,25 +2057,47 @@
 
     async function markRelievingPoolWardCovered(requestId, key){
       clearMessage();
-      const notes = document.getElementById(`notes_${key}`)?.value?.trim() || "Ward covered.";
       const { error } = await sb.rpc("mark_relieving_pool_ward_covered", {
         p_request_id: requestId,
-        p_notes: notes
+        p_notes: "Ward covered."
       });
       if(error){ showError(error.message); return; }
       showSuccess("Ward covered timestamp recorded.");
       await renderRelievingPool();
     }
 
+    async function closeRelievingPoolEvent(requestId, key){
+      clearMessage();
+      const nurses = Number(document.getElementById(`nurses_${key}`)?.value || 0);
+      const carers = Number(document.getElementById(`carers_${key}`)?.value || 0);
+      const hcas = Number(document.getElementById(`hcas_${key}`)?.value || 0);
+
+      const allocation = await sb.rpc("allocate_relieving_pool_request", {
+        p_request_id:requestId,
+        p_nurses_allocated:nurses,
+        p_carers_allocated:carers,
+        p_healthcare_assistants_allocated:hcas,
+        p_allocation_notes:"Event closed by SNO."
+      });
+      if(allocation.error){ showError(allocation.error.message); return; }
+
+      const closeResult = await sb.rpc("close_relieving_pool_case", {
+        p_request_id: requestId,
+        p_notes: "Event closed by SNO."
+      });
+      if(closeResult.error){ showError(closeResult.error.message); return; }
+      showSuccess("Event closed.");
+      await renderRelievingPool();
+    }
+
     async function closeRelievingPoolCase(requestId, key){
       clearMessage();
-      const notes = document.getElementById(`notes_${key}`)?.value?.trim() || "Case closed.";
       const { error } = await sb.rpc("close_relieving_pool_case", {
         p_request_id: requestId,
-        p_notes: notes
+        p_notes: "Event closed by SNO."
       });
       if(error){ showError(error.message); return; }
-      showSuccess("Relieving pool case closed.");
+      showSuccess("Event closed.");
       await renderRelievingPool();
     }
 
@@ -2058,19 +2107,16 @@
 
     async function resetRelievingPoolAllocation(requestId){
       clearMessage();
-      const confirmed = window.confirm("Reset allocation and verification for this request?");
+      const confirmed = window.confirm("Reset this relieving pool event? This clears staff sent, email fallback, verification calls, closure and audit entries for this case.");
       if(!confirmed) return;
-
-      const notes = window.prompt("Reset/correction notes:", "Reset due to correction");
-      if(notes === null) return;
 
       const { error } = await sb.rpc("reset_relieving_pool_allocation", {
         p_request_id:requestId,
-        p_reset_notes:notes
+        p_reset_notes:"Reset by SNO."
       });
 
       if(error){ showError(error.message); return; }
-      showSuccess("Relieving pool allocation reset.");
+      showSuccess("Relieving pool event reset.");
       await renderRelievingPool();
     }
 
