@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -444,8 +445,26 @@
     .rp-v8-step{border:1px solid var(--grey-border);background:#fff;border-radius:999px;padding:5px 7px;font-size:10px;font-weight:850;color:#536273;line-height:1.15;white-space:nowrap}
     .rp-v8-step b{color:#223449}.rp-v8-step.done{border-color:var(--green-border);background:var(--green-soft);color:#166534}.rp-v8-step.active{border-color:var(--primary-border);background:var(--primary-soft);color:#0f5f92}.rp-v8-step.warn{border-color:#fbbf24;background:#fffbeb;color:#92400e}.rp-v8-step.danger{border-color:var(--red-border);background:var(--red-soft);color:var(--red)}
     .rp-v8-call-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.rp-v8-call-pill{border:1px solid #fbbf24;background:#fffbeb;color:#92400e;border-radius:10px;padding:5px 6px;font-size:10px;font-weight:850;line-height:1.15}.rp-v8-call-pill.red{border-color:var(--red-border);background:var(--red-soft);color:var(--red)}.rp-v8-call-pill.green{border-color:var(--green-border);background:var(--green-soft);color:var(--green)}.rp-v8-call-pill small{display:block;color:inherit;font-weight:700;opacity:.82;margin-top:1px}
-    @media(max-width:1250px){.rp-v8-actionbar{grid-template-columns:1fr}.rp-v8-ward-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr 1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.rp-v8-title-row,.rp-v8-card-head{grid-template-columns:1fr}.rp-v8-filter-grid{grid-template-columns:1fr}.rp-v8-nav{grid-template-columns:1fr 1fr 1fr}.rp-v8-ward-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-fallback-grid{grid-template-columns:1fr}}
+    .rp-v10-summary{margin-top:10px;border:1px solid var(--border);background:#fff;border-radius:16px;padding:10px;box-shadow:0 2px 8px rgba(55,94,130,.04)}
+    .rp-v10-summary-head{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin-bottom:9px}
+    .rp-v10-title{font-size:13px;font-weight:950;color:#1f3146;letter-spacing:-.02em}
+    .rp-v10-subtitle{font-size:10.5px;color:var(--muted);font-weight:750;margin-top:2px;line-height:1.2}
+    .rp-v10-total{border:1px solid var(--green-border);background:var(--green-soft);border-radius:14px;padding:7px 10px;min-width:125px;text-align:center;color:var(--green)}
+    .rp-v10-total.warn{border-color:var(--red-border);background:var(--red-soft);color:var(--red)}
+    .rp-v10-total span{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:950}
+    .rp-v10-total strong{display:block;font-size:24px;line-height:1;margin:1px 0;font-weight:950}
+    .rp-v10-total small{display:block;font-size:9.5px;font-weight:850;opacity:.85}
+    .rp-v10-ward-summary-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+    .rp-v10-summary-chip{border:1px solid var(--border);border-radius:13px;background:#f8fafc;color:#243142;padding:7px 8px;text-align:left;box-shadow:none;min-height:64px}
+    .rp-v10-summary-chip:hover{background:#fff;box-shadow:0 4px 10px rgba(55,94,130,.08)}
+    .rp-v10-summary-chip.idle{opacity:.72}.rp-v10-summary-chip.active{border-color:#9bcff0;background:#f0f8ff}.rp-v10-summary-chip.warning{border-color:#fbbf24;background:#fffbeb}.rp-v10-summary-chip.urgent{border-color:#f5b5c4;background:#fff1f3}.rp-v10-summary-chip.done{border-color:#9bd8b7;background:#ecfdf3}
+    .rp-v10-chip-top{display:flex;justify-content:space-between;gap:5px;align-items:flex-start;margin-bottom:4px}
+    .rp-v10-chip-top strong{font-size:13px;font-weight:950;line-height:1;color:#1f3146}.rp-v10-chip-top span{font-size:9.5px;font-weight:950;text-transform:uppercase;color:var(--muted);line-height:1.1;text-align:right}
+    .rp-v10-summary-chip.urgent .rp-v10-chip-top strong,.rp-v10-summary-chip.urgent .rp-v10-chip-top span{color:#a61b3d}.rp-v10-summary-chip.warning .rp-v10-chip-top strong,.rp-v10-summary-chip.warning .rp-v10-chip-top span{color:#92400e}.rp-v10-summary-chip.done .rp-v10-chip-top strong,.rp-v10-summary-chip.done .rp-v10-chip-top span{color:#166534}
+    .rp-v10-chip-line{font-size:10.5px;color:#334155;font-weight:900;line-height:1.15}.rp-v10-chip-line.small{font-size:9.5px;color:var(--muted);font-weight:850;margin-top:2px}
+    .rp-v10-no-pressure{font-size:11px;color:var(--muted);font-weight:800;margin-top:7px;padding:7px 8px;border-radius:12px;background:#f8fafc;border:1px dashed var(--border)}
+    @media(max-width:1250px){.rp-v8-actionbar{grid-template-columns:1fr}.rp-v8-ward-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr 1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v10-ward-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:760px){.rp-v8-title-row,.rp-v8-card-head{grid-template-columns:1fr}.rp-v8-filter-grid{grid-template-columns:1fr}.rp-v8-nav{grid-template-columns:1fr 1fr 1fr}.rp-v8-ward-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-fallback-grid{grid-template-columns:1fr}.rp-v10-summary-head{grid-template-columns:1fr}.rp-v10-ward-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
   </style>
 </head>
@@ -1658,6 +1677,7 @@
               </div>
             </div>
           </div>
+          ${renderRelievingPoolAllocationSummary(allRows)}
         </div>
 
         <div class="rp-v8-stats">
@@ -1717,6 +1737,60 @@
       return `<div class="rp-v8-ward-strip">
           <button type="button" class="rp-v8-ward-chip all${selectedAll}" onclick="setSelectedRelievingWard('')"><strong>All</strong><span>Show all wards</span></button>
           ${chips}
+        </div>`;
+    }
+
+    function renderRelievingPoolAllocationSummary(allRows){
+      const wards = appState.wards || [];
+      const totals = wards.map(w => {
+        const wid = w.ward_id || w.id;
+        const wardRows = rpWardRows(allRows, wid);
+        const active = wardRows.filter(r => !rpIsDone(r));
+        const needN = active.reduce((sum,r)=>sum + rowNumber(r,["nurses_needed", "nurse_shortage", "required_nurses_shortage"]),0);
+        const needC = active.reduce((sum,r)=>sum + rowNumber(r,["carers_needed", "carer_shortage", "carers_shortage"]),0);
+        const needA = active.reduce((sum,r)=>sum + rowNumber(r,["nursing_aides_needed", "healthcare_assistants_needed", "hcas_needed", "aides_needed", "healthcare_assistant_shortage"]),0);
+        const sentN = active.reduce((sum,r)=>sum + rowNumber(r,["nurses_allocated", "allocated_nurses"]),0);
+        const sentC = active.reduce((sum,r)=>sum + rowNumber(r,["carers_allocated", "allocated_carers"]),0);
+        const sentA = active.reduce((sum,r)=>sum + rowNumber(r,["nursing_aides_allocated", "healthcare_assistants_allocated", "hcas_allocated", "aides_allocated", "allocated_aides"]),0);
+        const needTotal = needN + needC + needA;
+        const sentTotal = sentN + sentC + sentA;
+        const outstanding = Math.max(0, needTotal - sentTotal);
+        const unseen = active.filter(r => !rowField(r,["sno_seen_at", "reviewed_at", "seen_at"])).length;
+        const calls = active.reduce((sum,r)=>sum + rowNumber(r,["verification_call_count", "verification_calls"]),0);
+        return { ward:w, wid, active, needN, needC, needA, sentN, sentC, sentA, needTotal, sentTotal, outstanding, unseen, calls };
+      });
+
+      const needRows = totals.filter(x => x.active.length || x.needTotal || x.sentTotal);
+      const totalNeed = totals.reduce((sum,x)=>sum + x.needTotal,0);
+      const totalSent = totals.reduce((sum,x)=>sum + x.sentTotal,0);
+      const totalOutstanding = totals.reduce((sum,x)=>sum + x.outstanding,0);
+
+      return `
+        <div class="rp-v10-summary">
+          <div class="rp-v10-summary-head">
+            <div>
+              <div class="rp-v10-title">All wards allocation summary</div>
+              <div class="rp-v10-subtitle">Quick pressure view for the SNO. This fills the empty area and avoids relying only on the ward dropdown.</div>
+            </div>
+            <div class="rp-v10-total ${totalOutstanding ? "warn" : "ok"}">
+              <span>Outstanding</span>
+              <strong>${totalOutstanding}</strong>
+              <small>Needed ${totalNeed} · Sent ${totalSent}</small>
+            </div>
+          </div>
+          <div class="rp-v10-ward-summary-grid">
+            ${totals.map(x => {
+              const code = x.ward.ward_code || "Ward";
+              const cls = x.outstanding ? (x.unseen ? "urgent" : x.calls ? "warning" : "active") : (x.active.length ? "done" : "idle");
+              const status = x.outstanding ? `${x.outstanding} short` : (x.active.length ? "covered" : "no request");
+              return `<button type="button" class="rp-v10-summary-chip ${cls}" onclick="setSelectedRelievingWard('${escapeHtml(x.wid)}')">
+                <div class="rp-v10-chip-top"><strong>${escapeHtml(code)}</strong><span>${escapeHtml(status)}</span></div>
+                <div class="rp-v10-chip-line">Need <b>${x.needTotal}</b> · Sent <b>${x.sentTotal}</b></div>
+                <div class="rp-v10-chip-line small">N ${x.needN}/${x.sentN} · C ${x.needC}/${x.sentC} · A ${x.needA}/${x.sentA}</div>
+              </button>`;
+            }).join("")}
+          </div>
+          ${needRows.length ? "" : `<div class="rp-v10-no-pressure">No relieving pool allocation pressure recorded for this date.</div>`}
         </div>`;
     }
 
