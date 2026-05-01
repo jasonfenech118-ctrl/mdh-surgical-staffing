@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -436,6 +435,9 @@
     .rp-v8-mini-metrics b{display:block;font-size:17px;color:#1f3f5f;line-height:1;margin-bottom:2px}
     .rp-v8-shortage{margin-top:7px;font-size:11px;font-weight:950;padding:6px 8px;border-radius:11px}.rp-v8-shortage.ok{color:var(--green);background:var(--green-soft);border:1px solid var(--green-border)}.rp-v8-shortage.warn{color:var(--red);background:var(--red-soft);border:1px solid var(--red-border)}
     .rp-v8-fallback{margin-top:7px;font-size:11px;color:#7a541b}.rp-v8-fallback summary{font-weight:950;cursor:pointer}.rp-v8-fallback-grid{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end;margin-top:6px}.rp-v8-fallback-grid input{height:32px;padding:6px 8px;font-size:11px}
+    .rp-v11-email-sent{margin-top:7px;padding:6px 8px;border:1px solid var(--green-border);background:var(--green-soft);color:var(--green);border-radius:10px;font-size:10.5px;font-weight:850;line-height:1.25}
+    .rp-v11-email-pending{margin-top:7px;padding:6px 8px;border:1px dashed var(--amber-border);background:#fffdf4;color:#7a541b;border-radius:10px;font-size:10.5px;font-weight:800;line-height:1.25}
+
     .rp-v8-alloc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.rp-v8-alloc-grid input{height:32px;padding:6px 8px;font-size:12px}.rp-v8-alloc-grid label{font-size:10px;margin-bottom:3px}
     .rp-v8-note{min-height:38px!important;height:38px;resize:vertical;margin-top:7px;font-size:11.5px;padding:7px 8px}
     .rp-v8-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.rp-v8-actions button{min-height:32px;padding:7px 8px;font-size:11px;line-height:1.06;border-radius:10px}.rp-v8-actions .full{grid-column:1 / -1}
@@ -1837,17 +1839,17 @@
       const events = verificationEventsFromRow(r);
       const requestSentAt = rowField(r, ["requested_at", "request_sent_at", "created_at"]);
       const seenAt = rowField(r, ["sno_seen_at", "reviewed_at", "seen_at"]);
+      const fallbackSentAt = rowField(r, ["fallback_email_sent_at", "fallback_sent_at"]);
       const allocatedAt = rowField(r, ["allocation_sent_at", "allocated_at"]);
       const coveredAt = rowField(r, ["ward_covered_at", "covered_at"]);
-      const closedAt = rowField(r, ["case_closed_at", "closed_at", "completed_at"]);
       const callCount = events.length || rowNumber(r, ["verification_call_count", "verification_calls"]);
       const chips = [
         ["Request", requestSentAt, "done"],
+        ["Email", fallbackSentAt, fallbackSentAt ? "done" : ""],
         ["Seen", seenAt, seenAt ? "done" : "active"],
         ["Allocation", allocatedAt, allocatedAt ? "done" : ""],
         [`Calls ${callCount}`, rowField(r,["latest_verification_at", "verified_at"]), callCount >= 3 ? "danger" : callCount ? "warn" : ""],
-        ["Covered", coveredAt, coveredAt ? "done" : ""],
-        ["Closed", closedAt, closedAt ? "done" : ""]
+        ["Covered", coveredAt, coveredAt ? "done" : ""]
       ];
       return `<div class="rp-v8-timeline">${chips.map(([label, value, cls])=>`<span class="rp-v8-step ${cls}"><b>${escapeHtml(label)}</b>: ${escapeHtml(shortDateTime(value) || "—")}</span>`).join("")}</div>${renderVerificationCallPills(r)}`;
     }
@@ -1880,10 +1882,15 @@
       const allocatedAt = rowField(r, ["allocation_sent_at", "allocated_at"]);
       const seenAt = rowField(r, ["sno_seen_at", "reviewed_at", "seen_at"]);
       const coveredAt = rowField(r, ["ward_covered_at", "covered_at"]);
-      const closedAt = rowField(r, ["case_closed_at", "closed_at", "completed_at"]);
       const verificationCount = rowNumber(r, ["verification_call_count", "verification_calls"]);
       const source = rowField(r, ["request_source", "source_type", "source"], "Daily Staffing");
       const fallbackEmail = rowField(r, ["fallback_recipient_email", "fallback_email", "nurse_in_charge_email"], "");
+      const fallbackSentAt = rowField(r, ["fallback_email_sent_at", "fallback_sent_at"]);
+      const fallbackButtonClass = fallbackSentAt ? "success" : "amber";
+      const fallbackButtonText = fallbackSentAt ? "Email sent / send again" : "Send email";
+      const fallbackStatusHtml = fallbackSentAt
+        ? `<div class="rp-v11-email-sent">Email sent: ${escapeHtml(shortDateTime(fallbackSentAt))}${fallbackEmail ? ` · ${escapeHtml(fallbackEmail)}` : ""}</div>`
+        : `<div class="rp-v11-email-pending">No fallback email has been sent for this request.</div>`;
       const verifyClass = verificationTone(verificationCount);
       const verifyButton = verificationCount ? `Log call #${verificationCount + 1}` : "Log verification call";
 
@@ -1905,12 +1912,13 @@
                 <span><b>${aidesNeeded}</b> aides</span>
               </div>
               <div class="rp-v8-shortage ${shortage ? "warn" : "ok"}">${shortage ? `Still short by ${shortage}` : "Need covered"}</div>
-              <details class="rp-v8-fallback">
-                <summary>No charge nurse? Send fallback email</summary>
+              <details class="rp-v8-fallback" ${fallbackSentAt ? "open" : ""}>
+                <summary>No charge nurse? Email nurse in charge</summary>
                 <div class="rp-v8-fallback-grid">
                   <input id="fallbackEmail_${key}" type="email" value="${escapeHtml(fallbackEmail)}" placeholder="nurse.in.charge@gov.mt">
-                  <button class="secondary small" type="button" onclick="sendRelievingPoolWardUpdateEmail('${escapeHtml(requestId)}','${key}')">Send</button>
+                  <button class="${fallbackButtonClass} small" type="button" onclick="sendRelievingPoolWardUpdateEmail('${escapeHtml(requestId)}','${key}')">${escapeHtml(fallbackButtonText)}</button>
                 </div>
+                ${fallbackStatusHtml}
               </details>
             </div>
 
@@ -1922,7 +1930,7 @@
                 <div><label>Aides</label><input id="hcas_${key}" type="number" min="0" value="${aidesAllocated}"></div>
               </div>
               <textarea class="rp-v8-note" id="notes_${key}" placeholder="Notes for allocation / verification">${escapeHtml(rowField(r,["allocation_notes", "notes"], ""))}</textarea>
-              <button class="${allocatedAt ? "success" : "primary"} small wide" type="button" onclick="allocateRelievingPoolRequest('${escapeHtml(requestId)}','${key}')">${allocatedAt ? "Allocation recorded" : "Confirm allocation sent"}</button>
+              <button class="${allocatedAt ? "success" : "primary"} small wide" type="button" onclick="allocateRelievingPoolRequest('${escapeHtml(requestId)}','${key}')">${allocatedAt ? "Staff sent recorded" : "Save staff sent"}</button>
             </div>
 
             <div class="rp-v8-box">
@@ -1930,8 +1938,7 @@
               <div class="rp-v8-actions">
                 <button class="${seenAt ? "success" : "secondary"} small" type="button" onclick="markRelievingPoolSeen('${escapeHtml(requestId)}')">${seenAt ? "Seen" : "Mark seen"}</button>
                 <button class="${verifyClass} small" type="button" onclick="logRelievingPoolVerificationCall('${escapeHtml(requestId)}','${key}')">${escapeHtml(verifyButton)}</button>
-                <button class="${coveredAt ? "success" : "secondary"} small" type="button" onclick="markRelievingPoolWardCovered('${escapeHtml(requestId)}','${key}')">${coveredAt ? "Covered" : "Mark covered"}</button>
-                <button class="${closedAt ? "success" : "secondary"} small" type="button" onclick="closeRelievingPoolCase('${escapeHtml(requestId)}','${key}')">${closedAt ? "Closed" : "Close case"}</button>
+                <button class="${coveredAt ? "success" : "secondary"} small" type="button" onclick="markRelievingPoolWardCovered('${escapeHtml(requestId)}','${key}')">${coveredAt ? "Covered / finished" : "Mark ward covered"}</button>
               </div>
               <div class="rp-v8-verify-select"><label>Verification outcome</label><select id="verifyOutcome_${key}">
                 <option value="not_arrived">Staff not arrived yet</option>
@@ -1977,7 +1984,7 @@
         p_notes: notes
       });
       if(error){ showError(error.message); return; }
-      showSuccess("Ward update email request recorded. Connect this RPC to Power Automate/Email to send the actual email.");
+      showSuccess("Fallback email timestamp recorded for the nurse in charge.");
       await renderRelievingPool();
     }
 
