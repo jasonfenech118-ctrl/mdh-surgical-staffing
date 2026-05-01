@@ -456,6 +456,13 @@
     .rp-v10-total span{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:950}
     .rp-v10-total strong{display:block;font-size:24px;line-height:1;margin:1px 0;font-weight:950}
     .rp-v10-total small{display:block;font-size:9.5px;font-weight:850;opacity:.85}
+    .rp-v12-summary-head{grid-template-columns:minmax(220px,1fr) minmax(420px,.9fr) minmax(120px,160px)!important;align-items:end}
+    .rp-v12-summary-controls{border:1px solid var(--border);background:#fbfdff;border-radius:14px;padding:8px;min-width:0}
+    .rp-v12-control-row{display:grid;grid-template-columns:1fr 1.2fr;gap:8px;align-items:end}
+    .rp-v12-control-row label{font-size:10px;margin-bottom:3px}
+    .rp-v12-control-row input,.rp-v12-control-row select{height:34px;padding:6px 8px;font-size:11.5px;border-radius:10px}
+    .rp-v12-nav-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:7px}
+    .rp-v12-nav-row button{padding:6px 7px!important;font-size:10.5px!important;border-radius:9px!important;min-height:30px}
     .rp-v10-ward-summary-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
     .rp-v10-summary-chip{border:1px solid var(--border);border-radius:13px;background:#f8fafc;color:#243142;padding:7px 8px;text-align:left;box-shadow:none;min-height:64px}
     .rp-v10-summary-chip:hover{background:#fff;box-shadow:0 4px 10px rgba(55,94,130,.08)}
@@ -465,8 +472,8 @@
     .rp-v10-summary-chip.urgent .rp-v10-chip-top strong,.rp-v10-summary-chip.urgent .rp-v10-chip-top span{color:#a61b3d}.rp-v10-summary-chip.warning .rp-v10-chip-top strong,.rp-v10-summary-chip.warning .rp-v10-chip-top span{color:#92400e}.rp-v10-summary-chip.done .rp-v10-chip-top strong,.rp-v10-summary-chip.done .rp-v10-chip-top span{color:#166534}
     .rp-v10-chip-line{font-size:10.5px;color:#334155;font-weight:900;line-height:1.15}.rp-v10-chip-line.small{font-size:9.5px;color:var(--muted);font-weight:850;margin-top:2px}
     .rp-v10-no-pressure{font-size:11px;color:var(--muted);font-weight:800;margin-top:7px;padding:7px 8px;border-radius:12px;background:#f8fafc;border:1px dashed var(--border)}
-    @media(max-width:1250px){.rp-v8-actionbar{grid-template-columns:1fr}.rp-v8-ward-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr 1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v10-ward-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media(max-width:760px){.rp-v8-title-row,.rp-v8-card-head{grid-template-columns:1fr}.rp-v8-filter-grid{grid-template-columns:1fr}.rp-v8-nav{grid-template-columns:1fr 1fr 1fr}.rp-v8-ward-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-fallback-grid{grid-template-columns:1fr}.rp-v10-summary-head{grid-template-columns:1fr}.rp-v10-ward-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:1250px){.rp-v8-actionbar{grid-template-columns:1fr}.rp-v8-ward-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr 1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v10-ward-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-v12-summary-head{grid-template-columns:1fr!important}.rp-v12-summary-controls{max-width:720px}}
+    @media(max-width:760px){.rp-v8-title-row,.rp-v8-card-head{grid-template-columns:1fr}.rp-v8-filter-grid{grid-template-columns:1fr}.rp-v8-nav{grid-template-columns:1fr 1fr 1fr}.rp-v8-ward-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-grid{grid-template-columns:1fr}.rp-v8-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v8-fallback-grid{grid-template-columns:1fr}.rp-v10-summary-head{grid-template-columns:1fr}.rp-v10-ward-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-v12-control-row{grid-template-columns:1fr}.rp-v12-nav-row{grid-template-columns:1fr 1fr 1fr}}
 
   </style>
 </head>
@@ -1658,25 +1665,7 @@
           <div class="rp-v8-title-row">
             <div>
               <h2>Relieving Pool Requests</h2>
-              <p class="muted">Daily SNO action board. Ward strip and filters are kept together so no ward is missed.</p>
-            </div>
-          </div>
-          <div class="rp-v8-actionbar">
-            <div class="rp-v8-panel">
-              <div class="rp-v8-panel-title"><span>Ward action strip</span><span>${unseenRows.length ? `${unseenRows.length} not seen` : "All seen / no pending unseen"}</span></div>
-              ${renderRelievingPoolWardStrip(allRows, selectedWardFilter)}
-            </div>
-            <div class="rp-v8-panel">
-              <div class="rp-v8-panel-title"><span>Date and ward filter</span><span>${escapeHtml(formatDate(selectedDate))}</span></div>
-              <div class="rp-v8-filter-grid">
-                <div><label>Date</label><input type="date" value="${selectedDate}" onchange="setSelectedDate(this.value)"></div>
-                <div>${relievingWardSelectorHtml()}</div>
-              </div>
-              <div class="rp-v8-nav">
-                <button class="secondary small" type="button" onclick="changeSelectedDateDays(-1)">← Previous</button>
-                <button class="secondary small" type="button" onclick="setSelectedDate(todayISO())">Today</button>
-                <button class="secondary small" type="button" onclick="changeSelectedDateDays(1)">Next →</button>
-              </div>
+              <p class="muted">Daily SNO action board. Date, ward filter, and all-ward pressure summary are now together in one compact area.</p>
             </div>
           </div>
           ${renderRelievingPoolAllocationSummary(allRows)}
@@ -1769,10 +1758,21 @@
 
       return `
         <div class="rp-v10-summary">
-          <div class="rp-v10-summary-head">
+          <div class="rp-v10-summary-head rp-v12-summary-head">
             <div>
               <div class="rp-v10-title">All wards allocation summary</div>
-              <div class="rp-v10-subtitle">Quick pressure view for the SNO. This fills the empty area and avoids relying only on the ward dropdown.</div>
+              <div class="rp-v10-subtitle">Use this single area for date, ward selection, and allocation pressure. Ward chips below still show every ward so the SNO does not miss one.</div>
+            </div>
+            <div class="rp-v12-summary-controls">
+              <div class="rp-v12-control-row">
+                <div><label>Date</label><input type="date" value="${appState.selectedDate}" onchange="setSelectedDate(this.value)"></div>
+                <div>${relievingWardSelectorHtml()}</div>
+              </div>
+              <div class="rp-v12-nav-row">
+                <button class="secondary small" type="button" onclick="changeSelectedDateDays(-1)">← Previous</button>
+                <button class="secondary small" type="button" onclick="setSelectedDate(todayISO())">Today</button>
+                <button class="secondary small" type="button" onclick="changeSelectedDateDays(1)">Next →</button>
+              </div>
             </div>
             <div class="rp-v10-total ${totalOutstanding ? "warn" : "ok"}">
               <span>Outstanding</span>
