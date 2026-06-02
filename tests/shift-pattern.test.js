@@ -217,6 +217,47 @@ assertEqual("round-trip: rosterAssignmentValueFromStaff → parseRosterAssignmen
   { type: "pattern", code: "AMNR" }
 );
 
+// ── buildFullName / splitStaffName ─────────────────────────────────────────
+console.log("\nbuildFullName / splitStaffName:");
+
+function cleanStaffName(name) {
+  return String(name || "").replace(/^SW\d+\s+/i, "").replace(/^SAU1\s+/i, "").replace(/\s+/g, " ").trim();
+}
+function buildFullName(surname, firstName) {
+  return [String(surname || "").trim(), String(firstName || "").trim()].filter(Boolean).join(" ");
+}
+function splitStaffName(fullName) {
+  const clean = cleanStaffName(fullName), parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { surname: "", firstName: "" };
+  if (parts.length === 1) return { surname: parts[0], firstName: "" };
+  return { surname: parts[0], firstName: parts.slice(1).join(" ") };
+}
+
+assertEqual("buildFullName joins surname + first name",
+  buildFullName("Borg", "Anna"), "Borg Anna");
+assertEqual("buildFullName trims whitespace",
+  buildFullName("  Borg  ", "  Anna  "), "Borg Anna");
+assertEqual("buildFullName with empty firstName returns just surname",
+  buildFullName("Borg", ""), "Borg");
+assertEqual("buildFullName with both empty returns empty string",
+  buildFullName("", ""), "");
+
+assertEqual("splitStaffName('Borg Anna') → surname Borg, firstName Anna",
+  splitStaffName("Borg Anna"), { surname: "Borg", firstName: "Anna" });
+assertEqual("splitStaffName handles multi-part first names",
+  splitStaffName("Borg Anna Maria"), { surname: "Borg", firstName: "Anna Maria" });
+assertEqual("splitStaffName('Borg') → surname only",
+  splitStaffName("Borg"), { surname: "Borg", firstName: "" });
+assertEqual("splitStaffName('') → both empty",
+  splitStaffName(""), { surname: "", firstName: "" });
+assertEqual("splitStaffName strips SW-prefixed names",
+  splitStaffName("SW12 Borg Anna"), { surname: "Borg", firstName: "Anna" });
+
+// Round trip
+const roundTrip = splitStaffName(buildFullName("Borg", "Anna Maria"));
+assertEqual("round-trip: build then split returns the same parts",
+  roundTrip, { surname: "Borg", firstName: "Anna Maria" });
+
 // ── Summary ────────────────────────────────────────────────────────────────
 console.log(`\n${"─".repeat(50)}`);
 console.log(`Tests: ${passed + failed}  Passed: ${passed}  Failed: ${failed}`);
