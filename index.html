@@ -579,12 +579,20 @@ Could not reach Supabase at ${SUPABASE_URL}. If the browser console still shows 
       if(rpcErr){
         // Fall back: direct table upsert without shift_code (may not exist as column)
         const upsertPayload={ward_id:appState.selectedWardId,staff_id:state.staffId,shift_date:state.shiftDate,live_shift_code:backendCode,source_type:"override",override_reason:reasonForShift(storedCode),notes:notes||null,updated_at:new Date().toISOString()};
-        // Try ward_id+staff_id+shift_date conflict first, then staff_id+shift_date
-        let t1=await sb.from("ward_roster_overrides").upsert(upsertPayload,{onConflict:"ward_id,staff_id,shift_date"});
-        if(t1.error){
-          let t2=await sb.from("ward_roster_overrides").upsert(upsertPayload,{onConflict:"staff_id,shift_date"});
-          fallbackErr=t2.error;
+        // Try candidate table names and conflict keys
+        const tableAttempts=[
+          {table:"roster_overrides",conflict:"ward_id,staff_id,shift_date"},
+          {table:"roster_overrides",conflict:"staff_id,shift_date"},
+          {table:"ward_roster",conflict:"ward_id,staff_id,shift_date"},
+          {table:"ward_roster",conflict:"staff_id,shift_date"},
+        ];
+        let succeeded=false;
+        for(const attempt of tableAttempts){
+          const r=await sb.from(attempt.table).upsert(upsertPayload,{onConflict:attempt.conflict});
+          if(!r.error){succeeded=true;break;}
+          fallbackErr=r.error;
         }
+        if(succeeded)fallbackErr=null;
         saveError=fallbackErr;
       }
       if(saveError){
