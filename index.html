@@ -569,8 +569,17 @@ Could not reach Supabase at ${SUPABASE_URL}. If the browser console still shows 
       closeShiftPickerModal();
       const storedCode=storeRosterCode(chosen);
       const backendCode=storedCode==="A"?"D":storedCode;
-      const{error}=await sb.rpc("upsert_ward_roster_override",{p_ward_id:appState.selectedWardId,p_staff_id:state.staffId,p_shift_date:state.shiftDate,p_shift_code:backendCode,p_override_reason:reasonForShift(storedCode),p_notes:notes});
-      if(error){showError(error.message);return;}
+      // Try RPC first; if it fails with the known SQL alias bug, fall back to direct table upsert
+      let saveError=null;
+      const rpcResult=await sb.rpc("upsert_ward_roster_override",{p_ward_id:appState.selectedWardId,p_staff_id:state.staffId,p_shift_date:state.shiftDate,p_shift_code:backendCode,p_override_reason:reasonForShift(storedCode),p_notes:notes});
+      saveError=rpcResult.error;
+      if(saveError){
+        // Fall back to direct table upsert
+        const upsertPayload={ward_id:appState.selectedWardId,staff_id:state.staffId,shift_date:state.shiftDate,shift_code:backendCode,live_shift_code:backendCode,source_type:"override",override_reason:reasonForShift(storedCode),notes:notes||null};
+        const tableResult=await sb.from("ward_roster_overrides").upsert(upsertPayload,{onConflict:"staff_id,shift_date"});
+        saveError=tableResult.error;
+      }
+      if(saveError){showError(saveError.message);return;}
       showSuccess("Roster status updated.");
       if(appState.activeTab==="wardDaily")await renderWardDaily();else await renderMonthlyRoster();
     }
