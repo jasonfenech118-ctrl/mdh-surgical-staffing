@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>MDH Surgical Staffing</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f8fcf'/%3E%3Ctext x='32' y='42' font-size='30' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'%3EM%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -570,16 +573,24 @@ Could not reach Supabase at ${SUPABASE_URL}. If the browser console still shows 
       const storedCode=storeRosterCode(chosen);
       const backendCode=storedCode==="A"?"D":storedCode;
       // Try RPC first; if it fails with the known SQL alias bug, fall back to direct table upsert
-      let saveError=null;
+      let saveError=null,rpcErr=null,fallbackErr=null;
       const rpcResult=await sb.rpc("upsert_ward_roster_override",{p_ward_id:appState.selectedWardId,p_staff_id:state.staffId,p_shift_date:state.shiftDate,p_shift_code:backendCode,p_override_reason:reasonForShift(storedCode),p_notes:notes});
-      saveError=rpcResult.error;
-      if(saveError){
-        // Fall back to direct table upsert
-        const upsertPayload={ward_id:appState.selectedWardId,staff_id:state.staffId,shift_date:state.shiftDate,shift_code:backendCode,live_shift_code:backendCode,source_type:"override",override_reason:reasonForShift(storedCode),notes:notes||null};
-        const tableResult=await sb.from("ward_roster_overrides").upsert(upsertPayload,{onConflict:"staff_id,shift_date"});
-        saveError=tableResult.error;
+      rpcErr=rpcResult.error;
+      if(rpcErr){
+        // Fall back: direct table upsert without shift_code (may not exist as column)
+        const upsertPayload={ward_id:appState.selectedWardId,staff_id:state.staffId,shift_date:state.shiftDate,live_shift_code:backendCode,source_type:"override",override_reason:reasonForShift(storedCode),notes:notes||null,updated_at:new Date().toISOString()};
+        // Try ward_id+staff_id+shift_date conflict first, then staff_id+shift_date
+        let t1=await sb.from("ward_roster_overrides").upsert(upsertPayload,{onConflict:"ward_id,staff_id,shift_date"});
+        if(t1.error){
+          let t2=await sb.from("ward_roster_overrides").upsert(upsertPayload,{onConflict:"staff_id,shift_date"});
+          fallbackErr=t2.error;
+        }
+        saveError=fallbackErr;
       }
-      if(saveError){showError(saveError.message);return;}
+      if(saveError){
+        const detail=[rpcErr?.message,fallbackErr?.message].filter(Boolean).join(" | Fallback: ");
+        showError("Save failed: "+detail);return;
+      }
       showSuccess("Roster status updated.");
       if(appState.activeTab==="wardDaily")await renderWardDaily();else await renderMonthlyRoster();
     }
