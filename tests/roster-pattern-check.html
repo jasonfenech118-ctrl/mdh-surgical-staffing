@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Roster Pattern System Check</title>
+<style>
+  body{font-family:monospace;padding:20px;background:#f8fafc;color:#1e293b}
+  h2{margin-top:24px;border-bottom:2px solid #334155;padding-bottom:6px}
+  .pass{background:#d1fae5;color:#065f46;padding:4px 10px;border-radius:6px;display:inline-block;margin:2px 0}
+  .fail{background:#fee2e2;color:#b91c1c;padding:4px 10px;border-radius:6px;display:inline-block;margin:2px 0}
+  .info{background:#e0f2fe;color:#0369a1;padding:4px 10px;border-radius:6px;display:inline-block;margin:2px 0}
+  table{border-collapse:collapse;margin-top:10px;font-size:12px}
+  th,td{border:1px solid #cbd5e1;padding:5px 8px;text-align:center}
+  th{background:#1e293b;color:#f1f5f9}
+  .cell-A{background:#ccfbf1;color:#0f766e;font-weight:900}
+  .cell-M{background:#fed7aa;color:#c2410c;font-weight:900}
+  .cell-N{background:#1e1b4b;color:#c7d2fe;font-weight:900}
+  .cell-R{background:#f0fdf4;color:#15803d;font-weight:900}
+  .cell-O{background:#f1f5f9;color:#475569;font-weight:900}
+  .cell-empty{background:#fff0f0;color:#b91c1c;font-weight:900}
+  pre{background:#1e293b;color:#a5f3fc;padding:12px;border-radius:8px;overflow-x:auto;font-size:11px}
+  .summary{font-size:16px;font-weight:bold;padding:12px;border-radius:8px;margin-top:16px}
+  .summary.allpass{background:#d1fae5;color:#065f46}
+  .summary.hasfail{background:#fee2e2;color:#b91c1c}
+</style>
+</head>
+<body>
+<h1>🔍 Roster Pattern System Check</h1>
+<p>Independent verification of all pattern logic — no database needed.</p>
+
+<div id="output"></div>
+
+<script>
+// ── Functions copied verbatim from index.html ──────────────────────────────
+
+function isPatternCode(code){return/^[AMNRO]$/.test(String(code||"").trim().toUpperCase());}
+
+function normaliseRosterCode(code){
+  const raw=String(code||"").trim().toUpperCase().replace(/\s+/g,"_");
+  if(!raw||raw==="—"||raw==="-")return"";
+  if(isPatternCode(raw))return raw;
+  const aliases={AL:"L",ANNUAL:"L",ANNUAL_LEAVE:"L",LEAVE:"L",S:"SL",SICK:"SL",
+    SICK_LEAVE:"SL",MATERNITY:"ML",MATERNITY_LEAVE:"ML",STUDY:"ST",STUDY_LEAVE:"ST",
+    TIL:"TI",TILIN:"TI",TIL_IN:"TI",TIL_INWARD:"TI",TOL:"TO",TILOUT:"TO",
+    TIL_OUT:"TO",TIL_OUTWARD:"TO",OVERTIME:"OT",LONG_LEAVE:"LL",
+    CODIN:"CODI",COD_IN:"CODI",COD_ON:"CODI",COD_INWARD:"CODI","COD-IN":"CODI",
+    CODI:"CODI",CODOUT:"CODO",COD_OFF:"CODO",COD_OUT:"CODO",COD_OUTWARD:"CODO",
+    "COD-OFF":"CODO",CODO:"CODO"};
+  return aliases[raw]||raw;
+}
+
+function patternShiftForDate(pattern,startIso,targetIso){
+  if(!pattern||!startIso||!targetIso)return"";
+  const s=new Date(startIso),t=new Date(targetIso);
+  s.setHours(0,0,0,0);t.setHours(0,0,0,0);
+  const diff=Math.round((t-s)/(864e5));
+  if(diff<0)return"";
+  return pattern[diff%pattern.length]||"";
+}
+
+function baselineShiftCode(staff,isoDate,fallbackStart){
+  if(!staff.roster_pattern_code)return"";
+  const start=staff.roster_start_date||fallbackStart||isoDate;
+  return patternShiftForDate(staff.roster_pattern_code,start,isoDate);
+}
+
+function isoFromDate(date){
+  const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");
+  return`${y}-${m}-${d}`;
+}
+
+// ── Test harness ───────────────────────────────────────────────────────────
+let passed=0,failed=0,html="";
+
+function check(label,actual,expected){
+  const ok=JSON.stringify(actual)===JSON.stringify(expected);
+  if(ok)passed++;else failed++;
+  html+=`<div class="${ok?"pass":"fail"}">${ok?"✓":"✗"} ${label}${ok?"":` — got <b>${JSON.stringify(actual)}</b>, expected <b>${JSON.stringify(expected)}</b>`}</div>\n`;
+}
+
+function section(title){html+=`<h2>${title}</h2>\n`;}
+function info(msg){html+=`<div class="info">ℹ ${msg}</div>\n`;}
+
+// ── 1. isPatternCode ───────────────────────────────────────────────────────
+section("1. isPatternCode");
+check("A → true",  isPatternCode("A"),  true);
+check("M → true",  isPatternCode("M"),  true);
+check("N → true",  isPatternCode("N"),  true);
+check("R → true",  isPatternCode("R"),  true);
+check("O → true",  isPatternCode("O"),  true);
+check("D → false", isPatternCode("D"),  false);
+check("L → false", isPatternCode("L"),  false);
+check("'' → false",isPatternCode(""),   false);
+check("AANRO → false (multi-char)", isPatternCode("AANRO"), false);
+
+// ── 2. normaliseRosterCode ────────────────────────────────────────────────
+section("2. normaliseRosterCode — A must NOT map to L");
+check("A → A (All Day, not Leave)", normaliseRosterCode("A"), "A");
+check("M → M", normaliseRosterCode("M"), "M");
+check("N → N", normaliseRosterCode("N"), "N");
+check("R → R", normaliseRosterCode("R"), "R");
+check("O → O", normaliseRosterCode("O"), "O");
+check("AL → L (Annual Leave alias still works)", normaliseRosterCode("AL"), "L");
+check("ANNUAL → L", normaliseRosterCode("ANNUAL"), "L");
+check("SL → SL", normaliseRosterCode("SL"), "SL");
+check("lowercase 'a' → A", normaliseRosterCode("a"), "A");
+
+// ── 3. patternShiftForDate ────────────────────────────────────────────────
+section("3. patternShiftForDate — AANRO cycling");
+const pattern = "AANRO";
+const start   = "2026-06-01";
+check("Day 0 (Jun 1) → A", patternShiftForDate(pattern,start,"2026-06-01"), "A");
+check("Day 1 (Jun 2) → A", patternShiftForDate(pattern,start,"2026-06-02"), "A");
+check("Day 2 (Jun 3) → N", patternShiftForDate(pattern,start,"2026-06-03"), "N");
+check("Day 3 (Jun 4) → R", patternShiftForDate(pattern,start,"2026-06-04"), "R");
+check("Day 4 (Jun 5) → O", patternShiftForDate(pattern,start,"2026-06-05"), "O");
+check("Day 5 (Jun 6) → A (wrap)", patternShiftForDate(pattern,start,"2026-06-06"), "A");
+check("Day 9 (Jun 10) → R (index 4→R? no: 9%5=4→O)", patternShiftForDate(pattern,start,"2026-06-10"), "O");
+check("Before start → ''", patternShiftForDate(pattern,start,"2026-05-31"), "");
+check("No pattern → ''", patternShiftForDate("",start,"2026-06-01"), "");
+check("No start → ''",   patternShiftForDate(pattern,"","2026-06-01"), "");
+
+// ── 4. baselineShiftCode ─────────────────────────────────────────────────
+section("4. baselineShiftCode — staff object");
+const staff = { roster_pattern_code:"AANRO", roster_start_date:"2026-06-01" };
+check("Jun 1 → A", baselineShiftCode(staff,"2026-06-01","2026-06-01"), "A");
+check("Jun 3 → N", baselineShiftCode(staff,"2026-06-03","2026-06-01"), "N");
+check("Jun 5 → O", baselineShiftCode(staff,"2026-06-05","2026-06-01"), "O");
+
+const staffNoStart = { roster_pattern_code:"AANRO", roster_start_date:null };
+info("Staff with no roster_start_date — fallbackStart (month start) used");
+const fb = baselineShiftCode(staffNoStart,"2026-06-03","2026-06-01");
+check("Jun 3 with fallback start Jun 1 → N", fb, "N");
+
+const staffNoPattern = { roster_pattern_code:null, roster_start_date:"2026-06-01" };
+check("No pattern → ''", baselineShiftCode(staffNoPattern,"2026-06-01","2026-06-01"), "");
+
+// ── 5. Override logic ─────────────────────────────────────────────────────
+section("5. Override logic — backend only wins when source_type='override'");
+
+function resolveCell(r, staff, key, fallbackStart){
+  const isOverride = r?.source_type === "override";
+  const backendCode = isOverride ? (r?.live_shift_code||"") : "";
+  const patternCode = baselineShiftCode(staff, key, fallbackStart);
+  return backendCode || patternCode || r?.live_shift_code || "";
+}
+
+const overrideRow   = { source_type:"override",  live_shift_code:"SL" };
+const defaultRow    = { source_type:"generated",  live_shift_code:"O"  };
+const nullRow       = null;
+
+check("Override row → uses backend SL",
+  resolveCell(overrideRow, staff, "2026-06-01", "2026-06-01"), "SL");
+check("Generated row (default O) → ignores O, uses pattern A",
+  resolveCell(defaultRow, staff, "2026-06-01", "2026-06-01"), "A");
+check("No row at all → uses pattern A",
+  resolveCell(nullRow, staff, "2026-06-01", "2026-06-01"), "A");
+check("Generated row, day 3 → uses pattern N not O",
+  resolveCell(defaultRow, staff, "2026-06-03", "2026-06-01"), "N");
+
+// ── 6. Visual calendar preview ────────────────────────────────────────────
+section("6. Visual preview — AANRO pattern for June 2026");
+
+const monthStart = new Date(2026,5,1);
+const monthEnd   = new Date(2026,6,0);
+const days=[];
+const cur=new Date(monthStart);
+while(cur<=monthEnd){days.push(isoFromDate(new Date(cur)));cur.setDate(cur.getDate()+1);}
+
+html+=`<table><thead><tr><th>Staff</th>`;
+days.forEach(d=>html+=`<th>${d.slice(8)}</th>`);
+html+=`</tr></thead><tbody>`;
+
+const testStaff=[
+  {name:"AANRO (from Jun 1)", roster_pattern_code:"AANRO", roster_start_date:"2026-06-01"},
+  {name:"AANRO (no start)",   roster_pattern_code:"AANRO", roster_start_date:null},
+  {name:"AAOO (from Jun 1)",  roster_pattern_code:"AAOO",  roster_start_date:"2026-06-01"},
+  {name:"MR (Morning/Rest)",  roster_pattern_code:"MR",    roster_start_date:"2026-06-01"},
+];
+
+testStaff.forEach(s=>{
+  html+=`<tr><td style="text-align:left;white-space:nowrap"><strong>${s.name}</strong></td>`;
+  days.forEach(d=>{
+    const code=baselineShiftCode(s,d,"2026-06-01");
+    const cls=code?`cell-${code}`:"cell-empty";
+    html+=`<td class="${cls}">${code||"?"}</td>`;
+  });
+  html+=`</tr>`;
+});
+html+=`</tbody></table>`;
+
+// ── Summary ───────────────────────────────────────────────────────────────
+const total=passed+failed;
+const allOk=failed===0;
+html+=`<div class="summary ${allOk?"allpass":"hasfail"}">
+  ${allOk?"✅ ALL TESTS PASSED":"❌ SOME TESTS FAILED"} — ${passed}/${total} passed
+</div>`;
+
+// ── Render ────────────────────────────────────────────────────────────────
+document.getElementById("output").innerHTML=html;
+</script>
+</body>
+</html>
