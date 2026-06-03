@@ -654,6 +654,57 @@
         ${SHIFT_PICKER_CHOICES.map(c => legend(c.code, c.label)).join("")}
       </div></div>`;
 
+      // ── Roster table ─────────────────────────────────────────────────────────
+      const today = todayISO();
+
+      // Column headers
+      let thead = '<tr><th>Staff Member</th>';
+      for (const d of days) {
+        const key = isoFromDate(d);
+        const h   = holidayMap[key];
+        const cls = (h ? "holiday-col " : "") + (key === today ? "today-col" : "");
+        thead += `<th class="${cls}"><div class="day-head">
+          <span>${weekdayShort(d)}</span><span>${d.getDate()}</span>
+          ${h ? `<span class="holiday-label" title="${escapeHtml(h.holiday_name)}">${escapeHtml(h.holiday_name || h.short_label)}</span>` : ""}
+        </div></th>`;
+      }
+      thead += '</tr>';
+
+      // Core staff rows
+      let tbody = '';
+      for (const staff of grouped) {
+        let row = `<tr><td>
+          <span class="staff-name-line">${escapeHtml(cleanStaffName(staff.full_name))}</span>
+          <span class="staff-role-line">${escapeHtml(labelRole(staff.role))}</span>
+          <span class="staff-shift-line">${escapeHtml(staffRosterLabel(staff))}</span>
+        </td>`;
+        for (const day of days) {
+          const key              = isoFromDate(day);
+          const r                = staff.days[key];
+          const isOv             = r?.source_type === "override";
+          const backendCode      = isOv ? (r?.live_shift_code || "") : "";
+          const patternCode      = baselineShiftCode(staff, key, start);
+          const actualCode       = backendCode || patternCode || r?.live_shift_code || "";
+          const isPatternBaseline = !backendCode && !!patternCode;
+          const displayCode      = longLeaveDisplayCode(staff.days, key, actualCode);
+          const h   = holidayMap[key];
+          const tdCls = (h ? "holiday-col " : "") + (key === today ? "today-col" : "");
+          row += `<td class="${tdCls}">${shiftButton(staff.staff_id, key, displayCode, isOv, actualCode, r, isPatternBaseline)}</td>`;
+        }
+        row += '</tr>';
+        tbody += row;
+      }
+      if (!tbody) tbody = `<tr><td colspan="${days.length + 1}" class="muted">No roster rows found for this ward/month.</td></tr>`;
+
+      html += `<div class="card roster-table-card">
+        <div class="table-wrap roster-table-wrap">
+          <table class="roster-table">
+            <thead>${thead}</thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+      </div>`;
+
       document.getElementById("content").innerHTML = html;
     }
 
