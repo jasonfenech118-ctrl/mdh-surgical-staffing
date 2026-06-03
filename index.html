@@ -807,16 +807,16 @@
             const r=sr.days[state.shiftDate];
             const displayCode=longLeaveDisplayCode(sr.days,state.shiftDate,backendCode);
             td.innerHTML=shiftButton(state.staffId,state.shiftDate,displayCode,true,backendCode,r,false);
+            td.style.outline="3px solid #22c55e";
+            setTimeout(()=>{td.style.outline="";},1200);
+          } else {
+            // Cell not in DOM (e.g. daily view) — fall back to full re-render
+            if(appState.activeTab==="wardDaily") renderWardDaily().catch(()=>{});
+            else renderMonthlyRoster().catch(()=>{});
           }
         }
       }
       showSuccess("Roster status updated.");
-      // 3. Background re-fetch to stay in sync with DB (fire and forget)
-      if(appState.activeTab==="wardDaily"){
-        renderWardDaily().catch(e=>console.warn("bg re-render:",e));
-      } else {
-        renderMonthlyRoster().catch(e=>console.warn("bg re-render:",e));
-      }
     }
 
     async function renderStaffManagement(){const wardId=requireSelectedWard();const{data,error}=await sb.rpc("get_ward_staff_members",{p_ward_id:wardId});if(error)throw error;appState.staffRows=(data||[]).slice().sort((a,b)=>{const rd=roleSortOrder(a.role)-roleSortOrder(b.role);return rd!==0?rd:cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name));});document.getElementById("content").innerHTML=`<div class="card"><div class="actions" style="justify-content:space-between"><div><h2>${appState.profile.is_sno?"Staff Management":"My Ward Staff"}</h2><p class="muted">Ward complement only. Employment type is fixed as core.</p></div><div>${wardSelectorHtml()}</div></div></div><div class="card"><h3>Add staff member</h3><div class="grid grid-3"><div><label>Surname</label><input id="newStaffSurname" placeholder="Surname"></div><div><label>Name</label><input id="newStaffFirstName" placeholder="Name"></div><div><label>ID number</label><input id="newStaffIdNumber" placeholder="e.g. 0123456M"></div><div><label>Role</label>${roleSelectHtml("newStaffRole")}</div><div><label>Shift</label>${rosterAssignmentSelectHtml("newStaffRosterAssignment")}</div><div><label>Roster start date</label><input id="newStaffStartDate" type="date"></div></div><div style="margin-top:14px"><button type="button" onclick="addStaffMember()">Add staff member</button></div></div><div id="editStaffPanel" class="card hidden"><div class="actions" style="justify-content:space-between"><div><h3>Edit staff member</h3><p class="muted">SNO can manage charge nurses. Ward charge nurses can manage normal ward staff.</p></div><button type="button" class="secondary small" onclick="cancelEditStaff()">Close</button></div><input id="editStaffId" type="hidden"><div class="grid grid-3"><div><label>Surname</label><input id="editStaffSurname"></div><div><label>Name</label><input id="editStaffFirstName"></div><div><label>ID number</label><input id="editStaffIdNumber"></div><div><label>Role</label>${roleSelectHtml("editStaffRole")}</div><div><label>Shift</label>${rosterAssignmentSelectHtml("editStaffRosterAssignment")}</div><div><label>Roster start date</label><input id="editStaffStartDate" type="date"></div></div><div class="actions" style="margin-top:14px"><button type="button" onclick="updateStaffMember()">Save changes</button><button type="button" class="secondary" onclick="cancelEditStaff()">Cancel</button></div></div><div class="card"><h3>Current staff</h3><div class="table-wrap"><table><thead><tr><th>Name</th><th>ID Number</th><th>Role</th><th>Shift</th><th>Status</th><th>Actions</th></tr></thead><tbody>${appState.staffRows.map(s=>`<tr><td><strong>${escapeHtml(cleanStaffName(s.full_name))}</strong></td><td>${escapeHtml(s.corp_user_id||"—")}</td><td>${escapeHtml(labelRole(s.role))}</td><td>${escapeHtml(staffRosterLabel(s))}</td><td>${truthy(s.is_active)?badge("Active","green"):badge("Inactive","grey")}</td><td><div class="actions"><button type="button" class="secondary small" onclick="startEditStaff('${escapeHtml(s.id||s.staff_id)}')">Edit</button>${canShowDeactivateButton(s)?`<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id||s.staff_id)}','${escapeHtml(cleanStaffName(s.full_name))}')">Delete</button>`:`<span class="muted">SNO only</span>`}</div></td></tr>`).join("")||`<tr><td colspan="6" class="muted">No staff found.</td></tr>`}</tbody></table></div></div>`;}
