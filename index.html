@@ -477,6 +477,34 @@
 
     /* OT / TIL add bars */
     .nc-btn-bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 4px}
+    /* Staff profile modal */
+    .profile-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:3000;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
+    .profile-backdrop.hidden{display:none}
+    .profile-modal{background:#fff;border-radius:18px;width:min(96vw,560px);box-shadow:0 16px 48px rgba(0,0,0,.22);overflow:hidden}
+    .profile-header{background:linear-gradient(135deg,#1e3a5f,#2d6a9f);color:#fff;padding:22px 22px 18px;display:flex;justify-content:space-between;align-items:flex-start}
+    .profile-avatar{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0;margin-right:14px}
+    .profile-title{flex:1}
+    .profile-title h2{margin:0;font-size:20px;font-weight:900;color:#fff}
+    .profile-title p{margin:4px 0 0;font-size:13px;opacity:.82}
+    .profile-close{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer}
+    .profile-close:hover{background:rgba(255,255,255,.28)}
+    .profile-body{padding:20px 22px}
+    .profile-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+    .profile-info-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px}
+    .profile-info-label{font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+    .profile-info-value{font-size:13px;font-weight:700;color:#1e293b}
+    .profile-section-title{font-size:13px;font-weight:900;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid #e2e8f0}
+    .profile-history-table{width:100%;border-collapse:collapse;font-size:12px}
+    .profile-history-table th{background:#f1f5f9;color:#536273;font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:800;padding:7px 10px;text-align:left;border-bottom:1px solid #e2e8f0}
+    .profile-history-table td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:top}
+    .profile-history-table tr:last-child td{border-bottom:none}
+    .profile-empty{color:#94a3b8;font-size:13px;padding:14px 0;text-align:center}
+    .profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+    .profile-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;text-align:center}
+    .profile-stat strong{display:block;font-size:22px;font-weight:900;color:#1e3a5f;line-height:1}
+    .profile-stat span{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;display:block}
+    .clickable-name{cursor:pointer;text-decoration:underline dotted;color:#1e3a5f}
+    .clickable-name:hover{color:#2d6a9f}
     .btn-ot{background:#f97316;color:#fff;border:none;border-radius:8px;padding:0 16px;height:36px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
     .btn-ot:hover{background:#ea6c0a}
     .btn-til{background:#0d9488;color:#fff;border:none;border-radius:8px;padding:0 16px;height:36px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
@@ -516,6 +544,19 @@
         <button type="button" class="secondary" onclick="closeNcModal()">Cancel</button>
         <button type="button" id="ncModalSaveBtn" onclick="saveNcModal()">Add</button>
       </div>
+    </div>
+  </div>
+  <div id="profileBackdrop" class="profile-backdrop hidden" onclick="if(event.target===this)closeProfileModal()">
+    <div class="profile-modal" id="profileModal">
+      <div class="profile-header">
+        <div class="profile-avatar" id="profileAvatar"></div>
+        <div class="profile-title">
+          <h2 id="profileName"></h2>
+          <p id="profileSubtitle"></p>
+        </div>
+        <button class="profile-close" onclick="closeProfileModal()">Close</button>
+      </div>
+      <div class="profile-body" id="profileBody"><p class="muted">Loading…</p></div>
     </div>
   </div>
   <main class="container">
@@ -673,7 +714,7 @@
       let tbody = '';
       for (const staff of grouped) {
         let row = `<tr><td>
-          <span class="staff-name-line">${escapeHtml(cleanStaffName(staff.full_name))}</span>
+          <span class="staff-name-line clickable-name" onclick="openStaffProfile('${escapeHtml(staff.staff_id)}','${escapeHtml(staff.full_name)}','${escapeHtml(staff.role)}')">${escapeHtml(cleanStaffName(staff.full_name))}</span>
           <span class="staff-role-line">${escapeHtml(labelRole(staff.role))}</span>
           <span class="staff-shift-line">${escapeHtml(staffRosterLabel(staff))}</span>
         </td>`;
@@ -729,6 +770,80 @@
       return modal;
     }
     function findMonthlyStaff(staffId){return(appState.monthlyRosterRows||[]).find(s=>String(s.staff_id)===String(staffId));}
+
+    // ── Staff Profile Modal ───────────────────────────────────────────────────
+    function closeProfileModal(){document.getElementById("profileBackdrop").classList.add("hidden");}
+    async function openStaffProfile(staffId,fullName,role){
+      const backdrop=document.getElementById("profileBackdrop");
+      const initials=cleanStaffName(fullName).split(" ").filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+      document.getElementById("profileAvatar").textContent=initials;
+      document.getElementById("profileName").textContent=cleanStaffName(fullName);
+      document.getElementById("profileSubtitle").textContent=labelRole(role);
+      document.getElementById("profileBody").innerHTML='<p class="muted">Loading…</p>';
+      backdrop.classList.remove("hidden");
+
+      // Fetch leave/OT history from roster_overrides
+      const year=new Date().getFullYear();
+      const[overridesResult,staffResult]=await Promise.all([
+        sb.from("roster_overrides")
+          .select("shift_date,live_shift_code,override_reason,notes,updated_at")
+          .eq("staff_id",staffId)
+          .eq("is_cancelled",false)
+          .gte("shift_date",`${year-1}-01-01`)
+          .order("shift_date",{ascending:false})
+          .limit(200),
+        sb.rpc("get_ward_staff_members",{p_ward_id:appState.selectedWardId})
+      ]);
+
+      // Find this staff member's details
+      const staffRow=(staffResult.data||[]).find(s=>String(s.id||s.staff_id)===String(staffId));
+      const overrides=overridesResult.data||[];
+
+      const leaveCodes=new Set(["L","AL","SL","ML","ST"]);
+      const otCodes=new Set(["OT"]);
+      const tilCodes=new Set(["TI","TO"]);
+
+      const leaveRows=overrides.filter(r=>leaveCodes.has(normaliseRosterCode(r.live_shift_code)));
+      const otRows=overrides.filter(r=>otCodes.has(normaliseRosterCode(r.live_shift_code)));
+      const tilRows=overrides.filter(r=>tilCodes.has(normaliseRosterCode(r.live_shift_code)));
+
+      const thisYear=overrides.filter(r=>r.shift_date?.startsWith(String(year)));
+      const sickDays=thisYear.filter(r=>normaliseRosterCode(r.live_shift_code)==="SL").length;
+      const annualDays=thisYear.filter(r=>["L","AL"].includes(normaliseRosterCode(r.live_shift_code))).length;
+      const otDays=thisYear.filter(r=>normaliseRosterCode(r.live_shift_code)==="OT").length;
+
+      function historyTable(rows,emptyMsg){
+        if(!rows.length)return`<p class="profile-empty">${emptyMsg}</p>`;
+        return`<table class="profile-history-table"><thead><tr><th>Date</th><th>Type</th><th>Notes</th></tr></thead><tbody>${
+          rows.slice(0,40).map(r=>`<tr>
+            <td>${formatDate(r.shift_date)}</td>
+            <td>${shiftBadge(normaliseRosterCode(r.live_shift_code))}</td>
+            <td style="color:#64748b;font-size:11px">${escapeHtml(r.notes||r.override_reason||"—")}</td>
+          </tr>`).join("")
+        }</tbody></table>`;
+      }
+
+      document.getElementById("profileBody").innerHTML=`
+        <div class="profile-info-grid">
+          <div class="profile-info-item"><div class="profile-info-label">ID Number</div><div class="profile-info-value">${escapeHtml(staffRow?.corp_user_id||"—")}</div></div>
+          <div class="profile-info-item"><div class="profile-info-label">Ward</div><div class="profile-info-value">${escapeHtml(selectedWard()?.ward_name||"—")}</div></div>
+          <div class="profile-info-item"><div class="profile-info-label">Shift Pattern</div><div class="profile-info-value">${escapeHtml(staffRow?.roster_pattern_code||staffRow?.roster_group_code||"—")}</div></div>
+          <div class="profile-info-item"><div class="profile-info-label">Roster Start</div><div class="profile-info-value">${staffRow?.roster_start_date?formatDate(staffRow.roster_start_date):"—"}</div></div>
+        </div>
+        <div class="profile-section-title">${year} Summary</div>
+        <div class="profile-stats">
+          <div class="profile-stat"><strong>${sickDays}</strong><span>Sick Days</span></div>
+          <div class="profile-stat"><strong>${annualDays}</strong><span>Annual Leave</span></div>
+          <div class="profile-stat"><strong>${otDays}</strong><span>Overtime</span></div>
+        </div>
+        <div class="profile-section-title">Leave History</div>
+        ${historyTable(leaveRows,"No leave records in the past 12 months.")}
+        <div class="profile-section-title">Overtime History</div>
+        ${historyTable(otRows,"No overtime records in the past 12 months.")}
+        <div class="profile-section-title">TIL History</div>
+        ${historyTable(tilRows,"No TIL records in the past 12 months.")}
+      `;
+    }
     function editRosterShift(staffId,shiftDate,currentCode){openShiftPicker(staffId,shiftDate,currentCode||"");}
     function openShiftPicker(staffId,shiftDate,currentCode){
       clearMessage();
@@ -818,7 +933,7 @@
       showSuccess("Roster status updated.");
     }
 
-    async function renderStaffManagement(){const wardId=requireSelectedWard();const{data,error}=await sb.rpc("get_ward_staff_members",{p_ward_id:wardId});if(error)throw error;appState.staffRows=(data||[]).slice().sort((a,b)=>{const rd=roleSortOrder(a.role)-roleSortOrder(b.role);return rd!==0?rd:cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name));});document.getElementById("content").innerHTML=`<div class="card"><div class="actions" style="justify-content:space-between"><div><h2>${appState.profile.is_sno?"Staff Management":"My Ward Staff"}</h2><p class="muted">Ward complement only. Employment type is fixed as core.</p></div><div>${wardSelectorHtml()}</div></div></div><div class="card"><h3>Add staff member</h3><div class="grid grid-3"><div><label>Surname</label><input id="newStaffSurname" placeholder="Surname"></div><div><label>Name</label><input id="newStaffFirstName" placeholder="Name"></div><div><label>ID number</label><input id="newStaffIdNumber" placeholder="e.g. 0123456M"></div><div><label>Role</label>${roleSelectHtml("newStaffRole")}</div><div><label>Shift</label>${rosterAssignmentSelectHtml("newStaffRosterAssignment")}</div><div><label>Roster start date</label><input id="newStaffStartDate" type="date"></div></div><div style="margin-top:14px"><button type="button" onclick="addStaffMember()">Add staff member</button></div></div><div id="editStaffPanel" class="card hidden"><div class="actions" style="justify-content:space-between"><div><h3>Edit staff member</h3><p class="muted">SNO can manage charge nurses. Ward charge nurses can manage normal ward staff.</p></div><button type="button" class="secondary small" onclick="cancelEditStaff()">Close</button></div><input id="editStaffId" type="hidden"><div class="grid grid-3"><div><label>Surname</label><input id="editStaffSurname"></div><div><label>Name</label><input id="editStaffFirstName"></div><div><label>ID number</label><input id="editStaffIdNumber"></div><div><label>Role</label>${roleSelectHtml("editStaffRole")}</div><div><label>Shift</label>${rosterAssignmentSelectHtml("editStaffRosterAssignment")}</div><div><label>Roster start date</label><input id="editStaffStartDate" type="date"></div></div><div class="actions" style="margin-top:14px"><button type="button" onclick="updateStaffMember()">Save changes</button><button type="button" class="secondary" onclick="cancelEditStaff()">Cancel</button></div></div><div class="card"><h3>Current staff</h3><div class="table-wrap"><table><thead><tr><th>Name</th><th>ID Number</th><th>Role</th><th>Shift</th><th>Status</th><th>Actions</th></tr></thead><tbody>${appState.staffRows.map(s=>`<tr><td><strong>${escapeHtml(cleanStaffName(s.full_name))}</strong></td><td>${escapeHtml(s.corp_user_id||"—")}</td><td>${escapeHtml(labelRole(s.role))}</td><td>${escapeHtml(staffRosterLabel(s))}</td><td>${truthy(s.is_active)?badge("Active","green"):badge("Inactive","grey")}</td><td><div class="actions"><button type="button" class="secondary small" onclick="startEditStaff('${escapeHtml(s.id||s.staff_id)}')">Edit</button>${canShowDeactivateButton(s)?`<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id||s.staff_id)}','${escapeHtml(cleanStaffName(s.full_name))}')">Delete</button>`:`<span class="muted">SNO only</span>`}</div></td></tr>`).join("")||`<tr><td colspan="6" class="muted">No staff found.</td></tr>`}</tbody></table></div></div>`;}
+    async function renderStaffManagement(){const wardId=requireSelectedWard();const{data,error}=await sb.rpc("get_ward_staff_members",{p_ward_id:wardId});if(error)throw error;appState.staffRows=(data||[]).slice().sort((a,b)=>{const rd=roleSortOrder(a.role)-roleSortOrder(b.role);return rd!==0?rd:cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name));});document.getElementById("content").innerHTML=`<div class="card"><div class="actions" style="justify-content:space-between"><div><h2>${appState.profile.is_sno?"Staff Management":"My Ward Staff"}</h2><p class="muted">Ward complement only. Employment type is fixed as core.</p></div><div>${wardSelectorHtml()}</div></div></div><div class="card"><h3>Add staff member</h3><div class="grid grid-3"><div><label>Surname</label><input id="newStaffSurname" placeholder="Surname"></div><div><label>Name</label><input id="newStaffFirstName" placeholder="Name"></div><div><label>ID number</label><input id="newStaffIdNumber" placeholder="e.g. 0123456M"></div><div><label>Role</label>${roleSelectHtml("newStaffRole")}</div><div><label>Shift</label>${rosterAssignmentSelectHtml("newStaffRosterAssignment")}</div><div><label>Roster start date</label><input id="newStaffStartDate" type="date"></div></div><div style="margin-top:14px"><button type="button" onclick="addStaffMember()">Add staff member</button></div></div><div id="editStaffPanel" class="card hidden"><div class="actions" style="justify-content:space-between"><div><h3>Edit staff member</h3><p class="muted">SNO can manage charge nurses. Ward charge nurses can manage normal ward staff.</p></div><button type="button" class="secondary small" onclick="cancelEditStaff()">Close</button></div><input id="editStaffId" type="hidden"><div class="grid grid-3"><div><label>Surname</label><input id="editStaffSurname"></div><div><label>Name</label><input id="editStaffFirstName"></div><div><label>ID number</label><input id="editStaffIdNumber"></div><div><label>Role</label>${roleSelectHtml("editStaffRole")}</div><div><label>Shift</label>${rosterAssignmentSelectHtml("editStaffRosterAssignment")}</div><div><label>Roster start date</label><input id="editStaffStartDate" type="date"></div></div><div class="actions" style="margin-top:14px"><button type="button" onclick="updateStaffMember()">Save changes</button><button type="button" class="secondary" onclick="cancelEditStaff()">Cancel</button></div></div><div class="card"><h3>Current staff</h3><div class="table-wrap"><table><thead><tr><th>Name</th><th>ID Number</th><th>Role</th><th>Shift</th><th>Status</th><th>Actions</th></tr></thead><tbody>${appState.staffRows.map(s=>`<tr><td><strong class="clickable-name" onclick="openStaffProfile('${escapeHtml(s.id||s.staff_id)}','${escapeHtml(s.full_name)}','${escapeHtml(s.role)}')">${escapeHtml(cleanStaffName(s.full_name))}</strong></td><td>${escapeHtml(s.corp_user_id||"—")}</td><td>${escapeHtml(labelRole(s.role))}</td><td>${escapeHtml(staffRosterLabel(s))}</td><td>${truthy(s.is_active)?badge("Active","green"):badge("Inactive","grey")}</td><td><div class="actions"><button type="button" class="secondary small" onclick="startEditStaff('${escapeHtml(s.id||s.staff_id)}')">Edit</button>${canShowDeactivateButton(s)?`<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id||s.staff_id)}','${escapeHtml(cleanStaffName(s.full_name))}')">Delete</button>`:`<span class="muted">SNO only</span>`}</div></td></tr>`).join("")||`<tr><td colspan="6" class="muted">No staff found.</td></tr>`}</tbody></table></div></div>`;}
     async function addStaffMember(){clearMessage();const surname=document.getElementById("newStaffSurname").value.trim(),firstName=document.getElementById("newStaffFirstName").value.trim(),idNumber=document.getElementById("newStaffIdNumber").value.trim(),name=buildFullName(surname,firstName),role=document.getElementById("newStaffRole").value,assignment=parseRosterAssignment(document.getElementById("newStaffRosterAssignment").value);if(!surname){showError("Surname is required.");return;}if(!firstName){showError("Name is required.");return;}if(!idNumber){showError("ID number is required.");return;}if(!role){showError("Role is required.");return;}if(!assignment.type){showError("Shift pattern is required. Enter a sequence using A (All Day), M (Morning), N (Night), R (Rest), O (Off) — e.g. AAOO.");return;}const{error}=await sb.rpc("create_ward_staff_member",{p_full_name:name,p_corp_user_id:idNumber,p_email:null,p_role:role,p_home_ward_id:appState.selectedWardId,p_roster_group_template_id:null,p_roster_group_code:assignment.type==="group"?assignment.code:null,p_roster_pattern_id:null,p_roster_pattern_code:assignment.type==="pattern"?assignment.code:null,p_roster_start_date:document.getElementById("newStaffStartDate").value||null,p_roster_group:null,p_employment_type:null});if(error){showError(error.message);return;}showSuccess("Staff member added successfully.");await renderStaffManagement();}
     function startEditStaff(staffId){clearMessage();const staff=appState.staffRows.find(s=>String(s.id||s.staff_id)===String(staffId));if(!staff){showError("Could not find staff member in the current table.");return;}document.getElementById("editStaffPanel").classList.remove("hidden");document.getElementById("editStaffId").value=staff.id||staff.staff_id;const parts=splitStaffName(staff.full_name||"");document.getElementById("editStaffSurname").value=parts.surname;document.getElementById("editStaffFirstName").value=parts.firstName;document.getElementById("editStaffIdNumber").value=staff.corp_user_id||"";document.getElementById("editStaffRole").value=staff.role||"nurse";document.getElementById("editStaffRosterAssignment").value=rosterAssignmentValueFromStaff(staff);updateShiftPatternPreview("editStaffRosterAssignment");document.getElementById("editStaffStartDate").value=dateOnly(staff.roster_start_date)||"";document.getElementById("editStaffPanel").scrollIntoView({behavior:"smooth",block:"start"});}function cancelEditStaff(){document.getElementById("editStaffPanel").classList.add("hidden");document.getElementById("editStaffId").value="";}
     async function updateStaffMember(){clearMessage();const staffId=document.getElementById("editStaffId").value,assignment=parseRosterAssignment(document.getElementById("editStaffRosterAssignment").value);if(!staffId){showError("No staff member selected.");return;}if(!assignment.type){showError("Shift pattern is required. Enter a sequence using A (All Day), M (Morning), N (Night), R (Rest), O (Off) — e.g. AAOO.");return;}const surname=document.getElementById("editStaffSurname").value.trim(),firstName=document.getElementById("editStaffFirstName").value.trim(),idNumber=document.getElementById("editStaffIdNumber").value.trim();if(!surname){showError("Surname is required.");return;}if(!firstName){showError("Name is required.");return;}if(!idNumber){showError("ID number is required.");return;}const{error}=await sb.rpc("update_ward_staff_member",{p_staff_id:staffId,p_full_name:buildFullName(surname,firstName),p_corp_user_id:idNumber,p_email:null,p_role:document.getElementById("editStaffRole").value,p_home_ward_id:appState.selectedWardId,p_roster_group_template_id:null,p_roster_group_code:assignment.type==="group"?assignment.code:null,p_roster_pattern_id:null,p_roster_pattern_code:assignment.type==="pattern"?assignment.code:null,p_roster_start_date:document.getElementById("editStaffStartDate").value||null,p_roster_group:null});if(error){showError(error.message);return;}showSuccess("Staff member updated successfully.");await renderStaffManagement();}
