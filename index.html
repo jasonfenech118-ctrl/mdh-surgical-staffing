@@ -688,7 +688,7 @@
           const displayCode      = longLeaveDisplayCode(staff.days, key, actualCode);
           const h   = holidayMap[key];
           const tdCls = (h ? "holiday-col " : "") + (key === today ? "today-col" : "");
-          row += `<td class="${tdCls}">${shiftButton(staff.staff_id, key, displayCode, isOv, actualCode, r, isPatternBaseline)}</td>`;
+          row += `<td id="rc-${staff.staff_id}-${key}" class="${tdCls}">${shiftButton(staff.staff_id, key, displayCode, isOv, actualCode, r, isPatternBaseline)}</td>`;
         }
         row += '</tr>';
         tbody += row;
@@ -794,21 +794,28 @@
         const detail=[rpcErr?.message,fallbackErr?.message].filter(Boolean).join(" | Fallback: ");
         showError("Save failed: "+detail);return;
       }
-      // Optimistic in-memory update so the cell reflects the change immediately
+      // 1. Patch in-memory state immediately
       if(appState.monthlyRosterRows){
         const sr=appState.monthlyRosterRows.find(r=>String(r.staff_id)===String(state.staffId));
         if(sr){
           if(!sr.days[state.shiftDate])sr.days[state.shiftDate]={staff_id:state.staffId,shift_date:state.shiftDate};
           sr.days[state.shiftDate].live_shift_code=backendCode;
           sr.days[state.shiftDate].source_type="override";
+          // 2. Directly replace the cell in the DOM — no re-fetch needed
+          const td=document.getElementById("rc-"+state.staffId+"-"+state.shiftDate);
+          if(td){
+            const r=sr.days[state.shiftDate];
+            const displayCode=longLeaveDisplayCode(sr.days,state.shiftDate,backendCode);
+            td.innerHTML=shiftButton(state.staffId,state.shiftDate,displayCode,true,backendCode,r,false);
+          }
         }
       }
       showSuccess("Roster status updated.");
-      try{
-        if(appState.activeTab==="wardDaily")await renderWardDaily();else await renderMonthlyRoster();
-      }catch(rerr){
-        console.error("Re-render after save:",rerr);
-        showError("Saved but could not refresh view: "+rerr.message);
+      // 3. Background re-fetch to stay in sync with DB (fire and forget)
+      if(appState.activeTab==="wardDaily"){
+        renderWardDaily().catch(e=>console.warn("bg re-render:",e));
+      } else {
+        renderMonthlyRoster().catch(e=>console.warn("bg re-render:",e));
       }
     }
 
