@@ -604,20 +604,23 @@
       const rpcResult=await sb.rpc("upsert_ward_roster_override",{p_ward_id:appState.selectedWardId,p_staff_id:state.staffId,p_shift_date:state.shiftDate,p_shift_code:backendCode,p_override_reason:reasonForShift(storedCode),p_notes:notes});
       rpcErr=rpcResult.error;
       if(rpcErr){
-        // Fall back: direct table upsert without shift_code (may not exist as column)
         const upsertPayload={ward_id:appState.selectedWardId,staff_id:state.staffId,shift_date:state.shiftDate,live_shift_code:backendCode,source_type:"override",override_reason:reasonForShift(storedCode),notes:notes||null,updated_at:new Date().toISOString()};
-        // Try candidate table names and conflict keys
         const tableAttempts=[
           {table:"roster_overrides",conflict:"ward_id,staff_id,shift_date"},
           {table:"roster_overrides",conflict:"staff_id,shift_date"},
-          {table:"ward_roster",conflict:"ward_id,staff_id,shift_date"},
-          {table:"ward_roster",conflict:"staff_id,shift_date"},
+          {table:"roster_overrides",conflict:"ward_id,staff_id,roster_date"},
+          {table:"roster_overrides",conflict:"staff_id,roster_date"},
+          {table:"roster_overrides",conflict:"staff_id,shift_date,ward_id"},
         ];
         let succeeded=false;
         for(const attempt of tableAttempts){
           const r=await sb.from(attempt.table).upsert(upsertPayload,{onConflict:attempt.conflict});
           if(!r.error){succeeded=true;break;}
           fallbackErr=r.error;
+        }
+        if(!succeeded){
+          const r=await sb.from("roster_overrides").upsert(upsertPayload);
+          if(!r.error){succeeded=true;fallbackErr=null;}else{fallbackErr=r.error;}
         }
         if(succeeded)fallbackErr=null;
         saveError=fallbackErr;
