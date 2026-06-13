@@ -719,8 +719,8 @@
       for (const staff of grouped) {
         const resolvedMap = buildResolvedCodeMap(staff, days, start);
         let row = `<tr><td>
-          ${appState.profile?.is_sno
-            ? `<span class="staff-name-line clickable-name" onclick="openStaffProfile('${escapeHtml(String(staff.staff_id))}','${escapeHtml(cleanStaffName(staff.full_name))}','${escapeHtml(staff.role||'')}')">${escapeHtml(cleanStaffName(staff.full_name))}</span>`
+          ${(appState.profile?.is_sno||isChargeNurse())
+            ? `<span class="staff-name-line clickable-name" onclick="openStaffProfilePage('${escapeHtml(String(staff.staff_id))}','${escapeHtml(cleanStaffName(staff.full_name))}','${escapeHtml(staff.role||'')}')">${escapeHtml(cleanStaffName(staff.full_name))}</span>`
             : `<span class="staff-name-line">${escapeHtml(cleanStaffName(staff.full_name))}</span>`
           }
           <span class="staff-role-line">${escapeHtml(labelRole(staff.role))}</span>
@@ -1006,6 +1006,28 @@
           <div class="profile-section-title">TIL history</div>
           <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden"><table class="profile-history-table"><thead><tr><th>Date</th><th>Type</th><th>Reason</th></tr></thead><tbody>${historyRows([...tilInRows,...tilOutRows].sort((a,b)=>b.shift_date.localeCompare(a.shift_date)))}</tbody></table></div>
         </div>`;
+    }
+    // Full-page staff profile in a new browser tab (SNO + charge nurses)
+    async function openStaffProfilePage(staffId,fullName,role){
+      if(!(appState.profile?.is_sno||isChargeNurse()))return;
+      const w=window.open("","_blank");
+      if(!w){showError("Pop-up blocked. Allow pop-ups to open the staff profile.");return;}
+      const styleTags=Array.from(document.querySelectorAll("style")).map(s=>s.outerHTML).join("");
+      w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(fullName||"Staff profile")}</title>${styleTags}<style>body{background:#f7fafd;padding:0}.pp-wrap{max-width:760px;margin:0 auto;padding:18px 14px}.pp-head{background:linear-gradient(135deg,#1e3a5f,#2f6fae);color:#fff;border-radius:18px;padding:20px 22px;margin-bottom:16px}.pp-head h1{color:#fff;margin:0 0 4px;font-size:23px}.pp-head p{margin:0;opacity:.85;font-weight:600;font-size:13px}</style></head><body><div class="pp-wrap"><div class="pp-head"><h1>${escapeHtml(fullName||"Staff member")}</h1><p>${escapeHtml(labelRole(role)||"")}</p></div><div id="ppBody"><p class="muted" style="text-align:center;padding:30px 0">Loading…</p></div></div></body></html>`);
+      w.document.close();
+      const endDate=todayISO();const startD=new Date();startD.setFullYear(startD.getFullYear()-1);const startDate=isoFromDate(startD);
+      const{data:rows,error}=await sb.from("roster_overrides").select("shift_date,live_shift_code,source_type,override_reason,created_at").eq("staff_id",staffId).eq("is_cancelled",false).gte("shift_date",startDate).lte("shift_date",endDate).order("shift_date",{ascending:false});
+      const body=w.document.getElementById("ppBody");if(!body)return;
+      if(error){body.innerHTML=`<div class="error">${escapeHtml(error.message)}</div>`;return;}
+      const all=rows||[];
+      const leaveRows=all.filter(r=>["L","SL","ML","ST","LL"].includes(normaliseRosterCode(r.live_shift_code)));
+      const otRows=all.filter(r=>normaliseRosterCode(r.live_shift_code)==="OT");
+      const tilInRows=all.filter(r=>normaliseRosterCode(r.live_shift_code)==="TI");
+      const tilOutRows=all.filter(r=>normaliseRosterCode(r.live_shift_code)==="TO");
+      const slRows=all.filter(r=>normaliseRosterCode(r.live_shift_code)==="SL");
+      const hr=list=>!list.length?`<tr><td colspan="3" class="muted" style="text-align:center">No records</td></tr>`:list.slice(0,40).map(r=>`<tr><td>${escapeHtml(formatDate(r.shift_date))}</td><td>${shiftBadge(r.live_shift_code)}</td><td>${escapeHtml(r.override_reason||r.source_type||"")}</td></tr>`).join("");
+      const sect=(title,list)=>`<div class="card"><h3>${escapeHtml(title)}</h3><div class="table-wrap"><table class="mini-table"><thead><tr><th>Date</th><th>Type</th><th>Reason</th></tr></thead><tbody>${hr(list)}</tbody></table></div></div>`;
+      body.innerHTML=`<div class="stat-row-5" style="grid-template-columns:repeat(4,minmax(0,1fr))">${statCard(leaveRows.length,"Leave days")}${statCard(slRows.length,"Sick days")}${statCard(otRows.length,"OT shifts")}${statCard(tilOutRows.length,"TIL out")}</div>${sect("Leave history (last 12 months)",leaveRows)}${sect("Overtime history",otRows)}${sect("TIL history",[...tilInRows,...tilOutRows].sort((a,b)=>b.shift_date.localeCompare(a.shift_date)))}`;
     }
   </script>
 
