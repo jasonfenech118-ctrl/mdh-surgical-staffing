@@ -881,7 +881,7 @@
       if(staffRes.error)throw staffRes.error;
       const holidays=(holRes&&!holRes.error?(holRes.data||[]):[]).slice().sort((a,b)=>String(a.holiday_date).localeCompare(String(b.holiday_date)));
       appState.codHolidays=holidays;
-      const holYears=[];for(let y=yr-2;y<=yr+3;y++)holYears.push(y);
+      const holYears=[];for(let y=yr;y<=yr+3;y++)holYears.push(y);
       const staff=(staffRes.data||[]).filter(s=>truthy(s.is_active)).sort((a,b)=>cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name)));
       appState.codStaffRows=staff;
       const staffMap=new Map(staff.map(s=>[String(s.id||s.staff_id),cleanStaffName(s.full_name)]));
