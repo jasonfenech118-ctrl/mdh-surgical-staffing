@@ -682,6 +682,7 @@
       // ── Legend (shift picker choices only) ──────────────────────────────────
       html += `<div class="card"><div class="legend-compact">
         ${SHIFT_PICKER_CHOICES.map(c => legend(c.code, c.label)).join("")}
+        ${legend("LL", "Long Leave")}
       </div></div>`;
 
       // ── Roster table ─────────────────────────────────────────────────────────
