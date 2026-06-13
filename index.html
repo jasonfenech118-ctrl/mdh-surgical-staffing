@@ -885,7 +885,9 @@
       const staff=(staffRes.data||[]).filter(s=>truthy(s.is_active)).sort((a,b)=>cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name)));
       appState.codStaffRows=staff;
       const staffMap=new Map(staff.map(s=>[String(s.id||s.staff_id),cleanStaffName(s.full_name)]));
-      const opts=`<option value="">— Select —</option>`+staff.map(s=>`<option value="${escapeHtml(String(s.id||s.staff_id))}">${escapeHtml(cleanStaffName(s.full_name))}</option>`).join("");
+      const byRole=new Map();for(const s of staff){const r=s.role||"other";if(!byRole.has(r))byRole.set(r,[]);byRole.get(r).push(s);}
+      const roleOrder=[...byRole.keys()].sort((a,b)=>roleSortOrder(a)-roleSortOrder(b));
+      const opts=`<option value="">— Select —</option>`+roleOrder.map(r=>`<optgroup label="${escapeHtml(labelRole(r)||"Other")}">`+byRole.get(r).map(s=>`<option value="${escapeHtml(String(s.id||s.staff_id))}">${escapeHtml(cleanStaffName(s.full_name))}</option>`).join("")+`</optgroup>`).join("");
       const codRows=codRes.error?[]:(codRes.data||[]);
       const viceFromNotes=n=>{const m=String(n||"").match(/vice\s+(\d{4}-\d{2}-\d{2})/i);return m?m[1]:"";};
       const typeFromNotes=n=>{const s=String(n||"");if(/Holiday Swap/i.test(s))return"holiday";if(/Sunday Swap/i.test(s))return"sunday";return"normal";};
