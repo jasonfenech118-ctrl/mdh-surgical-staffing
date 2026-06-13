@@ -817,20 +817,7 @@
         p_override_reason:reasonForShift(shiftCode),
         p_notes:notes
       });
-      if(saveErr){
-        const{error:fbErr}=await sb.from("roster_overrides").upsert({
-          ward_id:appState.selectedWardId,
-          staff_id:state.staffId,
-          shift_date:state.shiftDate,
-          live_shift_code:shiftCode,
-          source_type:"override",
-          override_reason:reasonForShift(shiftCode),
-          notes:notes||null,
-          is_cancelled:false,
-          updated_at:new Date().toISOString()
-        },{onConflict:"staff_id,shift_date,is_cancelled"});
-        if(fbErr){showError("Save failed: "+saveErr.message);return;}
-      }
+      if(saveErr){showError("Save failed: "+saveErr.message);return;}
       // Patch in-memory and update the cell directly in the DOM
       if(appState.monthlyRosterRows){
         const sr=appState.monthlyRosterRows.find(r=>String(r.staff_id)===String(state.staffId));
