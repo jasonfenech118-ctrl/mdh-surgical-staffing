@@ -893,11 +893,11 @@
       function card(type){const t=COD_TYPES[type];const holOpts=codHolidayOptionsForYear(yr);const offField=type==="holiday"?`<select id="cod_${type}_off">${holOpts}</select>`:`<input id="cod_${type}_off" type="date">`;const workedField=type==="holiday"?`<select id="cod_${type}_worked">${holOpts}</select>`:`<input id="cod_${type}_worked" type="date">`;return`<div class="card" style="padding:0;overflow:hidden">
         <div style="background:${t.head};color:#fff;padding:11px 14px;font-weight:800;font-size:14px">${t.title}</div>
         <div style="padding:14px">
-          ${type==="holiday"?`<div style="max-width:170px;margin-bottom:10px"><label>Holiday Year</label><select id="cod_holiday_year" onchange="rebuildCodHolidayFields()">${holYears.map(y=>`<option value="${y}" ${y===yr?"selected":""}>${y}</option>`).join("")}</select></div>`:""}
-          <div class="grid" style="grid-template-columns:1.6fr 1fr 1fr auto;gap:10px;align-items:end">
+          <div class="grid" style="grid-template-columns:${type==="holiday"?"1.6fr 1fr 1fr .8fr auto":"1.6fr 1fr 1fr auto"};gap:10px;align-items:end">
             <div><label>Staff Member</label><select id="cod_${type}_staff">${opts}</select></div>
             <div><label>${escapeHtml(t.offLabel)}</label>${offField}</div>
             <div><label>${escapeHtml(t.workedLabel)}</label>${workedField}</div>
+            ${type==="holiday"?`<div><label>Year</label><select id="cod_holiday_year" onchange="rebuildCodHolidayFields()">${holYears.map(y=>`<option value="${y}" ${y===yr?"selected":""}>${y}</option>`).join("")}</select></div>`:""}
             <div><button type="button" onclick="recordChangeOfDuty('${type}')">Record</button></div>
           </div>
           <div class="table-wrap" style="margin-top:12px"><table class="mini-table"><thead><tr><th>Staff</th><th>${escapeHtml(t.offLabel)}</th><th>${escapeHtml(t.workedLabel)}</th><th>Recorded</th></tr></thead><tbody>${listFor(type)}</tbody></table></div>
