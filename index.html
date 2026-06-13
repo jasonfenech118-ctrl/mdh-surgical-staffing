@@ -808,7 +808,7 @@
       if(sameCode&&!notes&&sameCodDate){closeShiftPickerModal();return;}
       closeShiftPickerModal();
       const shiftCode=storeRosterCode(chosen);
-      // Save directly to roster_overrides (SECURITY DEFINER RPC handles permissions)
+      // Save via SECURITY DEFINER RPC
       const{error:saveErr}=await sb.rpc("upsert_ward_roster_override",{
         p_ward_id:appState.selectedWardId,
         p_staff_id:state.staffId,
@@ -818,19 +818,24 @@
         p_notes:notes
       });
       if(saveErr){
-        // RPC failed — try direct table upsert as fallback
+        // fallback: direct upsert with both "L" and "AL" tried
+        const tryCode=shiftCode==="L"?"AL":shiftCode;
         const{error:fbErr}=await sb.from("roster_overrides").upsert({
           ward_id:appState.selectedWardId,
           staff_id:state.staffId,
           shift_date:state.shiftDate,
-          live_shift_code:shiftCode,
+          live_shift_code:tryCode,
           source_type:"override",
           override_reason:reasonForShift(shiftCode),
           notes:notes||null,
           is_cancelled:false,
           updated_at:new Date().toISOString()
         },{onConflict:"staff_id,shift_date,is_cancelled"});
-        if(fbErr){showError("Save failed: "+saveErr.message+" | "+fbErr.message);return;}
+        if(fbErr){
+          showError("Save failed: "+saveErr.message);
+          window.alert("Save failed: "+saveErr.message);
+          return;
+        }
       }
       // Patch in-memory and update the cell directly in the DOM
       if(appState.monthlyRosterRows){
