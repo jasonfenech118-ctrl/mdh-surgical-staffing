@@ -849,16 +849,19 @@
     function openDayCard(staffId,shiftDate){
       clearMessage();
       const staff=findMonthlyStaff(staffId),row=staff?.days?.[shiftDate]||null;
-      const mainCode=normaliseRosterCode(row?.live_shift_code||"");
+      // Use live override if present, else fall back to pattern baseline
+      const liveCode=normaliseRosterCode(row?.live_shift_code||"");
+      const {start}=monthRange(appState.selectedMonth);
+      const patternCode=baselineShiftCode(staff,shiftDate,start);
+      const mainCode=liveCode||normaliseRosterCode(patternCode||"");
       const extraCodes=parseSecondaryCodes(row);
       const entries=[{code:mainCode,codDate:mainCode&&isCodCode(mainCode)?isoDateInputValue(codDateFromRow(row,shiftDate),shiftDate):""},
         ...extraCodes.map(c=>({code:c,codDate:""}))];
-      if(!entries.length||!entries[0].code)entries[0]={code:"",codDate:""};
+      if(!entries.length)entries.push({code:"",codDate:""});
       dayCardState={staffId,shiftDate,entries,originalNotes:""};
       const modal=ensureDayCardModal();
       const staffName=cleanStaffName(staff?.full_name||"Staff member"),role=labelRole(staff?.role||"");
       document.getElementById("dayCardSubtitle").innerHTML=`${escapeHtml(staffName)}${role?` — ${escapeHtml(role)}`:""}<br>${escapeHtml(formatDate(shiftDate))}`;
-      document.getElementById("dayCardNotes").value=strippedNotes;
       renderDayCardEntries();
       modal.classList.remove("hidden");
     }
