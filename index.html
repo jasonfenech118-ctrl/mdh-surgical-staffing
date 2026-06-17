@@ -797,6 +797,13 @@
       return`<option value="" ${!selectedCode?"selected":""}>— choose —</option>${opts}`;
     }
 
+    function dayCardRefreshWarning(){
+      const w=document.getElementById("dayCardWarn");if(!w||!dayCardState)return;
+      const codes=dayCardState.entries.map(e=>normaliseRosterCode(e.code||"")).filter(Boolean);
+      const staff=findMonthlyStaff(dayCardState.staffId);
+      const issue=shiftSafetyIssue(staff,dayCardState.shiftDate,codes);
+      if(issue){w.textContent="⛔ "+issue;w.style.display="block";}else{w.style.display="none";w.textContent="";}
+    }
     function renderDayCardEntries(){
       const entries=dayCardState.entries;
       document.getElementById("dayCardEntries").innerHTML=entries.map((e,i)=>{
@@ -811,6 +818,7 @@
           ${i>0?`<button type="button" class="day-card-remove" onclick="dayCardRemoveEntry(${i})" title="Remove this entry">×</button>`:""}
         </div>`;
       }).join("");
+      dayCardRefreshWarning();
     }
 
     function ensureDayCardModal(){
@@ -827,6 +835,7 @@
         <p class="muted" style="font-size:12px;margin:8px 0 0">Set the day shift. Add a second row for a night, overtime, or any additional shift on the same day.</p>
         <div class="day-card-entries" id="dayCardEntries"></div>
         <div class="day-card-add-row"><button type="button" class="day-card-add-btn" onclick="dayCardAddEntry()">+ Add shift</button></div>
+        <div id="dayCardWarn" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:9px 11px;font-size:12.5px;font-weight:600;margin:0 0 10px"></div>
         <label>Notes (optional)</label>
         <textarea class="shift-modal-note" id="dayCardNotes" placeholder="Optional note for audit trail"></textarea>
         <div class="shift-modal-actions">
@@ -888,6 +897,10 @@
         if(isCodCode(ec)&&!state.entries[i].codDate){showError(`Entry ${i+1}: choose the vice date for COD.`);return;}
         extraCodes.push(ec);
       }
+      // Safety: enforce rest gap between night and day across adjacent days
+      const staffForCheck=findMonthlyStaff(state.staffId);
+      const safetyIssue=shiftSafetyIssue(staffForCheck,state.shiftDate,[mainCode,...extraCodes]);
+      if(safetyIssue){const w=document.getElementById("dayCardWarn");if(w){w.textContent="⛔ "+safetyIssue;w.style.display="block";}return;}
       const typedNotes=document.getElementById("dayCardNotes")?.value?.trim()||"";
       let notes=typedNotes||null;
       // Attach COD vice date to main notes if needed
@@ -1029,7 +1042,21 @@
     function stripAllSecondaryTokens(notes){return String(notes||"").replace(/\s*\[ALSO:[A-Z0-9]+\]\s*/ig," ").trim();}
     function stripSecondaryToken(notes){return stripAllSecondaryTokens(notes);}
     function withSecondaryToken(notes,code){return withSecondaryTokens(notes,code?[code]:[]);}
-    function withSecondaryTokens(notes,codes){const base=stripAllSecondaryTokens(notes),toks=(codes||[]).map(c=>normaliseRosterCode(c)).filter(Boolean).map(c=>`[ALSO:${c}]`);return[base,...toks].filter(Boolean).join(" ").trim()||null;}function addDaysIso(isoDate,delta){const parts=String(isoDate||"").split("-").map(Number);if(parts.length!==3||parts.some(n=>!Number.isFinite(n)))return"";const d=new Date(parts[0],parts[1]-1,parts[2]);d.setDate(d.getDate()+delta);return isoFromDate(d);}
+    function withSecondaryTokens(notes,codes){const base=stripAllSecondaryTokens(notes),toks=(codes||[]).map(c=>normaliseRosterCode(c)).filter(Boolean).map(c=>`[ALSO:${c}]`);return[base,...toks].filter(Boolean).join(" ").trim()||null;}
+    // ── Shift safety (rest between night and day) ──────────────────────────────
+    function isNightCode(c){const x=normaliseRosterCode(c);return x==="N"||x==="OT";}
+    function isDayWorkCode(c){return["A","M","D"].includes(normaliseRosterCode(c));}
+    function resolvedCodeForDate(staff,iso){const live=staff?.days?.[iso]?.live_shift_code||"";const pat=baselineShiftCode(staff,iso,iso);return normaliseRosterCode(live||pat||"");}
+    function dayCodesFor(staff,iso){const r=staff?.days?.[iso]||null;return[resolvedCodeForDate(staff,iso),...parseSecondaryCodes(r)].filter(Boolean);}
+    // Returns a warning string if the proposed codes for `iso` break the night↔day rest rule, else "".
+    function shiftSafetyIssue(staff,iso,codes){
+      if(!staff)return"";
+      const hasNight=(codes||[]).some(isNightCode),hasDay=(codes||[]).some(isDayWorkCode);
+      if(hasNight){const next=addDaysIso(iso,1);if(next&&dayCodesFor(staff,next).some(isDayWorkCode))return`Unsafe rest gap: a night shift here is followed by a day shift on ${formatDate(next)}. A nurse cannot finish a night (07:00) and start a day the same morning.`;}
+      if(hasDay){const prev=addDaysIso(iso,-1);if(prev&&dayCodesFor(staff,prev).some(isNightCode))return`Unsafe rest gap: a day shift here follows a night shift on ${formatDate(prev)}. There is no rest between the night and this day.`;}
+      return"";
+    }
+    function addDaysIso(isoDate,delta){const parts=String(isoDate||"").split("-").map(Number);if(parts.length!==3||parts.some(n=>!Number.isFinite(n)))return"";const d=new Date(parts[0],parts[1]-1,parts[2]);d.setDate(d.getDate()+delta);return isoFromDate(d);}
     // Long Leave (LL): 3+ leave days in a block. Off/Rest do NOT break the block; any working/other shift does.
     function isLongLeaveTrigger(code){return normaliseRosterCode(code)==="L";}
     function isLongLeaveGap(code){const c=normaliseRosterCode(code);return c==="O"||c==="R";}
