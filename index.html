@@ -894,7 +894,7 @@
         const ec=normaliseRosterCode(state.entries[i].code||"");
         if(!ec)continue;
         if(!allowed.has(ec)){showError(`Entry ${i+1}: choose a valid shift code.`);return;}
-        if(isCodCode(ec)&&!state.entries[i].codDate){showError(`Entry ${i+1}: choose the vice date for COD.`);return;}
+        if(isCodCode(ec)){showError(`Entry ${i+1}: COD-in/COD-off can only be set on the first (day) row, where its vice date is recorded. Use the first row for a change of duty.`);return;}
         extraCodes.push(ec);
       }
       // Safety: enforce rest gap between night and day across adjacent days
