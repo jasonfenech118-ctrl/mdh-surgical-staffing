@@ -794,7 +794,7 @@
 
     // ── Day Card modal ──────────────────────────────────────────────────────────
     let dayCardState=null;
-    const ENTRY_PERIOD_LABELS=["New duty","Night / Extra","Additional","Additional"];
+    const ENTRY_PERIOD_LABELS=["Amended Duty","Night / Extra","Additional","Additional"];
 
     function dayCardCodeOptions(selectedCode=""){
       const opts=SHIFT_PICKER_CHOICES.map(c=>`<option value="${escapeHtml(c.code)}" ${c.code===selectedCode?"selected":""}>${escapeHtml(c.label)} (${escapeHtml(displayShiftCode(c.code))})</option>`).join("");
