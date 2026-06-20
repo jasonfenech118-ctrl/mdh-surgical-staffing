@@ -821,12 +821,11 @@
         const periodLabel=ENTRY_PERIOD_LABELS[i]||`Entry ${i+1}`;
         const codDateField=isCodCode(e.code)?`<div style="margin-top:6px"><label style="font-size:11px">Vice date (COD)</label><input type="date" class="day-card-cod-input" data-idx="${i}" value="${escapeHtml(e.codDate||"")}" onchange="dayCardSetCodDate(${i},this.value)"></div>`:"";
         const timeField=e.code?`<div style="margin-top:6px;display:flex;align-items:center;gap:6px"><label style="font-size:11px;white-space:nowrap;min-width:56px">Time (24h)</label><input type="time" style="flex:1" value="${escapeHtml(e.time||"")}" onchange="dayCardSetTime(${i},this.value)"></div>`:"";
-        const noteField=e.code?`<div style="margin-top:6px"><label style="font-size:11px">Note</label><input type="text" placeholder="Optional note…" maxlength="60" style="width:100%;box-sizing:border-box" value="${escapeHtml(e.note||"")}" oninput="dayCardSetNote(${i},this.value)"></div>`:"";
         return`<div class="day-card-entry">
           <span class="day-card-period">${escapeHtml(periodLabel)}</span>
           <div style="flex:1">
             <select class="day-card-code-sel" data-idx="${i}" onchange="dayCardSetCode(${i},this.value)">${dayCardCodeOptions(e.code,dayCardState.originalCode||"")}</select>
-            ${codDateField}${timeField}${noteField}
+            ${codDateField}${timeField}
           </div>
           ${i>0?`<button type="button" class="day-card-remove" onclick="dayCardRemoveEntry(${i})" title="Remove this entry">×</button>`:""}
         </div>`;
@@ -869,10 +868,9 @@
       const mainCode=(liveCode&&liveCode!==patternCode)?liveCode:"";
       const extraCodes=parseSecondaryCodes(row);
       const existingTime=parseTimeToken(row?.override_notes);
-      const existingNote=parseNoteToken(row?.override_notes);
-      const entries=[{code:mainCode,codDate:mainCode&&isCodCode(mainCode)?isoDateInputValue(codDateFromRow(row,shiftDate),shiftDate):"",time:existingTime,note:existingNote},
-        ...extraCodes.map(c=>({code:c,codDate:"",time:"",note:""}))];
-      if(!entries.length)entries.push({code:"",codDate:"",time:"",note:""});
+      const entries=[{code:mainCode,codDate:mainCode&&isCodCode(mainCode)?isoDateInputValue(codDateFromRow(row,shiftDate),shiftDate):"",time:existingTime},
+        ...extraCodes.map(c=>({code:c,codDate:"",time:""}))];
+      if(!entries.length)entries.push({code:"",codDate:"",time:""});
       const originalCode=normaliseRosterCode(patternCode||"");
       dayCardState={staffId,shiftDate,entries,originalNotes:"",originalCode};
       const modal=ensureDayCardModal();
@@ -885,7 +883,6 @@
     }
 
     function parseTimeToken(notes){const m=String(notes||"").match(/\[TIME:(\d{2}:\d{2})\]/);return m?m[1]:"";}
-    function parseNoteToken(notes){const m=String(notes||"").match(/\[NOTE:([^\]]*)\]/);return m?m[1].trim():"";}
     function dayCardSetCode(idx,code){
       if(!dayCardState)return;
       const clean=normaliseRosterCode(code);
@@ -895,8 +892,7 @@
     }
     function dayCardSetCodDate(idx,value){if(!dayCardState)return;dayCardState.entries[idx].codDate=value;}
     function dayCardSetTime(idx,value){if(!dayCardState?.entries[idx])return;dayCardState.entries[idx].time=value;}
-    function dayCardSetNote(idx,value){if(!dayCardState?.entries[idx])return;dayCardState.entries[idx].note=value;}
-    function dayCardAddEntry(){if(!dayCardState)return;if(dayCardState.entries.length>=4){alert("Maximum 4 shifts per day.");return;}dayCardState.entries.push({code:"",codDate:"",time:"",note:""});renderDayCardEntries();}
+    function dayCardAddEntry(){if(!dayCardState)return;if(dayCardState.entries.length>=4){alert("Maximum 4 shifts per day.");return;}dayCardState.entries.push({code:"",codDate:"",time:""});renderDayCardEntries();}
     function dayCardRemoveEntry(idx){if(!dayCardState||idx===0)return;dayCardState.entries.splice(idx,1);renderDayCardEntries();}
     function closeDayCard(){const m=document.getElementById("dayCardBackdrop");if(m)m.classList.add("hidden");dayCardState=null;}
 
@@ -959,10 +955,8 @@
       if(isCodCode(mainCode)&&mainEntry.codDate)notes=notes?`${notes} | vice ${mainEntry.codDate}`:`vice ${mainEntry.codDate}`;
       // Encode extra codes as tokens
       notes=withSecondaryTokens(notes,extraCodes);
-      // Encode time and note for main entry
+      // Encode time for main entry
       if(mainEntry.time){notes=(notes?notes+" ":"")+`[TIME:${mainEntry.time}]`;}
-      const noteText=(mainEntry.note||"").trim().replace(/[\[\]]/g,"");
-      if(noteText){notes=(notes?notes+" ":"")+`[NOTE:${noteText}]`;}
       closeDayCard();
       const shiftCode=storeRosterCode(mainCode);
       const{data:saveData,error:saveErr}=await sb.rpc("upsert_ward_roster_override",{
@@ -1138,9 +1132,8 @@
   const extraBadges=extraCodes.map(ec=>`<button type="button" class="shift-cell shift-${escapeHtml(ec)}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(ec))} — ${escapeHtml(shiftLabel(ec))}">${escapeHtml(displayShiftCode(ec))}</button>`).join("");
   const addBtn=`<button type="button" class="rcell-add" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="Add / edit shifts for this day">+</button>`;
   const cellTime=parseTimeToken(row?.override_notes);
-  const cellNote=parseNoteToken(row?.override_notes);
   const sunMoon=cellTime?(()=>{const h=parseInt(cellTime.split(":")[0],10);return(h>=7&&h<19)?"🌞":"🌙";})():"";
-  const metaLine=(sunMoon||cellNote)?`<div class="rcell-meta" title="${escapeHtml(cellTime+(cellNote?" · "+cellNote:""))}">${sunMoon}${cellTime?` ${escapeHtml(cellTime)}`:""}${cellNote?`<br>${escapeHtml(cellNote)}`:""}</div>`:"";
+  const metaLine=sunMoon?`<div class="rcell-meta" title="${escapeHtml(cellTime)}">${sunMoon} ${escapeHtml(cellTime)}</div>`:"";
   return`<div class="rcell">${mainBadge}${extraBadges}${addBtn}${overrideDot}${metaLine}</div>`;
 }
 function legend(code,label){return`<span class="legend-item" onclick="toggleLegendHighlight('${escapeHtml(code)}')" title="Click to highlight ${escapeHtml(label)} cells">${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`;}function toggleLegendHighlight(code){const clean=normaliseRosterCode(code)||code;const items=document.querySelectorAll(".legend-item");const cells=document.querySelectorAll(".roster-table td:not(:first-child)");const alreadyActive=document.querySelector(`.legend-item.legend-active[data-code="${CSS.escape(clean)}"]`);items.forEach(el=>el.classList.remove("legend-active"));cells.forEach(td=>td.classList.remove("legend-dim","legend-lit"));if(alreadyActive){return;}const activeItem=Array.from(items).find(el=>el.querySelector(`.shift-${CSS.escape(clean)}`));if(activeItem){activeItem.classList.add("legend-active");activeItem.setAttribute("data-code",clean);}cells.forEach(td=>{const btn=td.querySelector(".shift-cell");const cellCode=btn?normaliseRosterCode((btn.className.match(/shift-([A-Z0-9]+)/)||[])[1]||""):"";if(cellCode===clean){td.classList.add("legend-lit");}else{td.classList.add("legend-dim");}});}
