@@ -858,11 +858,12 @@
     function openDayCard(staffId,shiftDate){
       clearMessage();
       const staff=findMonthlyStaff(staffId),row=staff?.days?.[shiftDate]||null;
-      // Use live override if present, else fall back to pattern baseline
       const liveCode=normaliseRosterCode(row?.live_shift_code||"");
       const {start}=monthRange(appState.selectedMonth);
-      const patternCode=baselineShiftCode(staff,shiftDate,start);
-      const mainCode=liveCode||normaliseRosterCode(patternCode||"");
+      const patternCode=normaliseRosterCode(baselineShiftCode(staff,shiftDate,start)||"");
+      // The "Amended Duty" only pre-fills with a real override that differs
+      // from the original rostered duty; otherwise it starts blank.
+      const mainCode=(liveCode&&liveCode!==patternCode)?liveCode:"";
       const extraCodes=parseSecondaryCodes(row);
       const entries=[{code:mainCode,codDate:mainCode&&isCodCode(mainCode)?isoDateInputValue(codDateFromRow(row,shiftDate),shiftDate):""},
         ...extraCodes.map(c=>({code:c,codDate:""}))];
