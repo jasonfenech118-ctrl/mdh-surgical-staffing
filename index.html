@@ -796,8 +796,12 @@
     let dayCardState=null;
     const ENTRY_PERIOD_LABELS=["Amended Duty","Night / Extra","Additional","Additional"];
 
+    const DAY_CARD_HIDDEN_CODES=new Set(["CODO","CODI","ML","A","M","N","O","R"]);
     function dayCardCodeOptions(selectedCode=""){
-      const opts=SHIFT_PICKER_CHOICES.map(c=>`<option value="${escapeHtml(c.code)}" ${c.code===selectedCode?"selected":""}>${escapeHtml(c.label)} (${escapeHtml(displayShiftCode(c.code))})</option>`).join("");
+      // Hide a subset of codes from the picker, but always keep the currently
+      // selected code visible so existing entries still display correctly.
+      const opts=SHIFT_PICKER_CHOICES.filter(c=>!DAY_CARD_HIDDEN_CODES.has(c.code)||c.code===selectedCode)
+        .map(c=>`<option value="${escapeHtml(c.code)}" ${c.code===selectedCode?"selected":""}>${escapeHtml(c.label)} (${escapeHtml(displayShiftCode(c.code))})</option>`).join("");
       return`<option value="" ${!selectedCode?"selected":""}>— choose —</option>${opts}`;
     }
 
