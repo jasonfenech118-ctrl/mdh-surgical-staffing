@@ -851,9 +851,9 @@
         <div class="day-card-entries" id="dayCardEntries"></div>
         <div id="dayCardWarn" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:9px 11px;font-size:12.5px;font-weight:600;margin:0 0 10px"></div>
         <div class="shift-modal-actions">
-          <button type="button" class="secondary" onclick="closeDayCard()">Cancel</button>
-          <button type="button" class="secondary" onclick="dayCardAddEntry()">+ Add Duty</button>
-          <button type="button" class="success" onclick="saveDayCard()">Save</button>
+          <button type="button" class="secondary" style="padding:6px 12px;font-size:13px" onclick="closeDayCard()">Cancel</button>
+          <button type="button" class="secondary" style="padding:6px 12px;font-size:13px" onclick="dayCardAddEntry()">+ Add Duty</button>
+          <button type="button" class="success" style="padding:6px 12px;font-size:13px" onclick="saveDayCard()">Save</button>
         </div>
       </div>`;
       m.addEventListener("click",e=>{if(e.target===m)closeDayCard();});
