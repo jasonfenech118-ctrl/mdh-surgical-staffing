@@ -858,7 +858,7 @@
         <div class="shift-modal-actions" style="display:flex;gap:12px;grid-template-columns:none">
           <button type="button" class="secondary" style="flex:1;padding:6px 12px;font-size:13px" onclick="closeDayCard()">Cancel</button>
           <button type="button" id="dayCardAddBtn" style="flex:1;padding:6px 12px;font-size:13px;background:#2563eb;color:#fff;border:none" onclick="dayCardAddEntry()">+ Add Duty</button>
-          <button type="button" class="success" style="flex:1;padding:6px 12px;font-size:13px" onclick="saveDayCard()">Save</button>
+          <button type="button" id="dayCardSaveBtn" class="success" style="flex:1;padding:6px 12px;font-size:13px" onclick="saveDayCard()">Save</button>
         </div>
       </div>`;
       m.addEventListener("click",e=>{if(e.target===m)closeDayCard();});
@@ -902,12 +902,19 @@
       dayCardState.entries[idx].code=clean;
       if(clean==="LL"){alert("Long Leave is automatic — select Leave and the system shows LL after 3 consecutive days.");dayCardState.entries[idx].code=dayCardState.entries[idx].code==="LL"?"":clean;}
       renderDayCardEntries();
+      dayCardSyncAddBtn();
     }
     function dayCardSetCodDate(idx,value){if(!dayCardState)return;dayCardState.entries[idx].codDate=value;}
     function dayCardSetTimeFrom(idx,val){if(!dayCardState?.entries[idx])return;const e=dayCardState.entries[idx];const to=e.time?e.time.split("-")[1]:"";e.time=val!==""?`${val}-${to||""}`:"";}
     function dayCardSetTimeTo(idx,val){if(!dayCardState?.entries[idx])return;const e=dayCardState.entries[idx];const from=e.time?e.time.split("-")[0]:"";e.time=val!==""?`${from||""}-${val}`:"";}
     function dayCardAddEntry(){if(!dayCardState)return;dayCardState.entries.push({code:"",codDate:"",time:""});const b=document.getElementById("dayCardAddBtn");if(b)b.style.display="none";renderDayCardEntries();}
-    function dayCardSyncAddBtn(){const b=document.getElementById("dayCardAddBtn");if(b)b.style.display=(dayCardState&&dayCardState.entries.length>1)?"none":"";}
+    function dayCardSyncAddBtn(){
+      const isSL=dayCardState&&normaliseRosterCode(dayCardState.entries[0]?.code||"")==="SL";
+      const b=document.getElementById("dayCardAddBtn");
+      if(b)b.style.display=(isSL||(dayCardState&&dayCardState.entries.length>1))?"none":"";
+      const s=document.getElementById("dayCardSaveBtn");
+      if(s){if(isSL){s.style.background="#dc2626";s.style.color="#fff";s.style.border="none";}else{s.style.background="";s.style.color="";s.style.border="";}}
+    }
     function dayCardRemoveEntry(idx){if(!dayCardState||idx===0)return;dayCardState.entries.splice(idx,1);renderDayCardEntries();}
     function closeDayCard(){const m=document.getElementById("dayCardBackdrop");if(m)m.classList.add("hidden");dayCardState=null;}
 
