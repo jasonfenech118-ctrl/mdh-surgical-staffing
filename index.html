@@ -797,10 +797,12 @@
     const ENTRY_PERIOD_LABELS=["Amended Duty","Night / Extra","Additional","Additional"];
 
     const DAY_CARD_HIDDEN_CODES=new Set(["CODO","CODI","ML","A","M","N","O","R"]);
-    function dayCardCodeOptions(selectedCode=""){
-      // Hide a subset of codes from the picker, but always keep the currently
-      // selected code visible so existing entries still display correctly.
-      const opts=SHIFT_PICKER_CHOICES.filter(c=>!DAY_CARD_HIDDEN_CODES.has(c.code)||c.code===selectedCode)
+    function dayCardCodeOptions(selectedCode="",originalCode=""){
+      // Hide the static set + the original duty for this day.
+      // Always keep the currently selected code visible if it is one of the
+      // hidden ones, so existing entries still display correctly.
+      const hiddenForDay=new Set([...DAY_CARD_HIDDEN_CODES,normaliseRosterCode(originalCode||"")]);
+      const opts=SHIFT_PICKER_CHOICES.filter(c=>!hiddenForDay.has(c.code)||c.code===selectedCode)
         .map(c=>`<option value="${escapeHtml(c.code)}" ${c.code===selectedCode?"selected":""}>${escapeHtml(c.label)} (${escapeHtml(displayShiftCode(c.code))})</option>`).join("");
       return`<option value="" ${!selectedCode?"selected":""}>— choose —</option>${opts}`;
     }
@@ -820,7 +822,7 @@
         return`<div class="day-card-entry">
           <span class="day-card-period">${escapeHtml(periodLabel)}</span>
           <div style="flex:1">
-            <select class="day-card-code-sel" data-idx="${i}" onchange="dayCardSetCode(${i},this.value)">${dayCardCodeOptions(e.code)}</select>
+            <select class="day-card-code-sel" data-idx="${i}" onchange="dayCardSetCode(${i},this.value)">${dayCardCodeOptions(e.code,dayCardState.originalCode||"")}</select>
             ${codDateField}
           </div>
           ${i>0?`<button type="button" class="day-card-remove" onclick="dayCardRemoveEntry(${i})" title="Remove this entry">×</button>`:""}
