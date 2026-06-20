@@ -1137,7 +1137,7 @@
   const extraCodes=parseSecondaryCodes(row);
   const mainBadge=`<button type="button" class="shift-cell shift-${escapeHtml(visualCode)}${codClass}${patternClass}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftLabel(visualCode))}${codDate?` · vice ${escapeHtml(codDate)}`:""}">${mainInner}</button>`;
   const extraBadges=extraCodes.map(ec=>`<button type="button" class="shift-cell shift-${escapeHtml(ec)}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(ec))} — ${escapeHtml(shiftLabel(ec))}">${escapeHtml(displayShiftCode(ec))}</button>`).join("");
-  const addBtn=`<button type="button" class="rcell-add" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="Add / edit shifts for this day">+</button>`;
+  const addBtn="";
   let metaLine="";
   if(CODES_AUTO_ICON.has(visualCode)){
     // No manual timing — icon follows the core rostered duty for this day.
