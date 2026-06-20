@@ -842,10 +842,10 @@
       m=document.createElement("div");
       m.id="dayCardBackdrop";
       m.className="shift-modal-backdrop hidden";
-      m.innerHTML=`<div class="shift-modal" role="dialog" aria-modal="true" style="max-width:480px">
+      m.innerHTML=`<div class="shift-modal" role="dialog" aria-modal="true" style="max-width:600px">
         <div class="shift-modal-header">
           <div><h2 class="shift-modal-title">Day Card</h2><div class="shift-modal-subtitle" id="dayCardSubtitle"></div></div>
-          <button type="button" class="secondary small" onclick="closeDayCard()">Close</button>
+          <button type="button" class="danger small" onclick="closeDayCard()">Close</button>
         </div>
         <div class="day-card-original" id="dayCardOriginal"></div>
         <div class="day-card-entries" id="dayCardEntries"></div>
