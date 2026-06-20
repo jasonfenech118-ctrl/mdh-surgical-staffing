@@ -806,8 +806,8 @@
       // hidden ones, so existing entries still display correctly.
       const origNorm=normaliseRosterCode(originalCode||"");
       const hiddenForDay=new Set([...DAY_CARD_HIDDEN_CODES,origNorm]);
-      // TIL (TIL In / TIL Out) is not applicable when the core duty is All Day or Night.
-      if(origNorm==="A"||origNorm==="N"){hiddenForDay.add("TI");hiddenForDay.add("TO");}
+      // TIL In is not applicable when the core duty is All Day or Night.
+      if(origNorm==="A"||origNorm==="N"){hiddenForDay.add("TI");}
       const opts=SHIFT_PICKER_CHOICES.filter(c=>!hiddenForDay.has(c.code)||c.code===selectedCode)
         .map(c=>`<option value="${escapeHtml(c.code)}" ${c.code===selectedCode?"selected":""}>${escapeHtml(c.label)} (${escapeHtml(displayShiftCode(c.code))})</option>`).join("");
       return`<option value="" ${!selectedCode?"selected":""}>— choose —</option>${opts}`;
