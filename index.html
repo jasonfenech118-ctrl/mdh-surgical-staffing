@@ -315,6 +315,9 @@
     .rcell-add:hover{background:#f1f5f9;color:#475569;border-color:#94a3b8;}
 
     /* Day Card modal */
+    .day-card-original{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;margin:14px 0 0;}
+    .day-card-orig-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;}
+    .day-card-orig-name{font-size:13px;font-weight:600;color:#334155;}
     .day-card-entries{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px;}
     .day-card-entry{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;}
     .day-card-period{font-size:11px;font-weight:700;color:#64748b;min-width:46px;text-transform:uppercase;letter-spacing:.04em;}
@@ -833,9 +836,8 @@
           <div><h2 class="shift-modal-title">Day Card</h2><div class="shift-modal-subtitle" id="dayCardSubtitle"></div></div>
           <button type="button" class="secondary small" onclick="closeDayCard()">Close</button>
         </div>
-        <p class="muted" style="font-size:12px;margin:8px 0 0">Set the day shift. Add a second row for a night, overtime, or any additional shift on the same day.</p>
+        <div class="day-card-original" id="dayCardOriginal"></div>
         <div class="day-card-entries" id="dayCardEntries"></div>
-        <div class="day-card-add-row"><button type="button" class="day-card-add-btn" onclick="dayCardAddEntry()">+ Add shift</button></div>
         <div id="dayCardWarn" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:9px 11px;font-size:12.5px;font-weight:600;margin:0 0 10px"></div>
         <div class="shift-modal-actions">
           <button type="button" class="secondary" onclick="closeDayCard()">Cancel</button>
@@ -859,10 +861,13 @@
       const entries=[{code:mainCode,codDate:mainCode&&isCodCode(mainCode)?isoDateInputValue(codDateFromRow(row,shiftDate),shiftDate):""},
         ...extraCodes.map(c=>({code:c,codDate:""}))];
       if(!entries.length)entries.push({code:"",codDate:""});
-      dayCardState={staffId,shiftDate,entries,originalNotes:""};
+      const originalCode=normaliseRosterCode(patternCode||"");
+      dayCardState={staffId,shiftDate,entries,originalNotes:"",originalCode};
       const modal=ensureDayCardModal();
       const staffName=cleanStaffName(staff?.full_name||"Staff member"),role=labelRole(staff?.role||"");
       document.getElementById("dayCardSubtitle").innerHTML=`${escapeHtml(staffName)}${role?` — ${escapeHtml(role)}`:""}<br>${escapeHtml(formatDate(shiftDate))}`;
+      const orig=document.getElementById("dayCardOriginal");
+      if(orig)orig.innerHTML=originalCode?`<span class="day-card-orig-label">Original duty</span> ${shiftBadge(originalCode)} <span class="day-card-orig-name">${escapeHtml(shiftLabel(originalCode))}</span>`:`<span class="day-card-orig-label">No rostered duty for this day</span>`;
       renderDayCardEntries();
       modal.classList.remove("hidden");
     }
