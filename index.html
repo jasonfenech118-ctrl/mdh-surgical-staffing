@@ -827,11 +827,15 @@
     }
     function renderDayCardEntries(){
       const entries=dayCardState.entries;
+      // Charge nurses never work nights — restrict their hour range to 06:00–19:00.
+      const dcStaff=findMonthlyStaff(dayCardState.staffId);
+      const isCharge=dcStaff&&dcStaff.role==="charge_nurse";
+      const minH=isCharge?6:0,maxH=isCharge?19:23;
       document.getElementById("dayCardEntries").innerHTML=entries.map((e,i)=>{
         const periodLabel=ENTRY_PERIOD_LABELS[i]||`Entry ${i+1}`;
         const codDateField=isCodCode(e.code)?`<div style="margin-top:6px"><label style="font-size:11px">Vice date (COD)</label><input type="date" class="day-card-cod-input" data-idx="${i}" value="${escapeHtml(e.codDate||"")}" onchange="dayCardSetCodDate(${i},this.value)"></div>`:"";
-        const fromHourOpts=h=>[...Array(24)].map((_,n)=>`<option value="${n}" ${n===h?"selected":""}>${String(n).padStart(2,"0")}:00</option>`).join("");
-        const tillHourOpts=(h,minH)=>[...Array(24)].map((_,n)=>n>minH?`<option value="${n}" ${n===h?"selected":""}>${String(n).padStart(2,"0")}:00</option>`:"").join("");
+        const fromHourOpts=h=>[...Array(24)].map((_,n)=>(n>=minH&&n<maxH)?`<option value="${n}" ${n===h?"selected":""}>${String(n).padStart(2,"0")}:00</option>`:"").join("");
+        const tillHourOpts=(h,from)=>[...Array(24)].map((_,n)=>(n>from&&n>minH&&n<=maxH)?`<option value="${n}" ${n===h?"selected":""}>${String(n).padStart(2,"0")}:00</option>`:"").join("");
         const [tfrom,tto]=e.time?e.time.split("-").map(Number):[null,null];
         const showTime=e.code&&!CODES_AUTO_ICON.has(normaliseRosterCode(e.code));
         const timeField=showTime?`<div style="margin-top:6px;display:flex;align-items:center;gap:6px"><label style="font-size:11px;white-space:nowrap;min-width:32px">From</label><select style="flex:1" onchange="dayCardSetTimeFrom(${i},this.value)"><option value="">—</option>${fromHourOpts(tfrom)}</select><label style="font-size:11px;white-space:nowrap;margin-left:6px;min-width:24px">Till</label><select style="flex:1;margin-left:4px" onchange="dayCardSetTimeTo(${i},this.value)"><option value="">—</option>${tillHourOpts(tto,tfrom??-1)}</select></div>`:"";
