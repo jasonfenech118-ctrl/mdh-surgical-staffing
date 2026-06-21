@@ -808,8 +808,8 @@
       const hiddenForDay=new Set([...DAY_CARD_HIDDEN_CODES,origNorm]);
       // TIL In is not applicable when the core duty is All Day or Night.
       if(origNorm==="A"||origNorm==="N"){hiddenForDay.add("TI");}
-      // Sick Leave and TIL Out are not applicable when the core duty is Off or Rest.
-      if(origNorm==="O"||origNorm==="R"){hiddenForDay.add("SL");hiddenForDay.add("TO");}
+      // Sick Leave, TIL Out, Leave and Study are not applicable when the core duty is Off or Rest.
+      if(origNorm==="O"||origNorm==="R"){hiddenForDay.add("SL");hiddenForDay.add("TO");hiddenForDay.add("L");hiddenForDay.add("ST");}
       const opts=SHIFT_PICKER_CHOICES.filter(c=>!hiddenForDay.has(c.code)||c.code===selectedCode)
         .map(c=>`<option value="${escapeHtml(c.code)}" ${c.code===selectedCode?"selected":""}>${escapeHtml(c.label)} (${escapeHtml(displayShiftCode(c.code))})</option>`).join("");
       return`<option value="" ${!selectedCode?"selected":""}>— choose —</option>${opts}`;
