@@ -805,11 +805,14 @@
       // Always keep the currently selected code visible if it is one of the
       // hidden ones, so existing entries still display correctly.
       const origNorm=normaliseRosterCode(originalCode||"");
+      // filterNorm uses the richer filterCode from dayCardState when available
+      // (covers cases where there is no pattern code but cell defaults to Off).
+      const filterNorm=normaliseRosterCode((dayCardState?.filterCode)||origNorm);
       const hiddenForDay=new Set([...DAY_CARD_HIDDEN_CODES,origNorm]);
       // TIL In is not applicable when the core duty is All Day or Night.
-      if(origNorm==="A"||origNorm==="N"){hiddenForDay.add("TI");}
+      if(filterNorm==="A"||filterNorm==="N"){hiddenForDay.add("TI");}
       // Sick Leave, TIL Out, Leave and Study are not applicable when the core duty is Off or Rest.
-      if(origNorm==="O"||origNorm==="R"){hiddenForDay.add("SL");hiddenForDay.add("TO");hiddenForDay.add("L");hiddenForDay.add("ST");}
+      if(filterNorm==="O"||filterNorm==="R"){hiddenForDay.add("SL");hiddenForDay.add("TO");hiddenForDay.add("L");hiddenForDay.add("ST");}
       const opts=SHIFT_PICKER_CHOICES.filter(c=>!hiddenForDay.has(c.code)||c.code===selectedCode)
         .map(c=>`<option value="${escapeHtml(c.code)}" ${c.code===selectedCode?"selected":""}>${escapeHtml(c.label)} (${escapeHtml(displayShiftCode(c.code))})</option>`).join("");
       return`<option value="" ${!selectedCode?"selected":""}>— choose —</option>${opts}`;
@@ -883,7 +886,10 @@
         ...extraCodes.map(c=>({code:c,codDate:"",time:""}))];
       if(!entries.length)entries.push({code:"",codDate:"",time:""});
       const originalCode=normaliseRosterCode(patternCode||"");
-      dayCardState={staffId,shiftDate,entries,originalNotes:"",originalCode};
+      // For dropdown filtering: if there's no pattern and no live code, the cell
+      // visually defaults to "O" (Off), so treat it as Off for filter purposes.
+      const filterCode=originalCode||((!liveCode&&!patternCode)?"O":"");
+      dayCardState={staffId,shiftDate,entries,originalNotes:"",originalCode,filterCode};
       const modal=ensureDayCardModal();
       const staffName=cleanStaffName(staff?.full_name||"Staff member"),role=labelRole(staff?.role||"");
       document.getElementById("dayCardSubtitle").innerHTML=`${escapeHtml(staffName)}${role?` — ${escapeHtml(role)}`:""}<br>${escapeHtml(formatDate(shiftDate))}`;
