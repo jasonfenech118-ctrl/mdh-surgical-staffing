@@ -853,13 +853,12 @@
       m.innerHTML=`<div class="shift-modal" role="dialog" aria-modal="true">
         <div class="shift-modal-header">
           <div><h2 class="shift-modal-title">Duty Card</h2><div class="shift-modal-subtitle" id="dayCardSubtitle"></div></div>
-          <button type="button" class="danger small" onclick="closeDayCard()">Close</button>
         </div>
         <div class="day-card-original" id="dayCardOriginal"></div>
         <div class="day-card-entries" id="dayCardEntries"></div>
         <div id="dayCardWarn" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:9px 11px;font-size:12.5px;font-weight:600;margin:0 0 10px"></div>
         <div class="shift-modal-actions" style="display:flex;gap:12px;grid-template-columns:none">
-          <button type="button" class="secondary" style="flex:1;padding:6px 12px;font-size:13px" onclick="closeDayCard()">Cancel</button>
+          <button type="button" class="danger" style="flex:1;padding:6px 12px;font-size:13px" onclick="closeDayCard()">Cancel</button>
           <button type="button" id="dayCardAddBtn" style="flex:1;padding:6px 12px;font-size:13px;background:#2563eb;color:#fff;border:none" onclick="dayCardAddEntry()">+ Add Duty</button>
           <button type="button" id="dayCardSaveBtn" class="success" style="flex:1;padding:6px 12px;font-size:13px" onclick="saveDayCard()">Save</button>
         </div>
