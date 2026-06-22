@@ -310,12 +310,14 @@
 
     /* Split cell wrapper */
     .rcell{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 2px;cursor:pointer;min-width:38px;}
-    .rcell.has-override{min-width:58px;background:#f0f8ff;border-radius:6px;border:1px solid #bfdbfe;}
+    .rcell.has-override{min-width:74px;background:#f0f8ff;border-radius:6px;border:1px solid #bfdbfe;}
     .rcell .shift-cell{width:100%!important;min-width:0!important;max-width:54px!important;}
+    .rcell-unit{display:flex;flex-direction:column;align-items:center;gap:1px;width:100%;}
+    .rcell-unit+.rcell-unit{margin-top:3px;}
     .rcell-label{font-size:8px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.04em;line-height:1;}
     .rcell-add{display:block;width:24px;height:12px;line-height:12px;text-align:center;font-size:9px;font-weight:900;color:#94a3b8;background:none;border:1px dashed #cbd5e1;border-radius:4px;cursor:pointer;padding:0;}
     .rcell-add:hover{background:#f1f5f9;color:#475569;border-color:#94a3b8;}
-    .rcell-meta{font-size:9px;line-height:1.4;text-align:center;color:#1e40af;font-weight:700;max-width:64px;white-space:nowrap;}
+    .rcell-meta{font-size:8.5px;line-height:1.3;text-align:center;color:#1e40af;font-weight:700;white-space:nowrap;}
 
     /* Day Card modal */
     .day-card-original{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;margin:14px 0 0;}
@@ -1191,28 +1193,26 @@
   }
   // Full split-cell wrapper for monthly roster
   const extraShifts=parseSecondaryShifts(row);
-  const mainBadge=`<button type="button" class="shift-cell shift-${escapeHtml(visualCode)}${codClass}${patternClass}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftLabel(visualCode))}${codDate?` · vice ${escapeHtml(codDate)}`:""}">${mainInner}</button>`;
-  const extraBadges=extraShifts.map(s=>`<button type="button" class="shift-cell shift-${escapeHtml(s.code)}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(s.code))} — ${escapeHtml(shiftLabel(s.code))}">${escapeHtml(displayShiftCode(s.code))}</button>`).join("");
-  // Build a time line (icon + range) for each shift that has a time; icon follows that shift's start hour.
   const iconForHour=h=>(h>=7&&h<19)?"🌞":"🌙";
   const fmtRange=t=>{const[f,tt]=t.split("-");return`${String(f).padStart(2,"0")}:00–${String(tt).padStart(2,"0")}:00`;};
-  const metaParts=[];
+  const metaFor=t=>{if(!t||!/^\d+-\d+$/.test(t))return"";const h=parseInt(t.split("-")[0],10);return`<div class="rcell-meta" title="${escapeHtml(fmtRange(t))}">${iconForHour(h)} ${escapeHtml(fmtRange(t))}</div>`;};
+  // Main shift: badge with its own time (or auto icon for Sick Leave) directly beneath.
+  const mainBadge=`<button type="button" class="shift-cell shift-${escapeHtml(visualCode)}${codClass}${patternClass}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftLabel(visualCode))}${codDate?` · vice ${escapeHtml(codDate)}`:""}">${mainInner}</button>`;
+  let mainMeta="";
   if(CODES_AUTO_ICON.has(visualCode)){
     const staff=findMonthlyStaff(staffId);
     const{start}=monthRange(appState.selectedMonth);
     const base=staff?baselineShiftCode(staff,shiftDate,start):"";
     const ic=dutyIcon(base);
-    if(ic)metaParts.push(`<div class="rcell-meta" title="Core duty: ${escapeHtml(shiftLabel(base))}">${ic}</div>`);
+    if(ic)mainMeta=`<div class="rcell-meta" title="Core duty: ${escapeHtml(shiftLabel(base))}">${ic}</div>`;
   }else{
-    const mt=parseTimeToken(row?.override_notes);
-    if(mt&&/^\d+-\d+$/.test(mt)){const h=parseInt(mt.split("-")[0],10);metaParts.push(`<div class="rcell-meta" title="${escapeHtml(displayShiftCode(visualCode))} ${escapeHtml(fmtRange(mt))}">${iconForHour(h)} ${escapeHtml(fmtRange(mt))}</div>`);}
+    mainMeta=metaFor(parseTimeToken(row?.override_notes));
   }
-  for(const s of extraShifts){
-    if(s.time&&/^\d+-\d+$/.test(s.time)){const h=parseInt(s.time.split("-")[0],10);metaParts.push(`<div class="rcell-meta" title="${escapeHtml(displayShiftCode(s.code))} ${escapeHtml(fmtRange(s.time))}">${iconForHour(h)} ${escapeHtml(fmtRange(s.time))}</div>`);}
-  }
-  const metaLine=metaParts.join("");
-  const hasExtra=isOverride||extraShifts.length>0||!!metaLine;
-  return`<div class="rcell${hasExtra?" has-override":""}">${mainBadge}${extraBadges}${overrideDot}${metaLine}</div>`;
+  const mainUnit=`<div class="rcell-unit">${mainBadge}${mainMeta}</div>`;
+  // Each extra duty: its badge with its own time beneath it.
+  const extraUnits=extraShifts.map(s=>`<div class="rcell-unit"><button type="button" class="shift-cell shift-${escapeHtml(s.code)}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(s.code))} — ${escapeHtml(shiftLabel(s.code))}">${escapeHtml(displayShiftCode(s.code))}</button>${metaFor(s.time)}</div>`).join("");
+  const hasExtra=isOverride||extraShifts.length>0||!!mainMeta;
+  return`<div class="rcell${hasExtra?" has-override":""}">${mainUnit}${extraUnits}${overrideDot}</div>`;
 }
 function legend(code,label){return`<span class="legend-item" onclick="toggleLegendHighlight('${escapeHtml(code)}')" title="Click to highlight ${escapeHtml(label)} cells">${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`;}function toggleLegendHighlight(code){const clean=normaliseRosterCode(code)||code;const items=document.querySelectorAll(".legend-item");const cells=document.querySelectorAll(".roster-table td:not(:first-child)");const alreadyActive=document.querySelector(`.legend-item.legend-active[data-code="${CSS.escape(clean)}"]`);items.forEach(el=>el.classList.remove("legend-active"));cells.forEach(td=>td.classList.remove("legend-dim","legend-lit"));if(alreadyActive){return;}const activeItem=Array.from(items).find(el=>el.querySelector(`.shift-${CSS.escape(clean)}`));if(activeItem){activeItem.classList.add("legend-active");activeItem.setAttribute("data-code",clean);}cells.forEach(td=>{const btn=td.querySelector(".shift-cell");const cellCode=btn?normaliseRosterCode((btn.className.match(/shift-([A-Z0-9]+)/)||[])[1]||""):"";if(cellCode===clean){td.classList.add("legend-lit");}else{td.classList.add("legend-dim");}});}
     function groupRosterByStaff(rows){const map=new Map();for(const row of rows){if(!map.has(row.staff_id)){map.set(row.staff_id,{staff_id:row.staff_id,full_name:row.full_name,role:row.role,roster_group:row.roster_group,roster_code:row.roster_code,roster_name:row.roster_name,roster_pattern_code:row.roster_pattern_code,roster_start_date:row.roster_start_date||null,days:{}});}map.get(row.staff_id).days[dateOnly(row.shift_date)]=row;}return Array.from(map.values()).sort((a,b)=>{const rd=roleSortOrder(a.role)-roleSortOrder(b.role);return rd!==0?rd:cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name));});}function patternShiftForDate(pattern,startIso,targetIso){if(!pattern||!startIso||!targetIso)return"";const s=new Date(startIso),t=new Date(targetIso);s.setHours(0,0,0,0);t.setHours(0,0,0,0);const diff=Math.round((t-s)/(864e5));if(diff<0)return"";return pattern[diff%pattern.length]||"";}function baselineShiftCode(staff,isoDate,fallbackStart){if(!staff.roster_pattern_code)return"";const start=staff.roster_start_date||fallbackStart||isoDate;return patternShiftForDate(staff.roster_pattern_code,start,isoDate);}
