@@ -720,6 +720,10 @@
             <button type="button" onclick="printMonthlyRoster()">🖨 Print</button>
           </div>
         </div>
+        <div class="nc-btn-bar" style="margin-top:12px">
+          <button class="btn-ot" type="button" onclick="openNcModal('OT','${selDate}')">+ Add Overtime</button>
+          <button class="btn-til" type="button" onclick="openNcModal('TIL_IN','${selDate}')">+ Add TIL In</button>
+        </div>
       </div>`;
 
       // ── Legend (shift picker choices only) ──────────────────────────────────
@@ -781,6 +785,30 @@
             <tbody>${tbody}</tbody>
           </table>
         </div>
+      </div>`;
+
+      // ── Non-core overtime / TIL-in entries for this month ───────────────────
+      const ncEntries = [];
+      for (const [date, rows] of Object.entries(appState.dailyNonCoreRows || {})) {
+        if (date < start || date > end) continue;
+        for (const x of rows) ncEntries.push({ date, ...x });
+      }
+      ncEntries.sort((a, b) => a.date.localeCompare(b.date) || (a.name || "").localeCompare(b.name || ""));
+      const ncTypeLabel = t => t === "OT" ? "Overtime" : t === "TIL_IN" ? "TIL In" : "TIL Out";
+      const ncTypeCode  = t => t === "OT" ? "OT" : t === "TIL_IN" ? "TI" : "TO";
+      const ncRowsHtml = ncEntries.map(x =>
+        "<tr><td>" + escapeHtml(formatDate(x.date)) + "</td><td><strong>" + escapeHtml(x.name) + "</strong></td><td>" +
+        shiftBadge(ncTypeCode(x.type)) + " " + ncTypeLabel(x.type) + "</td><td>" +
+        escapeHtml(x.startTime || "07:00") + " &ndash; " + escapeHtml(x.untilTime || "") +
+        "</td><td><button type=\"button\" class=\"secondary small\" onclick=\"removeNonCore('" + x.date + "'," + x.id + ")\">Remove</button></td></tr>"
+      ).join("");
+      html += `<div class="card">
+        <h3>Non-Core Staff &mdash; Overtime &amp; TIL In</h3>
+        <p class="muted">External nurses recorded as working overtime or TIL-in this month.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Date</th><th>Name</th><th>Type</th><th>Time</th><th></th></tr></thead>
+          <tbody>${ncRowsHtml || "<tr><td colspan=\"5\" class=\"muted\">None recorded for this month. Use the buttons above to add.</td></tr>"}</tbody>
+        </table></div>
       </div>`;
 
       document.getElementById("content").innerHTML = html;
