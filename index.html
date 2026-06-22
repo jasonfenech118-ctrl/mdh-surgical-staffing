@@ -895,17 +895,17 @@
       // The "Amended Duty" only pre-fills with a real override that differs
       // from the original rostered duty; otherwise it starts blank.
       const mainCode=(liveCode&&liveCode!==patternCode)?liveCode:"";
-      const extraCodes=parseSecondaryCodes(row);
+      const extraShifts=parseSecondaryShifts(row);
       const existingTime=parseTimeToken(row?.override_notes);
       const entries=[{code:mainCode,codDate:mainCode&&isCodCode(mainCode)?isoDateInputValue(codDateFromRow(row,shiftDate),shiftDate):"",time:existingTime},
-        ...extraCodes.map(c=>({code:c,codDate:"",time:""}))];
+        ...extraShifts.map(s=>({code:s.code,codDate:"",time:s.time||""}))];
       if(!entries.length)entries.push({code:"",codDate:"",time:""});
       const originalCode=normaliseRosterCode(patternCode||"");
       // For dropdown filtering: if there's no pattern and no live code, the cell
       // visually defaults to "O" (Off), so treat it as Off for filter purposes.
       const filterCode=originalCode||((!liveCode&&!patternCode)?"O":"");
       // An override exists when the cell carries a live (saved) shift code or is flagged as an override.
-      const hasOverride=!!(row&&(liveCode||row.source_type==="override"||extraCodes.length>0));
+      const hasOverride=!!(row&&(liveCode||row.source_type==="override"||extraShifts.length>0));
       dayCardState={staffId,shiftDate,entries,originalNotes:"",originalCode,filterCode,hasOverride};
       const modal=ensureDayCardModal();
       const staffName=cleanStaffName(staff?.full_name||"Staff member"),role=labelRole(staff?.role||"");
@@ -957,12 +957,17 @@
       if(isCodCode(mainCode)&&!mainEntry.codDate){showError("Choose the vice date for COD-in/COD-off (first row).");return;}
       // Validate extras
       const extraCodes=[];
+      const extraShifts=[];
       for(let i=1;i<state.entries.length;i++){
-        const ec=normaliseRosterCode(state.entries[i].code||"");
+        const ent=state.entries[i];
+        const ec=normaliseRosterCode(ent.code||"");
         if(!ec)continue;
         if(!allowed.has(ec)){showError(`Entry ${i+1}: choose a valid shift code.`);return;}
         if(isCodCode(ec)){showError(`Entry ${i+1}: COD-in/COD-off can only be set on the first (day) row, where its vice date is recorded. Use the first row for a change of duty.`);return;}
         extraCodes.push(ec);
+        let et="";
+        if(ent.time&&!CODES_AUTO_ICON.has(ec)){const[tf,tt]=ent.time.split("-");if(tf!==""&&tt!=="")et=`${tf}-${tt}`;}
+        extraShifts.push({code:ec,time:et});
       }
       // Safety: enforce rest gap between night and day across adjacent days
       const staffForCheck=findMonthlyStaff(state.staffId);
@@ -971,8 +976,8 @@
       let notes=null;
       // Attach COD vice date to main notes if needed
       if(isCodCode(mainCode)&&mainEntry.codDate)notes=notes?`${notes} | vice ${mainEntry.codDate}`:`vice ${mainEntry.codDate}`;
-      // Encode extra codes as tokens
-      notes=withSecondaryTokens(notes,extraCodes);
+      // Encode extra duties (with their own times) as tokens
+      notes=withSecondaryShiftTokens(notes,extraShifts);
       // Encode from-to hours for main entry (only when both sides present, and code allows manual timing)
       if(mainEntry.time&&!CODES_AUTO_ICON.has(mainCode)){const[tf,tt]=mainEntry.time.split("-");if(tf!==""&&tt!=="")notes=(notes?notes+" ":"")+`[TIME:${tf}-${tt}]`;}
       closeDayCard();
@@ -1145,11 +1150,14 @@
     const SECONDARY_SHIFT_CHOICES=[{code:"",label:"— None —"},{code:"N",label:"Night"},{code:"M",label:"Morning"},{code:"A",label:"All Day"},{code:"OT",label:"Overtime (Night)"}];
     function rowNotesText(row){if(!row)return"";return[row.override_notes,row.notes,row.note].filter(Boolean).join(" ");}
     function parseSecondaryCode(row){const codes=parseSecondaryCodes(row);return codes[0]||"";}
-    function parseSecondaryCodes(row){const text=rowNotesText(row);return[...text.matchAll(/\[ALSO:([A-Z0-9]+)\]/ig)].map(m=>normaliseRosterCode(m[1])).filter(Boolean);}
-    function stripAllSecondaryTokens(notes){return String(notes||"").replace(/\s*\[ALSO:[A-Z0-9]+\]\s*/ig," ").trim();}
+    function parseSecondaryCodes(row){const text=rowNotesText(row);return[...text.matchAll(/\[ALSO:([A-Z0-9]+)(?:@\d+-\d+)?\]/ig)].map(m=>normaliseRosterCode(m[1])).filter(Boolean);}
+    // Extra duties with their optional time range: [ALSO:CODE] or [ALSO:CODE@F-T]
+    function parseSecondaryShifts(row){const text=rowNotesText(row);return[...text.matchAll(/\[ALSO:([A-Z0-9]+)(?:@(\d+)-(\d+))?\]/ig)].map(m=>({code:normaliseRosterCode(m[1]),time:(m[2]!=null&&m[3]!=null)?`${m[2]}-${m[3]}`:""})).filter(s=>s.code);}
+    function stripAllSecondaryTokens(notes){return String(notes||"").replace(/\s*\[ALSO:[A-Z0-9]+(?:@\d+-\d+)?\]\s*/ig," ").trim();}
     function stripSecondaryToken(notes){return stripAllSecondaryTokens(notes);}
     function withSecondaryToken(notes,code){return withSecondaryTokens(notes,code?[code]:[]);}
-    function withSecondaryTokens(notes,codes){const base=stripAllSecondaryTokens(notes),toks=(codes||[]).map(c=>normaliseRosterCode(c)).filter(Boolean).map(c=>`[ALSO:${c}]`);return[base,...toks].filter(Boolean).join(" ").trim()||null;}
+    function withSecondaryTokens(notes,codes){return withSecondaryShiftTokens(notes,(codes||[]).map(c=>({code:c,time:""})));}
+    function withSecondaryShiftTokens(notes,shifts){const base=stripAllSecondaryTokens(notes),toks=(shifts||[]).map(s=>{const c=normaliseRosterCode(s.code);if(!c)return"";const t=(s.time&&/^\d+-\d+$/.test(s.time))?`@${s.time}`:"";return`[ALSO:${c}${t}]`;}).filter(Boolean);return[base,...toks].filter(Boolean).join(" ").trim()||null;}
     // ── Shift safety (rest between night and day) ──────────────────────────────
     function isNightCode(c){const x=normaliseRosterCode(c);return x==="N"||x==="OT";}
     function isDayWorkCode(c){return["A","M","D"].includes(normaliseRosterCode(c));}
@@ -1182,23 +1190,28 @@
     return`<button type="button" class="shift-cell shift-${escapeHtml(visualCode)}${codClass}${patternClass}" onclick="editRosterShift('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}','${escapeHtml(storedCode)}')" title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftLabel(visualCode))}">${mainInner}</button>${overrideDot}`;
   }
   // Full split-cell wrapper for monthly roster
-  const extraCodes=parseSecondaryCodes(row);
+  const extraShifts=parseSecondaryShifts(row);
   const mainBadge=`<button type="button" class="shift-cell shift-${escapeHtml(visualCode)}${codClass}${patternClass}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftLabel(visualCode))}${codDate?` · vice ${escapeHtml(codDate)}`:""}">${mainInner}</button>`;
-  const extraBadges=extraCodes.map(ec=>`<button type="button" class="shift-cell shift-${escapeHtml(ec)}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(ec))} — ${escapeHtml(shiftLabel(ec))}">${escapeHtml(displayShiftCode(ec))}</button>`).join("");
-  let metaLine="";
+  const extraBadges=extraShifts.map(s=>`<button type="button" class="shift-cell shift-${escapeHtml(s.code)}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(s.code))} — ${escapeHtml(shiftLabel(s.code))}">${escapeHtml(displayShiftCode(s.code))}</button>`).join("");
+  // Build a time line (icon + range) for each shift that has a time; icon follows that shift's start hour.
+  const iconForHour=h=>(h>=7&&h<19)?"🌞":"🌙";
+  const fmtRange=t=>{const[f,tt]=t.split("-");return`${String(f).padStart(2,"0")}:00–${String(tt).padStart(2,"0")}:00`;};
+  const metaParts=[];
   if(CODES_AUTO_ICON.has(visualCode)){
     const staff=findMonthlyStaff(staffId);
     const{start}=monthRange(appState.selectedMonth);
     const base=staff?baselineShiftCode(staff,shiftDate,start):"";
     const ic=dutyIcon(base);
-    if(ic)metaLine=`<div class="rcell-meta" title="Core duty: ${escapeHtml(shiftLabel(base))}">${ic}</div>`;
+    if(ic)metaParts.push(`<div class="rcell-meta" title="Core duty: ${escapeHtml(shiftLabel(base))}">${ic}</div>`);
   }else{
-    const cellTime=parseTimeToken(row?.override_notes);
-    const sunMoon=cellTime?(()=>{const h=parseInt(cellTime.split("-")[0],10);return(h>=7&&h<19)?"🌞":"🌙";})():"";
-    const cellTimeLabel=cellTime?(()=>{const[f,t]=cellTime.split("-");return`${String(f).padStart(2,"0")}:00–${String(t).padStart(2,"0")}:00`;})():"";
-    if(sunMoon)metaLine=`<div class="rcell-meta" title="${escapeHtml(cellTimeLabel)}">${sunMoon} ${escapeHtml(cellTimeLabel)}</div>`;
+    const mt=parseTimeToken(row?.override_notes);
+    if(mt&&/^\d+-\d+$/.test(mt)){const h=parseInt(mt.split("-")[0],10);metaParts.push(`<div class="rcell-meta" title="${escapeHtml(displayShiftCode(visualCode))} ${escapeHtml(fmtRange(mt))}">${iconForHour(h)} ${escapeHtml(fmtRange(mt))}</div>`);}
   }
-  const hasExtra=isOverride||extraCodes.length>0||!!metaLine;
+  for(const s of extraShifts){
+    if(s.time&&/^\d+-\d+$/.test(s.time)){const h=parseInt(s.time.split("-")[0],10);metaParts.push(`<div class="rcell-meta" title="${escapeHtml(displayShiftCode(s.code))} ${escapeHtml(fmtRange(s.time))}">${iconForHour(h)} ${escapeHtml(fmtRange(s.time))}</div>`);}
+  }
+  const metaLine=metaParts.join("");
+  const hasExtra=isOverride||extraShifts.length>0||!!metaLine;
   return`<div class="rcell${hasExtra?" has-override":""}">${mainBadge}${extraBadges}${overrideDot}${metaLine}</div>`;
 }
 function legend(code,label){return`<span class="legend-item" onclick="toggleLegendHighlight('${escapeHtml(code)}')" title="Click to highlight ${escapeHtml(label)} cells">${shiftBadge(code)} <span class="muted">${escapeHtml(label)}</span></span>`;}function toggleLegendHighlight(code){const clean=normaliseRosterCode(code)||code;const items=document.querySelectorAll(".legend-item");const cells=document.querySelectorAll(".roster-table td:not(:first-child)");const alreadyActive=document.querySelector(`.legend-item.legend-active[data-code="${CSS.escape(clean)}"]`);items.forEach(el=>el.classList.remove("legend-active"));cells.forEach(td=>td.classList.remove("legend-dim","legend-lit"));if(alreadyActive){return;}const activeItem=Array.from(items).find(el=>el.querySelector(`.shift-${CSS.escape(clean)}`));if(activeItem){activeItem.classList.add("legend-active");activeItem.setAttribute("data-code",clean);}cells.forEach(td=>{const btn=td.querySelector(".shift-cell");const cellCode=btn?normaliseRosterCode((btn.className.match(/shift-([A-Z0-9]+)/)||[])[1]||""):"";if(cellCode===clean){td.classList.add("legend-lit");}else{td.classList.add("legend-dim");}});}
