@@ -837,7 +837,8 @@
         const fromHourOpts=h=>[...Array(24)].map((_,n)=>(n>=minH&&n<maxH)?`<option value="${n}" ${n===h?"selected":""}>${String(n).padStart(2,"0")}:00</option>`:"").join("");
         const tillHourOpts=(h,from)=>[...Array(24)].map((_,n)=>(n>from&&n>minH&&n<=maxH)?`<option value="${n}" ${n===h?"selected":""}>${String(n).padStart(2,"0")}:00</option>`:"").join("");
         const [tfrom,tto]=e.time?e.time.split("-").map(Number):[null,null];
-        const showTime=e.code&&!CODES_AUTO_ICON.has(normaliseRosterCode(e.code));
+        // Main entry always shows the time selection; extra entries show it once a code is chosen. Hidden for auto-icon codes (e.g. Sick Leave).
+        const showTime=!CODES_AUTO_ICON.has(normaliseRosterCode(e.code))&&(i===0||!!e.code);
         const timeField=showTime?`<div style="margin-top:6px;display:flex;align-items:center;gap:6px"><label style="font-size:11px;white-space:nowrap;min-width:32px">From</label><select style="flex:1" onchange="dayCardSetTimeFrom(${i},this.value)"><option value="">—</option>${fromHourOpts(tfrom)}</select><label style="font-size:11px;white-space:nowrap;margin-left:6px;min-width:24px">Till</label><select style="flex:1;margin-left:4px" onchange="dayCardSetTimeTo(${i},this.value)"><option value="">—</option>${tillHourOpts(tto,tfrom??-1)}</select></div>`:"";
         return`<div class="day-card-entry">
           <span class="day-card-period">${escapeHtml(periodLabel)}</span>
