@@ -1176,9 +1176,8 @@
   }
   // Full split-cell wrapper for monthly roster
   const extraCodes=parseSecondaryCodes(row);
-  const amdLabel=isOverride?`<span class="rcell-label">AMD</span>`:"";
-  const mainBadge=`${amdLabel}<button type="button" class="shift-cell shift-${escapeHtml(visualCode)}${codClass}${patternClass}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftLabel(visualCode))}${codDate?` · vice ${escapeHtml(codDate)}`:""}">${mainInner}</button>`;
-  const extraBadges=extraCodes.map(ec=>`<span class="rcell-label">EXT</span><button type="button" class="shift-cell shift-${escapeHtml(ec)}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(ec))} — ${escapeHtml(shiftLabel(ec))}">${escapeHtml(displayShiftCode(ec))}</button>`).join("");
+  const mainBadge=`<button type="button" class="shift-cell shift-${escapeHtml(visualCode)}${codClass}${patternClass}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(visualCode))} — ${escapeHtml(shiftLabel(visualCode))}${codDate?` · vice ${escapeHtml(codDate)}`:""}">${mainInner}</button>`;
+  const extraBadges=extraCodes.map(ec=>`<button type="button" class="shift-cell shift-${escapeHtml(ec)}" onclick="openDayCard('${escapeHtml(staffId)}','${escapeHtml(shiftDate)}')" title="${escapeHtml(displayShiftCode(ec))} — ${escapeHtml(shiftLabel(ec))}">${escapeHtml(displayShiftCode(ec))}</button>`).join("");
   let metaLine="";
   if(CODES_AUTO_ICON.has(visualCode)){
     const staff=findMonthlyStaff(staffId);
