@@ -926,10 +926,18 @@
 
     function openDayCard(staffId,shiftDate){
       clearMessage();
-      const staff=findMonthlyStaff(staffId),row=staff?.days?.[shiftDate]||null;
+      // Prefer the monthly roster record; when editing from Daily Staffing the
+      // staff won't be in monthlyRosterRows, so fall back to the daily data.
+      let staff=findMonthlyStaff(staffId),dailySrc=null;
+      if(!staff){
+        const d=appState.dailyPrintData;
+        dailySrc=d?[...(d.coreRows||[]),...(d.ncRows||[])].find(r=>String(r.staff_id)===String(staffId)):null;
+        if(dailySrc)staff={staff_id:staffId,full_name:dailySrc.full_name,role:dailySrc.role,roster_pattern_code:null,roster_start_date:null,days:{[shiftDate]:dailySrc.row}};
+      }
+      const row=staff?.days?.[shiftDate]||dailySrc?.row||null;
       const liveCode=normaliseRosterCode(row?.live_shift_code||"");
       const {start}=monthRange(appState.selectedMonth);
-      const patternCode=normaliseRosterCode(baselineShiftCode(staff,shiftDate,start)||"");
+      const patternCode=normaliseRosterCode(baselineShiftCode(staff,shiftDate,start)||dailySrc?.baselineCode||"");
       // The "Amended Duty" only pre-fills with a real override that differs
       // from the original rostered duty; otherwise it starts blank.
       const mainCode=(liveCode&&liveCode!==patternCode)?liveCode:"";
