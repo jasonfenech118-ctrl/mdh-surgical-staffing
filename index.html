@@ -1252,9 +1252,11 @@
         document.getElementById("content").innerHTML=`<div class="card"><h2>Downloads</h2><div class="info">The Downloads store is not set up yet. Run the <strong>save_daily_staffing_download</strong> / <strong>get_daily_staffing_downloads</strong> SQL in Supabase (provided in chat), then reload.</div><p class="muted">${escapeHtml(error.message)}</p></div>`;
         return;
       }
-      const rows=data||[];
+      const allRows=data||[];
       _downloadCache={};
-      for(const r of rows)_downloadCache[String(r.id)]=r;
+      for(const r of allRows)_downloadCache[String(r.id)]=r;
+      const searchDate=appState.downloadSearchDate||"";
+      const rows=searchDate?allRows.filter(r=>String(r.staffing_date||"").slice(0,10)===searchDate):allRows;
       // Group by Year -> Month
       const byYear={};
       for(const r of rows){
@@ -1264,9 +1266,11 @@
         (byYear[y]=byYear[y]||{}); (byYear[y][ym]=byYear[y][ym]||[]).push(r);
       }
       const years=Object.keys(byYear).sort((a,b)=>b.localeCompare(a));
-      let html=`<div class="card"><div class="actions" style="justify-content:space-between;align-items:flex-end"><div><h2>Downloads</h2><p class="muted">Archived Daily Staffing forms, grouped by year and month.</p></div>${wardSelectorHtml()}</div></div>`;
+      let html=`<div class="card"><div class="actions" style="justify-content:space-between;align-items:flex-end"><div><h2>Downloads</h2><p class="muted">Archived Daily Staffing forms, grouped by year and month.</p></div><div class="actions" style="align-items:flex-end">${wardSelectorHtml()}<div><label>Search date</label><input type="date" value="${escapeHtml(searchDate)}" onchange="setDownloadSearchDate(this.value)"></div>${searchDate?`<button type="button" class="secondary" onclick="setDownloadSearchDate('')">Clear</button>`:""}</div></div></div>`;
       if(!years.length){
-        html+=`<div class="card"><p class="muted">No saved forms yet. Open Daily Staffing and use <strong>🖨 Print Daily Staffing</strong> to archive a copy here.</p></div>`;
+        html+=searchDate
+          ?`<div class="card"><p class="muted">No saved forms for ${escapeHtml(formatDate(searchDate))}. <a href="#" onclick="setDownloadSearchDate('');return false;">Clear the date filter</a> to see all.</p></div>`
+          :`<div class="card"><p class="muted">No saved forms yet. Open Daily Staffing and use <strong>🖨 Print Daily Staffing</strong> to archive a copy here.</p></div>`;
       }
       for(const y of years){
         const months=Object.keys(byYear[y]).sort((a,b)=>b.localeCompare(a));
@@ -1284,6 +1288,7 @@
       }
       document.getElementById("content").innerHTML=html;
     }
+    function setDownloadSearchDate(value){appState.downloadSearchDate=value||"";renderDownloads();}
     function openDownload(id){const r=_downloadCache[String(id)];if(!r||!r.html_content){showError("This saved form has no content.");return;}openPrintWindow(r.html_content);}
     async function deleteDownload(id){
       const r=_downloadCache[String(id)];
