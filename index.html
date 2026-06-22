@@ -862,6 +862,9 @@
           <div><h2 class="shift-modal-title">Duty Card</h2><div class="shift-modal-subtitle" id="dayCardSubtitle"></div></div>
         </div>
         <div class="day-card-original" id="dayCardOriginal"></div>
+        <div id="dayCardRevertRow" style="display:none;margin:10px 0 0">
+          <button type="button" style="width:100%;padding:8px 12px;font-size:13px;font-weight:700;background:#fff7ed;color:#9a3412;border:1px solid #fdba74;border-radius:8px;cursor:pointer" onclick="revertDayCard()">&#8617; Revert this day to the original duty</button>
+        </div>
         <div class="day-card-entries" id="dayCardEntries"></div>
         <div id="dayCardWarn" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:9px 11px;font-size:12.5px;font-weight:600;margin:0 0 10px"></div>
         <div class="shift-modal-actions" style="display:flex;gap:12px;grid-template-columns:none">
@@ -893,12 +896,16 @@
       // For dropdown filtering: if there's no pattern and no live code, the cell
       // visually defaults to "O" (Off), so treat it as Off for filter purposes.
       const filterCode=originalCode||((!liveCode&&!patternCode)?"O":"");
-      dayCardState={staffId,shiftDate,entries,originalNotes:"",originalCode,filterCode};
+      // An override exists when the cell carries a live (saved) shift code or is flagged as an override.
+      const hasOverride=!!(row&&(liveCode||row.source_type==="override"||extraCodes.length>0));
+      dayCardState={staffId,shiftDate,entries,originalNotes:"",originalCode,filterCode,hasOverride};
       const modal=ensureDayCardModal();
       const staffName=cleanStaffName(staff?.full_name||"Staff member"),role=labelRole(staff?.role||"");
       document.getElementById("dayCardSubtitle").innerHTML=`${escapeHtml(staffName)}${role?` — ${escapeHtml(role)}`:""}<br>${escapeHtml(formatDate(shiftDate))}`;
       const orig=document.getElementById("dayCardOriginal");
       if(orig)orig.innerHTML=originalCode?`<span class="day-card-orig-label">Original duty</span> ${shiftBadge(originalCode)} <span class="day-card-orig-name">${escapeHtml(shiftLabel(originalCode))}</span>`:`<span class="day-card-orig-label">No rostered duty for this day</span>`;
+      const revertRow=document.getElementById("dayCardRevertRow");
+      if(revertRow)revertRow.style.display=hasOverride?"block":"none";
       renderDayCardEntries();
       dayCardSyncAddBtn();
       modal.classList.remove("hidden");
@@ -993,6 +1000,45 @@
             const disp=computeLongLeaveDisplay(resolvedMap,k);
             td.innerHTML=shiftButton(state.staffId,k,disp,isOv,actual,sr.days?.[k]||null,isPat);
             if(k===state.shiftDate){td.style.outline="3px solid #22c55e";setTimeout(()=>{if(td)td.style.outline="";},1500);}
+          }
+        }
+      }
+    }
+
+    async function revertDayCard(){
+      if(!dayCardState)return;
+      const state=dayCardState;
+      if(!window.confirm("Revert this day back to the original rostered duty? This removes the change.")){return;}
+      closeDayCard();
+      const{error}=await sb.rpc("cancel_ward_roster_override",{
+        p_ward_id:appState.selectedWardId,
+        p_staff_id:state.staffId,
+        p_shift_date:state.shiftDate
+      });
+      if(error){showError("Revert failed: "+error.message);return;}
+      showSuccess("Reverted to original duty.");
+      // Patch in-memory: drop the override and re-render the row
+      if(appState.monthlyRosterRows){
+        const sr=appState.monthlyRosterRows.find(r=>String(r.staff_id)===String(state.staffId));
+        if(sr){
+          if(sr.days[state.shiftDate]){
+            sr.days[state.shiftDate].live_shift_code="";
+            sr.days[state.shiftDate].source_type="";
+            sr.days[state.shiftDate].override_notes="";
+          }
+          const{start,days}=monthRange(appState.selectedMonth);
+          const resolvedMap=buildResolvedCodeMap(sr,days,start);
+          for(const d of days){
+            const k=isoFromDate(d);
+            const td=document.getElementById("rc-"+state.staffId+"-"+k);
+            if(!td)continue;
+            const live=sr.days?.[k]?.live_shift_code||"";
+            const pat=baselineShiftCode(sr,k,start);
+            const actual=live||pat||"";
+            const isOv=!!live,isPat=!live&&!!pat;
+            const disp=computeLongLeaveDisplay(resolvedMap,k);
+            td.innerHTML=shiftButton(state.staffId,k,disp,isOv,actual,sr.days?.[k]||null,isPat);
+            if(k===state.shiftDate){td.style.outline="3px solid #f97316";setTimeout(()=>{if(td)td.style.outline="";},1500);}
           }
         }
       }
