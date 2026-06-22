@@ -1219,17 +1219,17 @@
           .hd .ward{font-size:18px;font-weight:700}
           .hd .dt{font-size:13px;margin-top:2px}
           table{border-collapse:collapse;width:100%;table-layout:fixed}
-          th,td{border:1px solid #000;font-size:11px;padding:3px 4px;height:22px}
+          col.c-nm{width:26%}col.c-gr{width:9%}col.c-dt{width:14%}col.c-mk{width:7.28%}
+          th,td{border:1px solid #000;font-size:11px;padding:3px 4px;height:22px;overflow:hidden}
           th{background:#f0f0f0;text-align:center;font-weight:700}
           td.ct,th{text-align:center}
-          td.nm,th.nm{text-align:left;width:30%}
-          th:nth-child(2),td:nth-child(2){width:9%}
-          th:nth-child(3),td:nth-child(3){width:13%}
+          td.nm,th.nm{text-align:left}
           .tm{font-size:9px;color:#333}
           tr.sec td{background:#d9d9d9;font-weight:700;text-align:left;font-size:12px}
         </style></head><body>
         <div class="hd"><div class="ward">${escapeHtml(ward?.ward_name||ward?.ward_code||"Ward")}</div><div class="dt">${escapeHtml(dateLabel)}</div></div>
         <table>
+          <colgroup><col class="c-nm"><col class="c-gr"><col class="c-dt">${cols.map(()=>'<col class="c-mk">').join("")}</colgroup>
           <thead>${headRow}</thead>
           <tbody>
             ${sectionHeader("Day Duty")}${sectionRows(dayRows,8)}
@@ -1273,7 +1273,7 @@
           const monthName=new Date(Number(yy),Number(mm)-1,1).toLocaleDateString("en-GB",{month:"long"});
           html+=`<div style="margin:10px 0 4px;font-weight:700;color:#475569">${escapeHtml(monthName)} <span class="muted" style="font-weight:400">(${list.length})</span></div>`;
           html+=`<div class="table-wrap"><table><thead><tr><th>Date</th><th>Title</th><th>Saved</th><th></th></tr></thead><tbody>`;
-          html+=list.map(r=>`<tr><td>${escapeHtml(formatDate(String(r.staffing_date).slice(0,10)))}</td><td>${escapeHtml(r.title||"")}</td><td class="muted">${escapeHtml(shortDateTime(r.created_at)||"")}</td><td><button type="button" class="btn-print" onclick="openDownload('${escapeHtml(String(r.id))}')">⬇ Download PDF</button></td></tr>`).join("");
+          html+=list.map(r=>`<tr><td>${escapeHtml(formatDate(String(r.staffing_date).slice(0,10)))}</td><td>${escapeHtml(r.title||"")}</td><td class="muted">${escapeHtml(shortDateTime(r.created_at)||"")}</td><td><button type="button" class="btn-print" onclick="openDownload('${escapeHtml(String(r.id))}')">⬇ Download PDF</button> <button type="button" class="danger small" onclick="deleteDownload('${escapeHtml(String(r.id))}')">Delete</button></td></tr>`).join("");
           html+=`</tbody></table></div>`;
         }
         html+=`</div>`;
@@ -1281,6 +1281,14 @@
       document.getElementById("content").innerHTML=html;
     }
     function openDownload(id){const r=_downloadCache[String(id)];if(!r||!r.html_content){showError("This saved form has no content.");return;}openPrintWindow(r.html_content);}
+    async function deleteDownload(id){
+      const r=_downloadCache[String(id)];
+      if(!window.confirm("Delete this saved form?"+(r?` (${formatDate(String(r.staffing_date).slice(0,10))})`:"")))return;
+      const{error}=await sb.rpc("delete_daily_staffing_download",{p_id:id});
+      if(error){showError("Delete failed: "+error.message);return;}
+      showSuccess("Saved form deleted.");
+      await renderDownloads();
+    }
     async function printDailyStaffing(){
       const d=appState.dailyPrintData;
       if(!d){showError("Open Daily Staffing before printing.");return;}
