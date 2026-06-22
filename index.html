@@ -1214,7 +1214,9 @@
         <style>
           @page{size:A4 portrait;margin:12mm}
           *{font-family:Calibri,Arial,sans-serif}
-          body{margin:0;color:#000}
+          body{margin:0;color:#000;background:#e5e7eb}
+          .sheet{max-width:780px;margin:24px auto;background:#fff;padding:28px 30px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+          @media print{body{background:#fff}.sheet{max-width:none;margin:0;padding:0;box-shadow:none}}
           .hd{margin-bottom:10px}
           .hd .ward{font-size:18px;font-weight:700}
           .hd .dt{font-size:13px;margin-top:2px}
@@ -1227,6 +1229,7 @@
           .tm{font-size:9px;color:#333}
           tr.sec td{background:#d9d9d9;font-weight:700;text-align:left;font-size:12px}
         </style></head><body>
+        <div class="sheet">
         <div class="hd"><div class="ward">${escapeHtml(ward?.ward_name||ward?.ward_code||"Ward")}</div><div class="dt">${escapeHtml(dateLabel)}</div></div>
         <table>
           <colgroup><col class="c-nm"><col class="c-gr"><col class="c-dt">${cols.map(()=>'<col class="c-mk">').join("")}</colgroup>
@@ -1237,6 +1240,7 @@
             ${sectionHeader("Constant Watch (if any)")}${sectionRows(watchRows,3)}
           </tbody>
         </table>
+        </div>
         </body></html>`;
     }
     function openPrintWindow(html){const w=window.open("","_blank");if(!w){showError("Pop-up blocked. Allow pop-ups to print.");return;}w.document.write(html);w.document.close();w.focus();setTimeout(()=>{w.print();},400);}
