@@ -930,37 +930,6 @@
     function dayCardRemoveEntry(idx){if(!dayCardState||idx===0)return;dayCardState.entries.splice(idx,1);renderDayCardEntries();}
     function closeDayCard(){const m=document.getElementById("dayCardBackdrop");if(m)m.classList.add("hidden");dayCardState=null;}
 
-    // TEMPORARY DIAGNOSTIC — verifies whether a roster save actually persisted.
-    // After an upsert it (1) shows what the RPC returned, (2) reads the
-    // roster_overrides table directly, and (3) re-reads via the roster RPC.
-    // Open the browser console (F12) to see [ROSTER-DIAG] output.
-    async function diagnoseRosterSave(staffId,shiftDate,shiftCode,rpcData){
-      const out={staffId,shiftDate,sentShiftCode:shiftCode,ward:appState.selectedWardId,rpcReturned:rpcData??null};
-      try{
-        const{data:tbl,error:tblErr}=await sb.from("roster_overrides")
-          .select("shift_date,staff_id,ward_id,live_shift_code,override_reason,notes,is_cancelled,created_at")
-          .eq("ward_id",appState.selectedWardId).eq("staff_id",staffId);
-        out.tableRowsForStaff=tblErr?("ERROR: "+tblErr.message):(tbl||[]);
-        out.tableRowForThisDate=Array.isArray(tbl)?tbl.filter(r=>dateOnly(r.shift_date)===shiftDate):"n/a";
-      }catch(e){out.tableRowsForStaff="EXCEPTION: "+e.message;}
-      try{
-        const{data:rpc,error:rpcErr}=await sb.rpc("get_my_ward_roster_between",
-          {p_ward_id:appState.selectedWardId,p_start_date:shiftDate,p_end_date:shiftDate});
-        out.rosterRpcRows=rpcErr?("ERROR: "+rpcErr.message):(rpc||[]).filter(r=>String(r.staff_id)===String(staffId));
-      }catch(e){out.rosterRpcRows="EXCEPTION: "+e.message;}
-      console.log("%c[ROSTER-DIAG]","color:#fff;background:#7c3aed;padding:2px 6px;border-radius:4px;font-weight:bold",out);
-      const tableHas=Array.isArray(out.tableRowForThisDate)&&out.tableRowForThisDate.length>0;
-      const rpcHas=Array.isArray(out.rosterRpcRows)&&out.rosterRpcRows.some(r=>r.live_shift_code);
-      let verdict,color;
-      if(!tableHas){verdict="Write did NOT persist to roster_overrides (server-side: upsert_ward_roster_override RPC or RLS is blocking the insert).";color="#dc2626";}
-      else if(!rpcHas){verdict="Row IS saved in roster_overrides, but get_my_ward_roster_between does NOT return it (server-side: the read RPC isn't joining overrides).";color="#d97706";}
-      else{verdict="Saved AND read back correctly. If the cell still reverts, it's a display issue — tell Claude.";color="#16a34a";}
-      out.verdict=verdict;
-      const el=document.getElementById("message");
-      if(el)el.innerHTML=`<div style="background:${color};color:#fff;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.4"><strong>Save diagnostic:</strong> ${escapeHtml(verdict)}<br><span style="opacity:.85;font-size:12px">Full details in browser console (F12 → Console → look for [ROSTER-DIAG]). Copy that and send it to Claude.</span></div>`;
-      return out;
-    }
-
     async function saveDayCard(){
       if(!dayCardState)return;
       const state=dayCardState;
@@ -993,7 +962,7 @@
       if(mainEntry.time&&!CODES_AUTO_ICON.has(mainCode)){const[tf,tt]=mainEntry.time.split("-");if(tf!==""&&tt!=="")notes=(notes?notes+" ":"")+`[TIME:${tf}-${tt}]`;}
       closeDayCard();
       const shiftCode=storeRosterCode(mainCode);
-      const{data:saveData,error:saveErr}=await sb.rpc("upsert_ward_roster_override",{
+      const{error:saveErr}=await sb.rpc("upsert_ward_roster_override",{
         p_ward_id:appState.selectedWardId,
         p_staff_id:state.staffId,
         p_shift_date:state.shiftDate,
@@ -1002,7 +971,7 @@
         p_notes:notes
       });
       if(saveErr){showError("Save failed: "+saveErr.message);return;}
-      await diagnoseRosterSave(state.staffId,state.shiftDate,shiftCode,saveData);
+      showSuccess("Duty saved.");
       // Patch in-memory and update the whole row in the DOM
       if(appState.monthlyRosterRows){
         const sr=appState.monthlyRosterRows.find(r=>String(r.staff_id)===String(state.staffId));
@@ -1027,8 +996,6 @@
           }
         }
       }
-      // NOTE: success message intentionally suppressed while the save
-      // diagnostic banner is active (diagnoseRosterSave writes to #message).
     }
 
     async function renderStaffManagement(){const wardId=requireSelectedWard();const{data,error}=await sb.rpc("get_ward_staff_members",{p_ward_id:wardId});if(error)throw error;appState.staffRows=(data||[]).slice().sort((a,b)=>{const rd=roleSortOrder(a.role)-roleSortOrder(b.role);return rd!==0?rd:cleanStaffName(a.full_name).localeCompare(cleanStaffName(b.full_name));});document.getElementById("content").innerHTML=`<div class="card"><div class="actions" style="justify-content:space-between"><div><h2>${appState.profile.is_sno?"Staff Management":"My Ward Staff"}</h2><p class="muted">Ward complement only. Employment type is fixed as core.</p></div><div>${wardSelectorHtml()}</div></div></div><div class="card"><h3>Add staff member</h3><div class="grid grid-3"><div><label>Surname</label><input id="newStaffSurname" placeholder="Surname"></div><div><label>Name</label><input id="newStaffFirstName" placeholder="Name"></div><div><label>ID number</label><input id="newStaffIdNumber" placeholder="e.g. 0123456M"></div><div><label>Role</label>${roleSelectHtml("newStaffRole")}</div><div><label>Shift</label>${rosterAssignmentSelectHtml("newStaffRosterAssignment")}</div><div><label>Roster start date</label><input id="newStaffStartDate" type="date"></div></div><div style="margin-top:14px"><button type="button" onclick="addStaffMember()">Add staff member</button></div></div><div id="editStaffPanel" class="card hidden"><div class="actions" style="justify-content:space-between"><div><h3>Edit staff member</h3><p class="muted">SNO can manage charge nurses. Ward charge nurses can manage normal ward staff.</p></div><button type="button" class="secondary small" onclick="cancelEditStaff()">Close</button></div><input id="editStaffId" type="hidden"><div class="grid grid-3"><div><label>Surname</label><input id="editStaffSurname"></div><div><label>Name</label><input id="editStaffFirstName"></div><div><label>ID number</label><input id="editStaffIdNumber"></div><div><label>Role</label>${roleSelectHtml("editStaffRole")}</div><div><label>Shift</label>${rosterAssignmentSelectHtml("editStaffRosterAssignment")}</div><div><label>Roster start date</label><input id="editStaffStartDate" type="date"></div></div><div class="actions" style="margin-top:14px"><button type="button" onclick="updateStaffMember()">Save changes</button><button type="button" class="secondary" onclick="cancelEditStaff()">Cancel</button></div></div><div class="card"><h3>Current staff</h3><div class="table-wrap"><table><thead><tr><th>Name</th><th>ID Number</th><th>Role</th><th>Shift</th><th>Status</th><th>Actions</th></tr></thead><tbody>${appState.staffRows.map(s=>`<tr><td><strong>${escapeHtml(cleanStaffName(s.full_name))}</strong></td><td>${escapeHtml(s.corp_user_id||"—")}</td><td>${escapeHtml(labelRole(s.role))}</td><td>${escapeHtml(staffRosterLabel(s))}</td><td>${truthy(s.is_active)?badge("Active","green"):badge("Inactive","grey")}</td><td><div class="actions"><button type="button" class="secondary small" onclick="startEditStaff('${escapeHtml(s.id||s.staff_id)}')">Edit</button>${canShowDeactivateButton(s)?`<button type="button" class="danger small" onclick="deactivateStaffMember('${escapeHtml(s.id||s.staff_id)}','${escapeHtml(cleanStaffName(s.full_name))}')">Delete</button>`:`<span class="muted">SNO only</span>`}</div></td></tr>`).join("")||`<tr><td colspan="6" class="muted">No staff found.</td></tr>`}</tbody></table></div></div>`;}
