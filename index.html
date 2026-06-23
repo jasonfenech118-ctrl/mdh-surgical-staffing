@@ -1216,7 +1216,7 @@
       const emptyRows=n=>Array.from({length:n}).map(()=>`<tr><td class="nm"></td><td></td><td></td>${cols.map(()=>"<td></td>").join("")}</tr>`).join("");
       const rowHtml=r=>`<tr><td class="nm">${escapeHtml(r.name)}</td><td class="ct">${escapeHtml(r.grade)}</td><td class="ct">${escapeHtml(r.duty)}${r.time?`<div class="tm">${escapeHtml(r.time)}</div>`:""}</td>${cols.map(c=>`<td class="ct">${r.marks[c]||""}</td>`).join("")}</tr>`;
       const sectionRows=(rows,min)=>rows.map(rowHtml).join("")+emptyRows(Math.max(0,min-rows.length));
-      const sectionHeader=label=>`<tr class="sec"><td colspan="${3+cols.length}">${label}</td></tr>`;
+      const sectionHeader=(label,cls)=>`<tr class="sec ${cls}"><td colspan="${3+cols.length}">${label}</td></tr>`;
       const headRow=`<tr><th class="nm">Name &amp; Surname</th><th>Grade</th><th>Duty</th>${cols.map(c=>`<th>${c}</th>`).join("")}</tr>`;
       return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Attendance ${escapeHtml(dateLabel)}</title>
         <style>
@@ -1235,7 +1235,10 @@
           td.ct,th{text-align:center}
           td.nm,th.nm{text-align:left}
           .tm{font-size:9px;color:#333}
-          tr.sec td{background:#d9d9d9;font-weight:700;text-align:left;font-size:12px}
+          tr.sec td{font-weight:700;text-align:left;font-size:12px}
+          tr.sec-day td{background:#dbeafe;color:#1e40af}
+          tr.sec-night td{background:#ede9fe;color:#5b21b6}
+          tr.sec-watch td{background:#d1fae5;color:#065f46}
         </style></head><body>
         <div class="sheet">
         <div class="hd"><div class="ward">${escapeHtml(ward?.ward_name||ward?.ward_code||"Ward")}</div><div class="dt">${escapeHtml(dateLabel)}</div></div>
@@ -1243,9 +1246,9 @@
           <colgroup><col class="c-nm"><col class="c-gr"><col class="c-dt">${cols.map(()=>'<col class="c-mk">').join("")}</colgroup>
           <thead>${headRow}</thead>
           <tbody>
-            ${sectionHeader("Day Duty")}${sectionRows(dayRows,8)}
-            ${sectionHeader("Night Duty")}${sectionRows(nightRows,4)}
-            ${sectionHeader("Constant Watch (if any)")}${sectionRows(watchRows,3)}
+            ${sectionHeader("Day Duty","sec-day")}${sectionRows(dayRows,8)}
+            ${sectionHeader("Night Duty","sec-night")}${sectionRows(nightRows,4)}
+            ${sectionHeader("Constant Watch (if any)","sec-watch")}${sectionRows(watchRows,3)}
           </tbody>
         </table>
         </div>
